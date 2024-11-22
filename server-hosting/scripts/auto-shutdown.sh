@@ -1,7 +1,7 @@
 #!/bin/sh
 
-shutdownIdleMinutes=30
-idleCheckFrequencySeconds=1
+shutdownIdleMinutes=10
+idleCheckFrequencySeconds=60
 
 isIdle=0
 while [ $isIdle -le 0 ]; do
