@@ -8,15 +8,15 @@ USE_EXPERIMENTAL_BUILD=${2-false}
 
 
 # install steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD?__cf_chl_jschl_tk__=pmd_WNQPOiK18.h0rf16RCYrARI2s8_84hUMwT.7N1xHYcs-1635248050-0-gqNtZGzNAiWjcnBszQiR#Linux.2FmacOS)
-add-apt-repository multiverse
-dpkg --add-architecture i386
-apt update
+sudo add-apt-repository multiverse
+sudo dpkg --add-architecture i386
+sudo apt update
 
 # Needed to accept steam license without hangup
 echo steam steam/question 'select' "I AGREE" | sudo debconf-set-selections
 echo steam steam/license note '' | sudo debconf-set-selections
 
-apt install -y unzip lib32gcc1 steamcmd
+sudo apt install -y unzip lib32gcc-s1 steamcmd
 
 # install satisfactory: https://satisfactory.fandom.com/wiki/Dedicated_servers
 if [ $USE_EXPERIMENTAL_BUILD = "true" ]; then
