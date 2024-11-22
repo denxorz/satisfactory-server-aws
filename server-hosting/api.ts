@@ -24,6 +24,16 @@ export const setupApi = (stack: Stack, server: Instance) => {
         ]
     }))
 
+    startServerLambda.addToRolePolicy(new iam.PolicyStatement({
+        actions: [
+            'ec2:DescribeInstances',
+            'ec2:DescribeInstanceStatus',
+        ],
+        resources: [
+            `*`,
+        ]
+    }))
+
     new apigw.LambdaRestApi(stack, `${Config.prefix}StartServerApi`, {
         handler: startServerLambda,
         description: "Trigger lambda function to start server",
