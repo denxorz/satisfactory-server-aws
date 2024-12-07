@@ -27,6 +27,19 @@ fi
 # note, we are switching users because steam doesn't recommend running steamcmd as root
 su - ubuntu -c "$STEAM_INSTALL_SCRIPT"
 
+BLUEPRINT_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
+EPIC_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
+STEAM_DIR="/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer"
+CONFIG_DIR="$STEAM_DIR/FactoryGame/Saved/Config"
+CONFIG_SERVER_DIR="$CONFIG_DIR/LinuxServer"
+
+# pull down any saved files to new instances
+su - ubuntu -c "mkdir -p $EPIC_SAVE_DIR $CONFIG_DIR $BLUEPRINT_SAVE_DIR"
+su - ubuntu -c "/usr/local/bin/aws s3 sync s3://$S3_SAVE_BUCKET/blueprints $BLUEPRINT_SAVE_DIR"
+su - ubuntu -c "/usr/local/bin/aws s3 sync s3://$S3_SAVE_BUCKET/saves $EPIC_SAVE_DIR"
+su - ubuntu -c "/usr/local/bin/aws s3 sync s3://$S3_SAVE_BUCKET/config $CONFIG_DIR"
+su - ubuntu -c "mkdir -p $CONFIG_SERVER_DIR"
+
 # enable as server so it stays up and start: https://satisfactory.fandom.com/wiki/Dedicated_servers/Running_as_a_Service
 cat << EOF > /etc/systemd/system/satisfactory.service
 [Unit]
@@ -37,13 +50,13 @@ After=syslog.target network.target nss-lookup.target network-online.target
 [Service]
 Environment="LD_LIBRARY_PATH=./linux64"
 ExecStartPre=$STEAM_INSTALL_SCRIPT
-ExecStart=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryServer.sh
+ExecStart=$STEAM_DIR/FactoryServer.sh
 User=ubuntu
 Group=ubuntu
 StandardOutput=journal
 Restart=on-failure
 KillSignal=SIGINT
-WorkingDirectory=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer
+WorkingDirectory=$STEAM_DIR
 
 [Install]
 WantedBy=multi-user.target
@@ -52,31 +65,35 @@ systemctl enable satisfactory
 systemctl start satisfactory
 
 # enable auto shutdown: https://github.com/feydan/satisfactory-tools/tree/main/shutdown
-cat << 'EOF' > /home/ubuntu/auto-shutdown.sh
+cat << EOF > /home/ubuntu/auto-shutdown.sh
 #!/bin/sh
 
 shutdownIdleMinutes=10
 idleCheckFrequencySeconds=60
 
 isIdle=0
-while [ $isIdle -le 0 ]; do
+while [ \$isIdle -le 0 ]; do
     isIdle=1
-    iterations=$((60 / $idleCheckFrequencySeconds * $shutdownIdleMinutes))
-    while [ $iterations -gt 0 ]; do
-        sleep $idleCheckFrequencySeconds
-        connectionBytes=$(ss -lu | grep 777 | awk -F ' ' '{s+=$2} END {print s}')
-        if [ ! -z $connectionBytes ] && [ $connectionBytes -gt 0 ]; then
+    iterations=\$((60 / \$idleCheckFrequencySeconds * \$shutdownIdleMinutes))
+    while [ \$iterations -gt 0 ]; do
+        sleep \$idleCheckFrequencySeconds
+        connectionBytes=\$(ss -lu | grep 777 | awk -F ' ' '{s+=\$2} END {print s}')
+        if [ ! -z \$connectionBytes ] && [ \$connectionBytes -gt 0 ]; then
             isIdle=0
         fi
-        if [ $isIdle -le 0 ] && [ $(($iterations % 21)) -eq 0 ]; then
-           echo "Activity detected, resetting shutdown timer to $shutdownIdleMinutes minutes."
+        if [ \$isIdle -le 0 ] && [ \$((\$iterations % 21)) -eq 0 ]; then
+           echo "Activity detected, resetting shutdown timer to \$shutdownIdleMinutes minutes."
            break
         fi
-        iterations=$(($iterations-1))
+        iterations=\$((\$iterations-1))
     done
 done
 
-echo "No activity detected for $shutdownIdleMinutes minutes, shutting down."
+sudo /usr/local/bin/aws s3 sync $BLUEPRINT_SAVE_DIR s3://$S3_SAVE_BUCKET/blueprints
+sudo /usr/local/bin/aws s3 sync $EPIC_SAVE_DIR s3://$S3_SAVE_BUCKET/saves
+sudo /usr/local/bin/aws s3 sync $CONFIG_DIR s3://$S3_SAVE_BUCKET/config
+
+echo "No activity detected for \$shutdownIdleMinutes minutes, shutting down."
 sudo shutdown -h now
 EOF
 chmod +x /home/ubuntu/auto-shutdown.sh
@@ -104,13 +121,13 @@ systemctl enable auto-shutdown
 systemctl start auto-shutdown
 
 # automated backups to s3 every 5 minutes
-su - ubuntu -c "crontab -l -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
+su - ubuntu -c "(crontab -l; echo \"*/5 * * * * /usr/local/bin/aws s3 sync $EPIC_SAVE_DIR s3://$S3_SAVE_BUCKET/saves && /usr/local/bin/aws s3 sync $CONFIG_DIR s3://$S3_SAVE_BUCKET/config\") | crontab -"
 
 # enable auto dns update
 cat << 'EOF' > /home/ubuntu/dns-update.sh
 #!/bin/sh
 
-curl "http://api.dynu.com/nic/update"
+curl "http://api.dynu.com/nic/update?username=denxorz&password=6c52d25546bea079e5ca522975f3c036318ada51f1bcc7ea45e9ca05465ca786"
 EOF
 chmod +x /home/ubuntu/dns-update.sh
 chown ubuntu:ubuntu /home/ubuntu/dns-update.sh
