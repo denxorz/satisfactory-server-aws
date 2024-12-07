@@ -2,56 +2,67 @@ import { EC2Client, StartInstancesCommand, DescribeInstanceStatusCommand } from 
 
 const instanceId = process.env.INSTANCE_ID
 const client = new EC2Client({ region: process.env.AWS_REGION });
-const command = new StartInstancesCommand({ InstanceIds: [instanceId!] });
+const commandStart = new StartInstancesCommand({ InstanceIds: [instanceId!] });
+const commandStatus = new DescribeInstanceStatusCommand({ InstanceIds: [instanceId!], IncludeAllInstances: true });
 
-exports.handler = function (event: any) {
+exports.handler = async function (event: any) {
 
   console.log("Received event:", event.path);
 
-  if (event.path.startsWith('/start')) {
+  if (event.path.startsWith('/start') || event.path == '/') {
     console.log("Attempting to start game server", instanceId);
 
-    return client.send(command)
-      .then((res) => {
-        console.log(JSON.stringify(res));
-        return {
-          statusCode: 200,
-          headers: { "Content-Type": "text/json" },
-          body: JSON.stringify({ message: "Started satisfactory server", response: JSON.stringify(res) })
-        }
-      })
-      .catch((err) => {
-        console.log(JSON.stringify(err));
-        return {
-          statusCode: 200,
-          headers: { "Content-Type": "text/json" },
-          body: JSON.stringify({ message: "Failed to start satisfactory server", response: JSON.stringify(err) })
-        }
-      });
+    try {
+      const res = await client.send(commandStart);
+      const resStatus = await client.send(commandStatus)
+
+      console.log(JSON.stringify(res));
+      console.log(JSON.stringify(resStatus));
+
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "text/json" },
+        body: JSON.stringify({
+          status: res?.StartingInstances ? res?.StartingInstances[0]?.CurrentState?.Name ?? "??" : "??",
+          previousStatus: res?.StartingInstances ? res?.StartingInstances[0]?.PreviousState?.Name ?? "??" : "??",
+          detail: resStatus?.InstanceStatuses ? resStatus?.InstanceStatuses[0]?.InstanceStatus?.Details?.[0].Status ?? "??" : "??"
+        })
+      }
+    }
+    catch (err) {
+      console.log(JSON.stringify(err));
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "text/json" },
+        body: JSON.stringify({ message: "Failed to start satisfactory server", response: err })
+      }
+    }
   }
 
   if (event.path.startsWith('/status')) {
-    return client.send(new DescribeInstanceStatusCommand({ InstanceIds: [instanceId!], IncludeAllInstances: true }))
-      .then((res) => {
-        console.log(JSON.stringify(res));
-        return {
-          statusCode: 200,
-          headers: { "Content-Type": "text/json" },
-          body: JSON.stringify({ message: "Started satisfactory server", response: JSON.stringify(res) })
-        }
-      })
-      .catch((err) => {
-        console.log(JSON.stringify(err));
-        return {
-          statusCode: 200,
-          headers: { "Content-Type": "text/json" },
-          body: JSON.stringify({ message: "Failed to start satisfactory server", response: JSON.stringify(err) })
-        }
-      });
+    try {
+      const res = await client.send(commandStatus)
+      console.log(JSON.stringify(res));
+
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "text/json" },
+        body: JSON.stringify({
+          status: res?.InstanceStatuses ? res?.InstanceStatuses[0]?.InstanceStatus?.Details ?? "??" : "??"
+        })
+      }
+    }
+    catch (err) {
+      console.log(JSON.stringify(err));
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "text/json" },
+        body: JSON.stringify({ message: "Failed to get Status:", response: JSON.stringify(err) })
+      }
+    };
   }
 
   console.log(`oops, path not found: ${event.path}`);
-  return {
-    statusCode: 404
-  };
+
+  return { statusCode: 404 };
 }
