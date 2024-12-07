@@ -105,3 +105,33 @@ systemctl start auto-shutdown
 
 # automated backups to s3 every 5 minutes
 su - ubuntu -c "crontab -l -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
+
+# enable auto dns update
+cat << 'EOF' > /home/ubuntu/dns-update.sh
+#!/bin/sh
+
+curl "http://api.dynu.com/nic/update"
+EOF
+chmod +x /home/ubuntu/dns-update.sh
+chown ubuntu:ubuntu /home/ubuntu/dns-update.sh
+
+cat << 'EOF' > /etc/systemd/system/dns-update.service
+[Unit]
+Description=Updates DNS with current IP
+After=syslog.target network.target nss-lookup.target network-online.target
+
+[Service]
+Environment="LD_LIBRARY_PATH=./linux64"
+ExecStart=/home/ubuntu/dns-update.sh
+User=ubuntu
+Group=ubuntu
+StandardOutput=journal
+Restart=on-failure
+KillSignal=SIGINT
+WorkingDirectory=/home/ubuntu
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable dns-update
+systemctl start dns-update
