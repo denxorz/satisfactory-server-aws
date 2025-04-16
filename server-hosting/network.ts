@@ -52,6 +52,8 @@ export const setupNetwork = (stack: Stack) => {
     securityGroup.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.udp(7777), "Game port udp Ipv6");
     securityGroup.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(7777), "Game port tcp Ipv6");
 
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcpRange(8888, 9400), "Game port tcp 8888+512");
+
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(15000), "Beacon port");
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(15777), "Query port");
 
