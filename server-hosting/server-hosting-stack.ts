@@ -5,7 +5,7 @@ import { setupServer } from './server';
 import { setupNetwork } from './network';
 import { grantReadWriteToStorage, setupStorage } from './storage';
 import { setupApi } from './api';
-import { setupStatusPage } from './statusPageDeploy';
+import { setupStatusPage } from './status/statusPageStaticWebpage';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {

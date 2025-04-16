@@ -1,6 +1,6 @@
 import { CfnOutput, RemovalPolicy, Stack } from "aws-cdk-lib";
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import { Config } from "./config";
+import { Config } from "../config";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { Distribution } from "aws-cdk-lib/aws-cloudfront";
 import { S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
