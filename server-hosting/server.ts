@@ -18,7 +18,7 @@ export const setupServer = (
         instanceType: new ec2.InstanceType("m5a.large"),
         // get exact ami from parameter exported by canonical
         // https://discourse.ubuntu.com/t/finding-ubuntu-images-with-the-aws-ssm-parameter-store/15507
-        machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id"),
+        machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"),
         // storage for steam, satisfactory and save files
         blockDevices: [
             {
@@ -60,8 +60,14 @@ const setupStartupSequence = (stack: Stack, server: ec2.Instance, storage: IBuck
         bucket: startupScript.bucket,
         bucketKey: startupScript.s3ObjectKey,
     });
-    server.userData.addExecuteFileCommand({
-        filePath: localPath,
-        arguments: `${storage.bucketName} ${Config.useExperimentalBuild}`
-    });
+
+    const useDuckDns = !!(Config.duckDnsDomain && Config.duckDnsToken);
+    const useDynuDns = !!(Config.dynuDnsUsername && Config.dynuDnsToken);
+
+    // Ensure correct line endings and execute the script with permissions
+    server.userData.addCommands(`\
+      sed -i 's/\r$//' ${localPath}; \
+      chmod +x ${localPath}; \
+      sudo ${localPath} ${storage.bucketName} ${Config.useExperimentalBuild} ${useDuckDns} ${Config.duckDnsDomain} ${Config.duckDnsToken} ${useDynuDns} ${Config.dynuDnsUsername} ${Config.dynuDnsToken}\
+    `);
 };

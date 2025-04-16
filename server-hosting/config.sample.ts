@@ -29,5 +29,21 @@ export const Config = {
      // If vpc is not given specify subnet for default vpc
      subnetId: '',
      // Needed if subnetId is specified (i.e. us-west-2a)
-     availabilityZone: ''
+     availabilityZone: '',
+
+     // Needed if you want to use DuckDns domain
+     duckDnsDomain: '',
+     duckDnsToken: '',
+
+     // Needed if you want to use DynuDns domain
+     dynuDnsUsername: '',
+     dynuDnsToken: '',
+
+     // Status page 
+     statusPageDomainName: '',
+     statusPageCertificateArn: '',
+
+     // Status API
+     statusApiDomainName: '',
+     statusApiCertificateArn: '',
 };

@@ -5,6 +5,7 @@ import { setupServer } from './server';
 import { setupNetwork } from './network';
 import { grantReadWriteToStorage, setupStorage } from './storage';
 import { setupApi } from './api';
+import { setupStatusPage } from './statusPageDeploy';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -17,6 +18,10 @@ export class ServerHostingStack extends Stack {
 
     if (Config.restartApi && Config.restartApi === true) {
       setupApi(this, server);
+    }
+
+    if (Config.statusPageDomainName && Config.statusPageCertificateArn) {
+      setupStatusPage(this);
     }
   }
 }

@@ -1,0 +1,13 @@
+type Status {
+    status: String
+    previousStatus: String
+    detail: String
+}
+
+type Mutation {
+    start : Status
+}
+
+type Query {
+    status: Status
+}

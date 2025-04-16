@@ -6,10 +6,9 @@ const commandStart = new StartInstancesCommand({ InstanceIds: [instanceId!] });
 const commandStatus = new DescribeInstanceStatusCommand({ InstanceIds: [instanceId!], IncludeAllInstances: true });
 
 exports.handler = async function (event: any) {
+  const fieldName = event.info.fieldName;
 
-  console.log("Received event:", event.path);
-
-  if (event.path.startsWith('/start') || event.path == '/') {
+  if (fieldName == 'start') {
     console.log("Attempting to start game server", instanceId);
 
     try {
@@ -20,49 +19,39 @@ exports.handler = async function (event: any) {
       console.log(JSON.stringify(resStatus));
 
       return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/json" },
-        body: JSON.stringify({
-          status: res?.StartingInstances ? res?.StartingInstances[0]?.CurrentState?.Name ?? "??" : "??",
-          previousStatus: res?.StartingInstances ? res?.StartingInstances[0]?.PreviousState?.Name ?? "??" : "??",
-          detail: resStatus?.InstanceStatuses ? resStatus?.InstanceStatuses[0]?.InstanceStatus?.Details?.[0].Status ?? "??" : "??"
-        })
+        status: res?.StartingInstances ? res?.StartingInstances[0]?.CurrentState?.Name ?? "??" : "??",
+        previousStatus: res?.StartingInstances ? res?.StartingInstances[0]?.PreviousState?.Name ?? "??" : "??",
+        detail: resStatus?.InstanceStatuses ? resStatus?.InstanceStatuses[0]?.InstanceStatus?.Details?.[0].Status ?? "??" : "??"
       }
     }
     catch (err) {
       console.log(JSON.stringify(err));
       return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/json" },
-        body: JSON.stringify({ message: "Failed to start satisfactory server", response: err })
+        status: "Failed to start satisfactory server " + JSON.stringify(err)
       }
     }
   }
 
-  if (event.path.startsWith('/status')) {
+  if (fieldName == 'status') {
     try {
       const res = await client.send(commandStatus)
       console.log(JSON.stringify(res));
 
       return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/json" },
-        body: JSON.stringify({
-          status: res?.InstanceStatuses ? res?.InstanceStatuses[0]?.InstanceStatus?.Details ?? "??" : "??"
-        })
+        status: res?.InstanceStatuses ? res?.InstanceStatuses[0]?.InstanceState?.Name ?? "??" : "??",
+        detail: res?.InstanceStatuses ? res?.InstanceStatuses[0]?.InstanceStatus?.Details : "??",
+        previousStatus: JSON.stringify(res)
       }
     }
     catch (err) {
       console.log(JSON.stringify(err));
       return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/json" },
-        body: JSON.stringify({ message: "Failed to get Status:", response: JSON.stringify(err) })
+        status: "Failed to get status " + JSON.stringify(err)
       }
     };
   }
 
-  console.log(`oops, path not found: ${event.path}`);
+  console.log(`oops, fieldName not found: ${fieldName}`);
 
   return { statusCode: 404 };
 }

@@ -1,0 +1,31 @@
+{
+  "name": "statuspage",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "codegen": "graphql-codegen -r dotenv/config --config codegen.ts dotenv_config_path=.env.local",
+    "codegen-watch": "graphql-codegen -r dotenv/config --config codegen.ts dotenv_config_path=.env.local --watch"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.13.7",
+    "@graphql-codegen/plugin-helpers": "^5.1.0",
+    "@vue/apollo-composable": "^4.2.2",
+    "aws-appsync-auth-link": "^3.0.7",
+    "aws-appsync-subscription-link": "^3.1.3",
+    "graphql": "^16.10.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.5",
+    "@graphql-codegen/introspection": "^4.0.3",
+    "@parcel/watcher": "^2.5.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "esbuild": "0.24.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.3"
+  }
+}

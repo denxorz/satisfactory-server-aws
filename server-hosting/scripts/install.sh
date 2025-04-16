@@ -6,6 +6,13 @@
 S3_SAVE_BUCKET=$1
 USE_EXPERIMENTAL_BUILD=${2-false}
 
+USE_DUCK_DNS=${3-false}
+DUCK_DNS_DOMAIN=$4
+DUCK_DNS_TOKEN=$5
+
+USE_DYNU_DNS=${6-false}
+DYNU_DNS_USERNAME=$7
+DYNU_DNS_TOKEN=$8
 
 # install steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD?__cf_chl_jschl_tk__=pmd_WNQPOiK18.h0rf16RCYrARI2s8_84hUMwT.7N1xHYcs-1635248050-0-gqNtZGzNAiWjcnBszQiR#Linux.2FmacOS)
 sudo add-apt-repository multiverse
@@ -16,22 +23,24 @@ sudo apt update
 echo steam steam/question 'select' "I AGREE" | sudo debconf-set-selections
 echo steam steam/license note '' | sudo debconf-set-selections
 
-sudo apt install -y unzip lib32gcc-s1 steamcmd
+sudo apt install -y unzip ca-certificates locales lib32gcc-s1 libsdl2-2.0-0:i386 libcurl4t64 steamcmd
+
+BLUEPRINT_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
+EPIC_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
+STEAM_DIR="/home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer"
+CONFIG_DIR="$STEAM_DIR/FactoryGame/Saved/Config"
+CONFIG_SERVER_DIR="$CONFIG_DIR/LinuxServer"
 
 # install satisfactory: https://satisfactory.fandom.com/wiki/Dedicated_servers
 if [ $USE_EXPERIMENTAL_BUILD = "true" ]; then
+    #STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +force_install_dir $STEAM_DIR +login anonymous +app_update 1690800 -beta experimental validate +quit"
     STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 -beta experimental validate +quit"
 else
+    #STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +force_install_dir $STEAM_DIR +login anonymous +app_update 1690800 validate +quit"
     STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 validate +quit"
 fi
 # note, we are switching users because steam doesn't recommend running steamcmd as root
 su - ubuntu -c "$STEAM_INSTALL_SCRIPT"
-
-BLUEPRINT_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
-EPIC_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
-STEAM_DIR="/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer"
-CONFIG_DIR="$STEAM_DIR/FactoryGame/Saved/Config"
-CONFIG_SERVER_DIR="$CONFIG_DIR/LinuxServer"
 
 # pull down any saved files to new instances
 su - ubuntu -c "mkdir -p $EPIC_SAVE_DIR $CONFIG_DIR $BLUEPRINT_SAVE_DIR"
@@ -41,7 +50,7 @@ su - ubuntu -c "/usr/local/bin/aws s3 sync s3://$S3_SAVE_BUCKET/config $CONFIG_D
 su - ubuntu -c "mkdir -p $CONFIG_SERVER_DIR"
 
 # enable as server so it stays up and start: https://satisfactory.fandom.com/wiki/Dedicated_servers/Running_as_a_Service
-cat << EOF > /etc/systemd/system/satisfactory.service
+cat << EOF | sudo tee /etc/systemd/system/satisfactory.service
 [Unit]
 Description=Satisfactory dedicated server
 Wants=network-online.target
@@ -61,11 +70,11 @@ WorkingDirectory=$STEAM_DIR
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable satisfactory
-systemctl start satisfactory
+sudo systemctl enable satisfactory
+sudo systemctl start satisfactory
 
 # enable auto shutdown: https://github.com/feydan/satisfactory-tools/tree/main/shutdown
-cat << EOF > /home/ubuntu/auto-shutdown.sh
+cat << EOF | sudo tee /home/ubuntu/auto-shutdown.sh
 #!/bin/sh
 
 shutdownIdleMinutes=10
@@ -96,10 +105,10 @@ sudo /usr/local/bin/aws s3 sync $CONFIG_DIR s3://$S3_SAVE_BUCKET/config
 echo "No activity detected for \$shutdownIdleMinutes minutes, shutting down."
 sudo shutdown -h now
 EOF
-chmod +x /home/ubuntu/auto-shutdown.sh
-chown ubuntu:ubuntu /home/ubuntu/auto-shutdown.sh
+sudo chmod +x /home/ubuntu/auto-shutdown.sh
+sudo chown ubuntu:ubuntu /home/ubuntu/auto-shutdown.sh
 
-cat << 'EOF' > /etc/systemd/system/auto-shutdown.service
+cat << EOF | sudo tee /etc/systemd/system/auto-shutdown.service
 [Unit]
 Description=Auto shutdown if no one is playing Satisfactory
 After=syslog.target network.target nss-lookup.target network-online.target
@@ -117,22 +126,28 @@ WorkingDirectory=/home/ubuntu
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable auto-shutdown
-systemctl start auto-shutdown
+sudo systemctl enable auto-shutdown
+sudo systemctl start auto-shutdown
 
 # automated backups to s3 every 5 minutes
 su - ubuntu -c "(crontab -l; echo \"*/5 * * * * /usr/local/bin/aws s3 sync $EPIC_SAVE_DIR s3://$S3_SAVE_BUCKET/saves && /usr/local/bin/aws s3 sync $CONFIG_DIR s3://$S3_SAVE_BUCKET/config\") | crontab -"
 
 # enable auto dns update
-cat << 'EOF' > /home/ubuntu/dns-update.sh
+cat << EOF | sudo tee /home/ubuntu/dns-update.sh
 #!/bin/sh
 
-curl "http://api.dynu.com/nic/update?username=denxorz&password=6c52d25546bea079e5ca522975f3c036318ada51f1bcc7ea45e9ca05465ca786"
-EOF
-chmod +x /home/ubuntu/dns-update.sh
-chown ubuntu:ubuntu /home/ubuntu/dns-update.sh
+if [ "$USE_DUCK_DNS" = "true" ]; then
+curl "https://www.duckdns.org/update?domains=$DUCK_DNS_DOMAIN&token=$DUCK_DNS_TOKEN"
+fi
 
-cat << 'EOF' > /etc/systemd/system/dns-update.service
+if [ "$USE_DYNU_DNS" = "true" ]; then
+curl "http://api.dynu.com/nic/update?username=$DYNU_DNS_USERNAME&password=$DYNU_DNS_TOKEN"
+fi
+EOF
+sudo chmod +x /home/ubuntu/dns-update.sh
+sudo chown ubuntu:ubuntu /home/ubuntu/dns-update.sh
+
+cat << EOF | sudo tee /etc/systemd/system/dns-update.service
 [Unit]
 Description=Updates DNS with current IP
 After=syslog.target network.target nss-lookup.target network-online.target
@@ -150,5 +165,5 @@ WorkingDirectory=/home/ubuntu
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable dns-update
-systemctl start dns-update
+sudo systemctl enable dns-update
+sudo systemctl start dns-update
