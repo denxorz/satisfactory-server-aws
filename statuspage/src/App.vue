@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import Status from './components/Ec2Status.vue'
 </script>
 
