@@ -1,6 +1,11 @@
 # satisfactory server
 server-hosting/config.ts
 
+# cdk
+.cdk.staging
+cdk.out
+cdk.context.json
+
 # Logs
 logs
 *.log
