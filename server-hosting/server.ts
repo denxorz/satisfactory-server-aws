@@ -15,7 +15,7 @@ export const setupServer = (
 
     const server = new ec2.Instance(stack, `${prefix}Server`, {
         // 2 vCPU, 8 GB RAM should be enough for most factories
-        instanceType: new ec2.InstanceType("m5a.large"),
+        instanceType: new ec2.InstanceType("m7a.large"),
         // get exact ami from parameter exported by canonical
         // https://discourse.ubuntu.com/t/finding-ubuntu-images-with-the-aws-ssm-parameter-store/15507
         machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"),
