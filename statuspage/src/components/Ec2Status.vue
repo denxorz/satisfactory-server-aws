@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
 
-const { result } = useQuery(
+const { result, refetch } = useQuery(
   graphql(`
     query status {
       status {
@@ -32,12 +32,13 @@ const { mutate: start } = useMutation(
 );
 
 const startRes = ref();
-const status = computed(() => startRes.value?.data?.start?.status ?? result.value?.status?.status ?? "??");
-const previousStatus = computed(() => startRes.value?.data?.start?.previousStatus ?? result.value?.status?.previousStatus ?? "??");
-const detailStatus = computed(() => startRes.value?.data?.start?.detail ?? result.value?.status?.detail ?? "??");
+const status = computed(() => result.value?.status?.status ?? "offline");
+const previousStatus = computed(() => result.value?.status?.previousStatus ?? "offline");
+const detailStatus = computed(() => result.value?.status?.detail ?? "offline");
 
 const startServer = async () => {
   startRes.value = await start();
+  await refetch();
 }
 </script>
 
