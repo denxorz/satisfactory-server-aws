@@ -1,6 +1,6 @@
 import * as lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { Duration, Expiration, Stack } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Expiration, Stack } from 'aws-cdk-lib';
 import { Config } from './config';
 import { Instance } from 'aws-cdk-lib/aws-ec2';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -11,7 +11,7 @@ export const setupApi = (stack: Stack, server: Instance) => {
     const prefix = Config.prefix;
 
     const startServerLambda = new lambda_nodejs.NodejsFunction(stack, `${prefix}StartServerLambda`, {
-        entry: './server-hosting/lambda/index.ts',
+        entry: './server-hosting/status/lambda.ts',
         description: "Manage game server",
         timeout: Duration.seconds(10),
         environment: { INSTANCE_ID: server.instanceId },
@@ -70,5 +70,7 @@ export const setupApi = (stack: Stack, server: Instance) => {
         const lambdaDataSource = api.addLambdaDataSource(`${prefix}LambdaDataSource`, startServerLambda);
         lambdaDataSource.createResolver(`${prefix}StartResolver`, { typeName: "Mutation", fieldName: "start" });
         lambdaDataSource.createResolver(`${prefix}StatusResolver`, { typeName: "Query", fieldName: "status" });
+
+        new CfnOutput(stack, "APIKey", { value: api.apiKey ?? "" });
     }
 };
