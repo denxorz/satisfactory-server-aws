@@ -10,22 +10,23 @@ export const setupServer = (
     network: { vpc: ec2.IVpc; vpcSubnets: ec2.SubnetSelection; securityGroup: ec2.SecurityGroup; },
     storage: IBucket
 ) => {
-
     const prefix = Config.prefix;
 
     const server = new ec2.Instance(stack, `${prefix}Server`, {
-        // 2 vCPU, 8 GB RAM should be enough for most factories
-        instanceType: new ec2.InstanceType("m7a.large"),
+        instanceType: new ec2.InstanceType("m7a.xlarge"),
+
         // get exact ami from parameter exported by canonical
         // https://discourse.ubuntu.com/t/finding-ubuntu-images-with-the-aws-ssm-parameter-store/15507
         machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"),
+
         // storage for steam, satisfactory and save files
         blockDevices: [
             {
                 deviceName: "/dev/sda1",
-                volume: ec2.BlockDeviceVolume.ebs(15),
+                volume: ec2.BlockDeviceVolume.ebs(30),
             }
         ],
+
         // server needs a public ip to allow connections
         vpcSubnets: network.vpcSubnets,
         userDataCausesReplacement: true,
