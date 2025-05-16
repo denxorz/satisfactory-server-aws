@@ -28,8 +28,11 @@ sudo apt install -y unzip ca-certificates locales lib32gcc-s1 libsdl2-2.0-0:i386
 BLUEPRINT_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
 EPIC_SAVE_DIR="/home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
 STEAM_DIR="/home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer"
-CONFIG_DIR="$STEAM_DIR/FactoryGame/Saved/Config"
+SAVED_DIR="$STEAM_DIR/FactoryGame/Saved"
+CONFIG_DIR="$SAVED_DIR/Config"
 CONFIG_SERVER_DIR="$CONFIG_DIR/LinuxServer"
+
+#/home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Logs
 
 # install satisfactory: https://satisfactory.fandom.com/wiki/Dedicated_servers
 if [ $USE_EXPERIMENTAL_BUILD = "true" ]; then
@@ -101,6 +104,7 @@ done
 sudo /usr/local/bin/aws s3 sync $BLUEPRINT_SAVE_DIR s3://$S3_SAVE_BUCKET/blueprints
 sudo /usr/local/bin/aws s3 sync $EPIC_SAVE_DIR s3://$S3_SAVE_BUCKET/saves
 sudo /usr/local/bin/aws s3 sync $CONFIG_DIR s3://$S3_SAVE_BUCKET/config
+sudo /usr/local/bin/aws s3 sync $SAVED_DIR s3://$S3_SAVE_BUCKET/saved
 
 echo "No activity detected for \$shutdownIdleMinutes minutes, shutting down."
 sudo shutdown -h now
