@@ -14,8 +14,8 @@ export const setupApi = (stack: Stack, server: Instance) => {
         entry: './server-hosting/status/lambda.ts',
         description: "Manage game server",
         timeout: Duration.seconds(10),
-        environment: { INSTANCE_ID: server.instanceId },
-        runtime: Runtime.NODEJS_LATEST
+        environment: { INSTANCE_ID: server.instanceId, bucketName: storage.bucketName },
+        runtime: Runtime.NODEJS_22_X
     })
 
     startServerLambda.addToRolePolicy(new iam.PolicyStatement({
