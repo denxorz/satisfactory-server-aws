@@ -6,8 +6,10 @@ import { Instance } from 'aws-cdk-lib/aws-ec2';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { AuthorizationType, Definition, GraphqlApi } from 'aws-cdk-lib/aws-appsync';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { grantReadToStorage } from './storage';
 
-export const setupApi = (stack: Stack, server: Instance) => {
+export const setupApi = (stack: Stack, server: Instance, storage: IBucket) => {
     const prefix = Config.prefix;
 
     const startServerLambda = new lambda_nodejs.NodejsFunction(stack, `${prefix}StartServerLambda`, {
@@ -17,6 +19,7 @@ export const setupApi = (stack: Stack, server: Instance) => {
         environment: { INSTANCE_ID: server.instanceId, bucketName: storage.bucketName },
         runtime: Runtime.NODEJS_22_X
     })
+    grantReadToStorage(startServerLambda.role!, storage);
 
     startServerLambda.addToRolePolicy(new iam.PolicyStatement({
         actions: [
@@ -70,6 +73,8 @@ export const setupApi = (stack: Stack, server: Instance) => {
         const lambdaDataSource = api.addLambdaDataSource(`${prefix}LambdaDataSource`, startServerLambda);
         lambdaDataSource.createResolver(`${prefix}StartResolver`, { typeName: "Mutation", fieldName: "start" });
         lambdaDataSource.createResolver(`${prefix}StatusResolver`, { typeName: "Query", fieldName: "status" });
+        lambdaDataSource.createResolver(`${prefix}LastSaveResolver`, { typeName: "Query", fieldName: "lastSave" });
+        lambdaDataSource.createResolver(`${prefix}LastLogResolver`, { typeName: "Query", fieldName: "lastLog" });
 
         new CfnOutput(stack, "APIKey", { value: api.apiKey ?? "" });
     }

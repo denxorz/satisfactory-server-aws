@@ -3,7 +3,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Config } from './config';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 
-export const setupStorage = (stack: Stack) => {
+export const setupStorage = (stack: Stack) : s3.IBucket => {
     const prefix = Config.prefix;
 
     const findOrCreateBucket = (bucketName: string): s3.IBucket => {
@@ -17,9 +17,12 @@ export const setupStorage = (stack: Stack) => {
         }
     }
 
-    const savesBucket = findOrCreateBucket(Config.bucketName);
-    return savesBucket;
+    return findOrCreateBucket(Config.bucketName);
 };
+
+export const grantReadToStorage = (role: IRole, bucket: s3.IBucket) => {
+    bucket.grantRead(role);
+}
 
 export const grantReadWriteToStorage = (role: IRole, bucket: s3.IBucket) => {
     bucket.grantReadWrite(role);

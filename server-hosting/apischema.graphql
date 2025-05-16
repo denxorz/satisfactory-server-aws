@@ -4,10 +4,16 @@ type Status {
     detail: String
 }
 
+type File{
+    url: String
+}
+
 type Mutation {
     start : Status
 }
 
 type Query {
     status: Status
+    lastSave: File
+    lastLog: File
 }

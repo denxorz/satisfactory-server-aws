@@ -16,10 +16,14 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
 type Documents = {
     "\n    query status {\n      status {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": typeof types.StatusDocument,
     "\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": typeof types.StartDocument,
+    "\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  ": typeof types.LastSaveDocument,
+    "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  ": typeof types.LastLogDocument,
 };
 const documents: Documents = {
     "\n    query status {\n      status {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": types.StatusDocument,
     "\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": types.StartDocument,
+    "\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  ": types.LastSaveDocument,
+    "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  ": types.LastLogDocument,
 };
 
 /**
@@ -44,6 +48,14 @@ export function graphql(source: "\n    query status {\n      status {\n        s
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  "): (typeof documents)["\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  "): (typeof documents)["\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  "): (typeof documents)["\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  "];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

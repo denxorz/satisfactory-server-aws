@@ -17,7 +17,7 @@ export class ServerHostingStack extends Stack {
     grantReadWriteToStorage(server.role, storage);
 
     if (Config.restartApi && Config.restartApi === true) {
-      setupApi(this, server);
+      setupApi(this, server, storage);
     }
 
     if (Config.statusPageDomainName && Config.statusPageCertificateArn) {
