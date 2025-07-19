@@ -30,24 +30,19 @@ function writeTrainGraphToDot(stations: any[], trains: any[], outputPath: string
     if (typeof station.x === 'number' && typeof station.y === 'number') {
       const scaledX = Math.round((station.x - minX) * scale);
       const scaledY = 30 - (Math.round((station.y - minY) * scale));
-      dot += `  "${station.instanceName.split("_").pop()}" [label="${station.name}", pos="${scaledX},${scaledY}!"]\n`;
+      dot += `  "${station.id.split("_").pop()}" [label="${station.name}", pos="${scaledX},${scaledY}!"]\n`;
     } else {
-      dot += `  "${station.instanceName.split("_").pop()}" [label="${station.name}"]\n`;
+      dot += `  "${station.id.split("_").pop()}" [label="${station.name}"]\n`;
     }
   }
 
   // Add edges for each train's route
   for (const train of trains) {
     if (train.stops && train.stops.length > 1) {
-      const from = train.stops[0].name.split("_").pop();
-      const to = train.stops[1].name.split("_").pop();
+      const from = train.stops[0].stationId.split("_").pop();
+      const to = train.stops[1].stationId.split("_").pop();
 
-      if (train.stops[0].unload) {
-        dot += `  "${to}" -> "${from}"\n`;
-      }
-      else {
-        dot += `  "${from}" -> "${to}"\n`;
-      }
+      dot += `  "${from}" -> "${to}" [label="${train.stops[1].content}"]\n`;
     }
   }
 
@@ -57,19 +52,30 @@ function writeTrainGraphToDot(stations: any[], trains: any[], outputPath: string
 
 async function main() {
   // Update the path to your actual save file location if needed
-  const filePath = "C:\\Users\\jjb3n\\Downloads\\Gimmie S.A.M.!_autosave_1 (3).sav";
+  const filePath = "C:\\Users\\jjb3n\\Downloads\\Gimmie S.A.M.!_autosave_0 (10).sav";
   const buffer = readFileSync(filePath);
-
 
   try {
     const stations = await getStationsFromSave(buffer);
-    const trainStationsBuildableById = stations.trainStationsBuilds.reduce((map, obj) => (map[obj.instanceName] = obj, map), {});
 
-    const stationWithPosition = stations.trainStations.map(station => ({
-      instanceName: station.instanceName,
-      name: station.name,
-      x: trainStationsBuildableById[station.stationPathName]?.x,
-      y: trainStationsBuildableById[station.stationPathName]?.y
+    const stationWithPosition = Array.from(stations.trainStations.values()).map(station => ({
+      ...station,
+      x: stations.trainStationsLocation.get(station.locationId)?.x,
+      y: stations.trainStationsLocation.get(station.locationId)?.y,
+    }));
+
+    const trainsWithUnload = stations.trains.map(train => ({
+      ...train,
+      stops: train.stops?.map(stop => ({
+        ...stop,
+        isUnloading: stations.trainStationsPlatforms.get(stations.trainStations.get(stop.stationId)?.locationId ?? '')?.isUnloading ?? false,
+        content: `[${	(stations.trainStations.get(stop.stationId)?.name ?? '').substring(1).split('[').slice(1).join('[')}`
+      })).sort((a, b) => {
+        // Sort so that isUnloading: true entries come last
+        if (a.isUnloading && !b.isUnloading) return 1;
+        if (!a.isUnloading && b.isUnloading) return -1;
+        return 0;
+      })
     }));
     //console.log(stationWithPosition);
     //console.log(stations.trains);
@@ -77,11 +83,15 @@ async function main() {
     //console.log(stations.truckStations.map(station => ({ type: 'truck', name: station.properties.mBuildingTag?.value, x: station.transform.translation.x, y: station.transform.translation.y  })));
     //console.log(stations.other.map(station => ({ type: 'other', name: station, x:station.transform.translation.x, y: station.transform.translation.y })));
 
-    //writeRawTrainStationsToJson(stations.truckStations, "truckstations.json");
-    writeRawTrainStationsToJson(stations.trains, "trains.json");
-    writeTrainGraphToDot(stationWithPosition, stations.trains, "train_network.dot");
+    writeRawTrainStationsToJson(stationWithPosition, "trainStations.json");
+    writeRawTrainStationsToJson(Array.from(stations.trainStationsPlatforms.values()), "trainStationsPlatforms.json");
+    writeRawTrainStationsToJson(Array.from(stations.trainStationsLocation.values()), "trainStationsLocation.json");
+    writeRawTrainStationsToJson(trainsWithUnload, "trains.json");
+    writeRawTrainStationsToJson(stations.other, "other.json");
+    //writeRawTrainStationsToJson(stations.trains, "trains.json");
+    writeTrainGraphToDot(stationWithPosition, trainsWithUnload, "train_network.dot");
 
-    if (stations.trainStations?.length <= 0 && stations.droneStations?.length <= 0 && stations.truckStations?.length <= 0) {
+    if (Array.from(stations.trainStations.values()).length <= 0 && stations.droneStations?.length <= 0 && stations.truckStations?.length <= 0) {
       console.log("No stations found in the save file.");
     }
   } catch (err) {

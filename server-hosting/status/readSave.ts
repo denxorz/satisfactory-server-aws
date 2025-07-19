@@ -1,9 +1,10 @@
-import { ObjectProperty, Parser, StructArrayProperty, TextProperty } from '@etothepii/satisfactory-file-parser';
+import { BoolProperty, ObjectProperty, Parser, SaveEntity, StructArrayProperty, TextProperty } from '@etothepii/satisfactory-file-parser';
 
 export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
-  trainStations: any[],
-  trainStationsBuilds: any[],
-  trains: any[],
+  trainStations: Map<string, { id: string, name: string, locationId: string, raw?: SaveEntity }>,
+  trainStationsLocation: Map<string, { id: string, x: number, y: number, raw?: SaveEntity }>,
+  trainStationsPlatforms: Map<string, { id: string, locationId: string, isUnloading: boolean, raw?: SaveEntity }>,
+  trains:  { id: string, stops: { stationId: string }[], raw?: SaveEntity }[],
   droneStations: any[],
   truckStations: any[],
   other: any[]
@@ -15,56 +16,69 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
 
   const save = Parser.ParseSave('SaveFile', arrayBuffer);
 
-  const trainStations: any[] = [];
-  const trainStationsBuilds: any[] = [];
+  const trainStations: Map<string, { id: string, name: string, locationId: string, raw?: SaveEntity }> = new Map();
+  const trainStationsLocation: Map<string, { id: string, x: number, y: number, raw?: SaveEntity }> = new Map();
+  const trainStationsPlatforms: Map<string, { id: string, locationId: string, isUnloading: boolean, raw?: SaveEntity }> = new Map();
   const droneStations: any[] = [];
   const truckStations: any[] = [];
-  const trains: any[] = [];
+  const trains: { id: string, stops: { stationId: string }[], raw?: SaveEntity }[] = [];
   const other: any[] = [];
 
   for (const level of Object.values(save.levels || {})) {
     for (const obj of level.objects || []) {
 
       if (obj.typePath === "/Script/FactoryGame.FGTrainStationIdentifier") {
-        trainStations.push({
-          instanceName: obj.instanceName,
-          name: (obj.properties.mStationName as TextProperty).value.value,
-          stationPathName: (obj.properties.mStation as ObjectProperty).value.pathName,
-          raw: obj,
+        trainStations.set(obj.instanceName, {
+          id: obj.instanceName,
+          name: (obj.properties.mStationName as TextProperty).value.value ?? '??',
+          locationId: (obj.properties.mStation as ObjectProperty).value.pathName,
+         // raw: obj as SaveEntity,
+        });
+      }
+      else if (obj.typePath === "/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainStation.Build_TrainStation_C") {
+        trainStationsLocation.set(obj.instanceName, {
+          id: obj.instanceName,
+          x: (obj as any).transform.translation.x,
+          y: (obj as any).transform.translation.y,
+        //  raw: obj as SaveEntity,
+        });
+      }
+      else if (obj.typePath === "/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainDockingStation.Build_TrainDockingStation_C") {
+        const locationId = (obj.properties.mStationDockingMaster as ObjectProperty)?.value.pathName;
+        trainStationsPlatforms.set(locationId, {
+          id: obj.instanceName,
+          isUnloading: (obj.properties.mIsLoadUnloading as BoolProperty)?.value ?? false,
+          locationId: locationId,
+          raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGDroneStationInfo") {
         droneStations.push({
           instanceName: obj.instanceName, name: (obj.properties.mBuildingTag as TextProperty).value,
-          raw: obj,
+         // raw: obj,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGDockingStationInfo") {
         truckStations.push({
           instanceName: obj.instanceName,
           name: (obj.properties.mBuildingTag as TextProperty).value,
-          raw: obj,
-        });
-      }
-      else if (obj.typePath === "/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainStation.Build_TrainStation_C") {
-        trainStationsBuilds.push({
-          instanceName: obj.instanceName,
-          x: (obj as any).transform.translation.x,
-          y: (obj as any).transform.translation.y,
-          raw: obj,
+        //  raw: obj,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGRailroadTimeTable") {
         trains.push({
-          instanceName: obj.instanceName,
-          stops: (obj.properties.mStops as StructArrayProperty)?.values?.map(stop => (stop.value as any)).map(stop => ({
-            name: stop.properties.Station.value.pathName,
-            unload: stop.properties.DockingRuleSet.value.properties.DockingDefinition.value.value.includes('Unload')
-          })),
-          raw: obj,
+          id: obj.instanceName,
+          stops: (obj.properties.mStops as StructArrayProperty)
+            ?.values
+            ?.map(stop => (stop.value as any))
+            .map(stop => ({
+              stationId: stop.properties.Station.value.pathName
+            })),
+         // raw: obj as SaveEntity,
         });
       }
-      else if (obj.typePath.includes("FGWheeledVehicleInfo")
+      else if (obj.instanceName.endsWith("Build_TrainDockingStation_C_2145491312")
+        //obj.typePath.includes("FGWheeledVehicleInfo")
         // && !obj.typePath.endsWith("Spawnable")
         // && obj.typePath !== "/Script/FactoryGame.FGPowerConnectionComponent"
         // && obj.typePath !== "/Script/FactoryGame.FGPowerInfoComponent"
@@ -89,7 +103,7 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
         // && obj.typePath !== "/Script/FactoryGame.FGConveyorChainActor_RepSizeHuge"
         // && obj.typePath !== "/Script/FactoryGame.FGWheeledVehicleInfo"
         // && obj.typePath !== "/Script/FactoryGame.FGRailroadTrackConnectionComponent"
-        // && obj.typePath !== "/Script/FactoryGame.FGTrainPlatformConnection"
+        // || obj.typePath == "/Script/FactoryGame.FGTrainPlatformConnection"
         // && obj.typePath !== "/Script/FactoryGame.FGFactoryConnectionComponent"
         // && obj.typePath !== "/Script/FactoryGame.FGFactoryLegsComponent"
         // && obj.typePath !== "/Script/FactoryGame.FGHealthComponent"
@@ -113,5 +127,13 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
     }
   }
 
-  return { trainStations, trainStationsBuilds, trains, droneStations, truckStations, other };
+  return {
+    trainStations,
+    trainStationsLocation,
+    trainStationsPlatforms,
+    trains,
+    droneStations,
+    truckStations,
+    other
+  };
 }
