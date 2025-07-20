@@ -1,14 +1,7 @@
 import { BoolProperty, ObjectProperty, Parser, SaveEntity, StructArrayProperty, TextProperty } from '@etothepii/satisfactory-file-parser';
+import { StationsFromSaveResult, TrainStation, TrainStationLocation, TrainStationPlatform, Train, InventoryEntry } from './types';
 
-export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
-  trainStations: Map<string, { id: string, name: string, locationId: string, raw?: SaveEntity }>,
-  trainStationsLocation: Map<string, { id: string, x: number, y: number, raw?: SaveEntity }>,
-  trainStationsPlatforms: Map<string, { id: string, locationId: string, isUnloading: boolean, raw?: SaveEntity }>,
-  trains:  { id: string, stops: { stationId: string }[], raw?: SaveEntity }[],
-  droneStations: any[],
-  truckStations: any[],
-  other: any[]
-}> {
+export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<StationsFromSaveResult> {
   const arrayBuffer = saveFileBuffer.buffer.slice(
     saveFileBuffer.byteOffset,
     saveFileBuffer.byteOffset + saveFileBuffer.byteLength
@@ -16,12 +9,13 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
 
   const save = Parser.ParseSave('SaveFile', arrayBuffer);
 
-  const trainStations: Map<string, { id: string, name: string, locationId: string, raw?: SaveEntity }> = new Map();
-  const trainStationsLocation: Map<string, { id: string, x: number, y: number, raw?: SaveEntity }> = new Map();
-  const trainStationsPlatforms: Map<string, { id: string, locationId: string, isUnloading: boolean, raw?: SaveEntity }> = new Map();
+  const trainStations: Map<string, TrainStation> = new Map();
+  const trainStationsLocation: Map<string, TrainStationLocation> = new Map();
+  const trainStationsPlatforms: Map<string, TrainStationPlatform> = new Map();
   const droneStations: any[] = [];
   const truckStations: any[] = [];
-  const trains: { id: string, stops: { stationId: string }[], raw?: SaveEntity }[] = [];
+  const trains: Train[] = [];
+  const inventory: Map<string, InventoryEntry> = new Map();
   const other: any[] = [];
 
   for (const level of Object.values(save.levels || {})) {
@@ -32,7 +26,9 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
           id: obj.instanceName,
           name: (obj.properties.mStationName as TextProperty).value.value ?? '??',
           locationId: (obj.properties.mStation as ObjectProperty).value.pathName,
-         // raw: obj as SaveEntity,
+          location: undefined as any,
+          trainsStopping: [],
+          //raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainStation.Build_TrainStation_C") {
@@ -40,7 +36,7 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
           id: obj.instanceName,
           x: (obj as any).transform.translation.x,
           y: (obj as any).transform.translation.y,
-        //  raw: obj as SaveEntity,
+          //raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainDockingStation.Build_TrainDockingStation_C") {
@@ -49,20 +45,21 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
           id: obj.instanceName,
           isUnloading: (obj.properties.mIsLoadUnloading as BoolProperty)?.value ?? false,
           locationId: locationId,
-          raw: obj as SaveEntity,
+          inventoryId: (obj.properties.mInventory as ObjectProperty)?.value.pathName,
+          //raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGDroneStationInfo") {
         droneStations.push({
-          instanceName: obj.instanceName, name: (obj.properties.mBuildingTag as TextProperty).value,
-         // raw: obj,
+          id: obj.instanceName, name: (obj.properties.mBuildingTag as TextProperty).value,
+         // raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGDockingStationInfo") {
         truckStations.push({
-          instanceName: obj.instanceName,
+          id: obj.instanceName,
           name: (obj.properties.mBuildingTag as TextProperty).value,
-        //  raw: obj,
+        //  raw: obj as SaveEntity,
         });
       }
       else if (obj.typePath === "/Script/FactoryGame.FGRailroadTimeTable") {
@@ -77,7 +74,15 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
          // raw: obj as SaveEntity,
         });
       }
-      else if (obj.instanceName.endsWith("Build_TrainDockingStation_C_2145491312")
+      else if (obj.typePath === "/Script/FactoryGame.FGInventoryComponent") {
+        const items = (obj.properties.mInventoryStacks as StructArrayProperty)?.values?.filter(v => v.value !== null);
+        inventory.set(obj.instanceName, ({
+          id: obj.instanceName,
+          firstItemTypeId: (items?.[0]?.value as any)?.properties.Item.value.itemReference.pathName,
+          //raw: obj as SaveEntity,
+        }));
+      }
+      else if (obj.instanceName.endsWith("Persistent_Level:PersistentLevel.Build_TrainDockingStation_C_2142679459.inventory")
         //obj.typePath.includes("FGWheeledVehicleInfo")
         // && !obj.typePath.endsWith("Spawnable")
         // && obj.typePath !== "/Script/FactoryGame.FGPowerConnectionComponent"
@@ -127,13 +132,36 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<{
     }
   }
 
+  for (const [, station] of trainStations) {
+      station.location = trainStationsLocation.get(station.locationId);
+      station.platform = trainStationsPlatforms.get(station.locationId);
+  }
+
+  for (const [, platform] of trainStationsPlatforms) {
+    platform.location = trainStationsLocation.get(platform.locationId);
+    platform.inventory = inventory.get(platform.inventoryId ?? '');
+  }
+
+  toJson(Array.from(trainStationsPlatforms.values()), "trainPlatforms.json");
+
+  for (const train of trains) {
+    train.stops ??= [];
+  }
+
+  for (const [, station] of trainStations) {
+    station.trainsStopping = trains.filter(train => train.stops.some(stop => stop.stationId === station.id));
+}
+
   return {
     trainStations,
-    trainStationsLocation,
-    trainStationsPlatforms,
     trains,
     droneStations,
     truckStations,
     other
   };
+}
+
+function toJson(anyArray: any, outputPath: string) {
+  const fs = require('fs');
+  fs.writeFileSync(outputPath, JSON.stringify(anyArray, null, 2), 'utf-8');
 }
