@@ -15,9 +15,10 @@ export const setupApi = (stack: Stack, server: Instance, storage: IBucket) => {
     const startServerLambda = new lambda_nodejs.NodejsFunction(stack, `${prefix}StartServerLambda`, {
         entry: './server-hosting/status/lambda.ts',
         description: "Manage game server",
-        timeout: Duration.seconds(10),
+        timeout: Duration.seconds(45),
         environment: { INSTANCE_ID: server.instanceId, bucketName: storage.bucketName },
-        runtime: Runtime.NODEJS_22_X
+        runtime: Runtime.NODEJS_22_X,
+        memorySize: 2048
     })
     grantReadToStorage(startServerLambda.role!, storage);
 
@@ -75,6 +76,7 @@ export const setupApi = (stack: Stack, server: Instance, storage: IBucket) => {
         lambdaDataSource.createResolver(`${prefix}StatusResolver`, { typeName: "Query", fieldName: "status" });
         lambdaDataSource.createResolver(`${prefix}LastSaveResolver`, { typeName: "Query", fieldName: "lastSave" });
         lambdaDataSource.createResolver(`${prefix}LastLogResolver`, { typeName: "Query", fieldName: "lastLog" });
+        lambdaDataSource.createResolver(`${prefix}SaveDetailsResolver`, { typeName: "Query", fieldName: "saveDetails" });
 
         new CfnOutput(stack, "APIKey", { value: api.apiKey ?? "" });
     }

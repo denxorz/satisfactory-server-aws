@@ -18,12 +18,14 @@ type Documents = {
     "\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": typeof types.StartDocument,
     "\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  ": typeof types.LastSaveDocument,
     "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  ": typeof types.LastLogDocument,
+    "\n    query saveDetails {\n      saveDetails {\n        trainStations {\n          cargoType\n          id\n          isUnload\n          name\n          trains {\n            id\n          }\n        }\n      }\n    }\n  ": typeof types.SaveDetailsDocument,
 };
 const documents: Documents = {
     "\n    query status {\n      status {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": types.StatusDocument,
     "\n    mutation start {\n      start {\n        status\n        previousStatus\n        detail\n      }\n    }\n  ": types.StartDocument,
     "\n    query lastSave {\n      lastSave {\n        url\n      }\n    }\n  ": types.LastSaveDocument,
     "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  ": types.LastLogDocument,
+    "\n    query saveDetails {\n      saveDetails {\n        trainStations {\n          cargoType\n          id\n          isUnload\n          name\n          trains {\n            id\n          }\n        }\n      }\n    }\n  ": types.SaveDetailsDocument,
 };
 
 /**
@@ -56,6 +58,10 @@ export function graphql(source: "\n    query lastSave {\n      lastSave {\n     
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  "): (typeof documents)["\n    query lastLog {\n      lastLog {\n        url\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query saveDetails {\n      saveDetails {\n        trainStations {\n          cargoType\n          id\n          isUnload\n          name\n          trains {\n            id\n          }\n        }\n      }\n    }\n  "): (typeof documents)["\n    query saveDetails {\n      saveDetails {\n        trainStations {\n          cargoType\n          id\n          isUnload\n          name\n          trains {\n            id\n          }\n        }\n      }\n    }\n  "];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

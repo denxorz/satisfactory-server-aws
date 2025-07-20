@@ -1,6 +1,8 @@
+import { readFileSync } from "fs";
 import { EC2Client, StartInstancesCommand, DescribeInstanceStatusCommand } from "@aws-sdk/client-ec2";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { getStationsFromSave } from "./readSave";
 
 const instanceId = process.env.INSTANCE_ID
 const bucketName = process.env.bucketName
@@ -25,6 +27,10 @@ exports.handler = async function (event: any) {
 
   if (fieldName == 'lastLog') {
     return await lastLog();
+  }
+
+  if (fieldName == 'saveDetails') {
+    return await readLastSave();
   }
 
   console.log(`oops, fieldName not found: ${fieldName}`);
@@ -114,6 +120,33 @@ async function lastLog() {
     console.log(JSON.stringify(err));
     return {
       status: "Failed to get lastLog " + JSON.stringify(err)
+    }
+  };
+}
+
+async function readLastSave() {
+  try {
+    const saveFileUrl = await lastSave();
+
+    const saveFileResponse = await fetch(saveFileUrl.url ?? '');
+    const buffer = Buffer.from(await saveFileResponse.arrayBuffer());
+
+    const details = await getStationsFromSave(buffer);
+
+    return {
+      trainStations: Array.from(details.trainStations.values()).map(t => ({
+        id: t.id.split("_").pop(),
+        name: t.name,
+        cargoType: t.platform?.inventory?.firstItemTypeId?.split("/")[5],
+        isUnload: t.platform?.isUnloading ?? false,
+        trains: t.trainsStopping.map(train => ({id: train.id.split("_").pop()}))
+      }))
+    };
+  }
+  catch (err) {
+    console.log(JSON.stringify(err));
+    return {
+      status: "Failed to readLastSave " + JSON.stringify(err)
     }
   };
 }

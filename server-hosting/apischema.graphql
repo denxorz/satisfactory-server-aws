@@ -4,8 +4,24 @@ type Status {
     detail: String
 }
 
-type File{
+type File {
     url: String
+}
+
+type TrainStation {
+    id: String
+    name: String
+    cargoType: String
+    trains: [Train]
+    isUnload: Boolean
+}
+
+type Train {
+    id: String
+}
+
+type SaveDetails {
+    trainStations: [TrainStation]
 }
 
 type Mutation {
@@ -16,4 +32,5 @@ type Query {
     status: Status
     lastSave: File
     lastLog: File
+    saveDetails: SaveDetails
 }

@@ -142,7 +142,7 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<Stati
     platform.inventory = inventory.get(platform.inventoryId ?? '');
   }
 
-  toJson(Array.from(trainStationsPlatforms.values()), "trainPlatforms.json");
+  //toJson(Array.from(trainStationsPlatforms.values()), "trainPlatforms.json");
 
   for (const train of trains) {
     train.stops ??= [];
@@ -161,7 +161,7 @@ export async function getStationsFromSave(saveFileBuffer: Buffer): Promise<Stati
   };
 }
 
-function toJson(anyArray: any, outputPath: string) {
-  const fs = require('fs');
-  fs.writeFileSync(outputPath, JSON.stringify(anyArray, null, 2), 'utf-8');
-}
+// function toJson(anyArray: any, outputPath: string) {
+//   const fs = require('fs');
+//   fs.writeFileSync(outputPath, JSON.stringify(anyArray, null, 2), 'utf-8');
+// }
