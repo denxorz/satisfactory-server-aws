@@ -32,13 +32,13 @@ const { result: resultSaveDetails } = useQuery(
   `));
 
 const sortedTrainStations = computed(() => {
-//   const stations = resultSaveDetails.value?.saveDetails?.trainStations;
-//   if (!stations) return [];
-//   return [...stations].sort((a, b) => {
-//     const nameA = (a?.name || 'Unnamed Station').toLowerCase();
-//     const nameB = (b?.name || 'Unnamed Station').toLowerCase();
-//     return nameA.localeCompare(nameB);
-//   });
+  const stations = resultSaveDetails.value?.saveDetails?.trainStations;
+  if (!stations) return [];
+  return [...stations].sort((a, b) => {
+    const nameA = (a?.name || 'Unnamed Station').toLowerCase();
+    const nameB = (b?.name || 'Unnamed Station').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 });
 
 const getTrainDestinations = (trainId: string, currentStationId: string) => {

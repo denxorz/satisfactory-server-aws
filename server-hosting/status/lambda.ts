@@ -1,14 +1,13 @@
-import { readFileSync } from "fs";
 import { EC2Client, StartInstancesCommand, DescribeInstanceStatusCommand } from "@aws-sdk/client-ec2";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { getStationsFromSave } from "./readSave";
 
 const instanceId = process.env.INSTANCE_ID
 const bucketName = process.env.bucketName
-const client = new EC2Client({ region: process.env.AWS_REGION });
+const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
 const commandStart = new StartInstancesCommand({ InstanceIds: [instanceId!] });
 const commandStatus = new DescribeInstanceStatusCommand({ InstanceIds: [instanceId!], IncludeAllInstances: true });
+const s3Client = new S3Client({});
 
 exports.handler = async function (event: any) {
   const fieldName = event.info.fieldName;
@@ -41,8 +40,8 @@ async function start() {
   console.log("Attempting to start game server", instanceId);
 
   try {
-    const res = await client.send(commandStart);
-    const resStatus = await client.send(commandStatus)
+    const res = await ec2Client.send(commandStart);
+    const resStatus = await ec2Client.send(commandStatus)
 
     console.log(JSON.stringify(res));
     console.log(JSON.stringify(resStatus));
@@ -63,7 +62,7 @@ async function start() {
 
 async function status() {
   try {
-    const res = await client.send(commandStatus)
+    const res = await ec2Client.send(commandStatus)
     console.log(JSON.stringify(res));
 
     return {
@@ -81,10 +80,8 @@ async function status() {
 
 async function lastSave() {
   try {
-    const client = new S3Client({});
-
     const savesListCommand = new ListObjectsV2Command({ Bucket: bucketName, Prefix: 'saves' });
-    const saves = await client.send(savesListCommand);
+    const saves = await s3Client.send(savesListCommand);
 
     console.log('Saves total:', (saves.Contents ?? []).length);
 
@@ -93,7 +90,7 @@ async function lastSave() {
 
     if (sortedSaves.length > 0) {
       const command = new GetObjectCommand({ Bucket: bucketName, Key: sortedSaves[0].Key });
-      const url = await getSignedUrl(client, command, { expiresIn: 600 });
+      const url = await getSignedUrl(s3Client, command, { expiresIn: 600 });
 
       return { url };
     }
@@ -109,10 +106,8 @@ async function lastSave() {
 
 async function lastLog() {
   try {
-    const client = new S3Client({});
-
     const command = new GetObjectCommand({ Bucket: bucketName, Key: 'saved/Logs/FactoryGame.log' });
-    const url = await getSignedUrl(client, command, { expiresIn: 600 });
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 600 });
 
     return { url };
   }
@@ -124,24 +119,14 @@ async function lastLog() {
   };
 }
 
+async function getSaveDetails() {
+  const details = await s3Client.send(new GetObjectCommand({ Bucket: bucketName, Key: 'saveDetails/details.txt' }));
+  return JSON.parse(await details.Body?.transformToString() ?? '{}');
+}
+
 async function readLastSave() {
   try {
-    const saveFileUrl = await lastSave();
-
-    const saveFileResponse = await fetch(saveFileUrl.url ?? '');
-    const buffer = Buffer.from(await saveFileResponse.arrayBuffer());
-
-    const details = await getStationsFromSave(buffer);
-
-    return {
-      trainStations: Array.from(details.trainStations.values()).map(t => ({
-        id: t.id.split("_").pop(),
-        name: t.name,
-        cargoType: t.platform?.inventory?.firstItemTypeId?.split("/")[5],
-        isUnload: t.platform?.isUnloading ?? false,
-        trains: t.trainsStopping.map(train => ({id: train.id.split("_").pop()}))
-      }))
-    };
+    return await getSaveDetails();
   }
   catch (err) {
     console.log(JSON.stringify(err));

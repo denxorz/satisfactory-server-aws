@@ -1,45 +1,10 @@
-import * as lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { CfnOutput, Duration, Expiration, Stack } from 'aws-cdk-lib';
 import { Config } from './config';
-import { Instance } from 'aws-cdk-lib/aws-ec2';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { AuthorizationType, Definition, GraphqlApi } from 'aws-cdk-lib/aws-appsync';
-import { IBucket } from 'aws-cdk-lib/aws-s3';
-import { grantReadToStorage } from './storage';
 
-export const setupApi = (stack: Stack, server: Instance, storage: IBucket) => {
+export const setupApi = (stack: Stack) => {
     const prefix = Config.prefix;
-
-    const startServerLambda = new lambda_nodejs.NodejsFunction(stack, `${prefix}StartServerLambda`, {
-        entry: './server-hosting/status/lambda.ts',
-        description: "Manage game server",
-        timeout: Duration.seconds(45),
-        environment: { INSTANCE_ID: server.instanceId, bucketName: storage.bucketName },
-        runtime: Runtime.NODEJS_22_X,
-        memorySize: 2048
-    })
-    grantReadToStorage(startServerLambda.role!, storage);
-
-    startServerLambda.addToRolePolicy(new iam.PolicyStatement({
-        actions: [
-            'ec2:StartInstances',
-        ],
-        resources: [
-            `arn:aws:ec2:*:${Config.account}:instance/${server.instanceId}`,
-        ]
-    }))
-
-    startServerLambda.addToRolePolicy(new iam.PolicyStatement({
-        actions: [
-            'ec2:DescribeInstances',
-            'ec2:DescribeInstanceStatus',
-        ],
-        resources: [
-            `*`,
-        ]
-    }))
 
     const domainName = Config.statusApiDomainName;
     const certificateArn = Config.statusApiCertificateArn;
@@ -71,13 +36,10 @@ export const setupApi = (stack: Stack, server: Instance, storage: IBucket) => {
                 },
             });
 
-        const lambdaDataSource = api.addLambdaDataSource(`${prefix}LambdaDataSource`, startServerLambda);
-        lambdaDataSource.createResolver(`${prefix}StartResolver`, { typeName: "Mutation", fieldName: "start" });
-        lambdaDataSource.createResolver(`${prefix}StatusResolver`, { typeName: "Query", fieldName: "status" });
-        lambdaDataSource.createResolver(`${prefix}LastSaveResolver`, { typeName: "Query", fieldName: "lastSave" });
-        lambdaDataSource.createResolver(`${prefix}LastLogResolver`, { typeName: "Query", fieldName: "lastLog" });
-        lambdaDataSource.createResolver(`${prefix}SaveDetailsResolver`, { typeName: "Query", fieldName: "saveDetails" });
-
         new CfnOutput(stack, "APIKey", { value: api.apiKey ?? "" });
+
+        return api;
     }
+
+    return null;
 };
