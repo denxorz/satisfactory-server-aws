@@ -1,23 +1,19 @@
 <script setup lang="ts">
-import Status from './components/Ec2Status.vue'
+import Toolbar from './components/Toolbar.vue'
+import TrainsTable from './components/TrainsTable.vue'
 </script>
 
 <template>
-  <div>
-    <img src="./assets/ctor.png" class="logo constructor" alt="constructor" />
-  </div>
-  <Status />
+  <v-app>
+    <Toolbar />
+    <v-main>
+      <v-container class="pa-8" fluid>
+        <v-row justify="center">
+          <v-col cols="12" md="10" lg="8">
+            <TrainsTable />
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo.constructor:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>

@@ -3,8 +3,10 @@ import { DefaultApolloClient } from '@vue/apollo-composable'
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/client/core'
 import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-link';
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link';
+import { createVuetify } from 'vuetify';
+import 'vuetify/styles';
+import '@mdi/font/css/materialdesignicons.css';
 
-import './style.css'
 import App from './App.vue'
 
 const url = import.meta.env.VITE_GraphQLAPI;
@@ -28,7 +30,10 @@ const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-const app = createApp(App)
+const vuetify = createVuetify();
+
+const app = createApp(App);
+app.use(vuetify);
 app.provide(DefaultApolloClient, apolloClient)
 
 app.mount('#app')

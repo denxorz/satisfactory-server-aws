@@ -1,0 +1,105 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useQuery, useMutation } from "@vue/apollo-composable";
+
+import { graphql } from "../gql";
+import ctorImg from '../assets/ctor.png';
+
+const { result, refetch } = useQuery(
+    graphql(`
+    query status {
+      status {
+        status
+        previousStatus
+        detail
+      }
+    }
+  `),
+    null, {
+    pollInterval: 10000,
+}
+);
+
+const { mutate: start } = useMutation(
+    graphql(`
+    mutation start {
+      start {
+        status
+        previousStatus
+        detail
+      }
+    }
+  `)
+);
+
+const lastSaveEnabled = ref(false);
+const { result: resultLastSave } = useQuery(
+    graphql(`
+    query lastSave {
+      lastSave {
+        url
+      }
+    }
+  `),
+    null,
+    { enabled: lastSaveEnabled }
+);
+
+watch(resultLastSave, nv => {
+    if (nv?.lastSave) {
+        window.open(nv.lastSave?.url ?? '');
+        lastSaveEnabled.value = false;
+    }
+})
+
+const lastLogEnabled = ref(false);
+const { result: resultLastLog } = useQuery(
+    graphql(`
+    query lastLog {
+      lastLog {
+        url
+      }
+    }
+  `),
+    null,
+    { enabled: lastLogEnabled }
+);
+
+watch(resultLastLog, nv => {
+    if (nv?.lastLog) {
+        window.open(nv.lastLog?.url ?? '');
+        lastLogEnabled.value = false;
+    }
+})
+
+const startRes = ref();
+const status = computed(() => result.value?.status?.status ?? "stopped");
+const detailStatus = computed(() => result.value?.status?.detail ?? "stopped");
+
+const startServer = async () => {
+    startRes.value = await start();
+    await refetch();
+}
+
+const downloadSave = async () => {
+    lastSaveEnabled.value = true
+}
+
+const downloadLog = async () => {
+    lastLogEnabled.value = true
+}
+</script>
+<template>
+    <v-app-bar color="primary" dark>
+        <template #prepend>
+            <v-img :src="ctorImg" alt="constructor" class="mr-4 ml-4" style="height: 40px; width: 40px;" />
+        </template>
+        <v-app-bar-title>Satisfactory Server Status</v-app-bar-title>
+        <v-spacer />
+        <span class="mr-4"><strong>Status:</strong> {{ status }}</span>
+        <span class="mr-4"><strong>Detail:</strong> {{ detailStatus }}</span>
+        <v-btn variant="outlined" @click="startServer" class="mr-4">Start server</v-btn>
+        <v-btn variant="outlined" @click="downloadSave" class="mr-4">Download last save</v-btn>
+        <v-btn variant="outlined" @click="downloadLog">Download last log</v-btn>
+    </v-app-bar>
+</template>
