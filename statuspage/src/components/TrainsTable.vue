@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
 import type { TrainStation, Train } from "../gql/graphql";
+import type { RowProps } from "vuetify/lib/components/VDataTable/types.mjs";
+import { useTheme } from 'vuetify';
 
 const { result: resultSaveDetails } = useQuery(
   graphql(`
@@ -34,6 +36,24 @@ const sortedTrainStations = computed(() => {
     });
 });
 
+const selectedStations = ref<string[]>([]);
+const selectedStation = computed(() => sortedTrainStations.value.find(s => s.id === selectedStations.value[0]));
+const selectedStationTrains = computed(() => selectedStation.value?.trains?.map(t => ({ id: t?.id ?? '', destinations: getTrainDestinations(t?.id ?? '', selectedStation.value?.id || '') })) ?? []);
+
+const theme = useTheme();
+const isDark = theme.global.current.value.dark;
+
+function rowProps({ internalItem }: { internalItem: { value: string } }) {
+  if (internalItem.value && selectedStations.value.includes(internalItem.value)) {
+    return {
+      style: isDark
+        ? 'background-color: #374151 !important; color: #fff;'
+        : 'background-color: #e3f2fd !important;'
+    };
+  }
+  return {};
+}
+
 const getTrainDestinations = (trainId: string, currentStationId: string) => {
   const stations = resultSaveDetails.value?.saveDetails?.trainStations as (TrainStation | null)[] | undefined;
   if (!stations) return [];
@@ -45,24 +65,19 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
     );
   return destinations.map((station: TrainStation) => station?.name || 'Unnamed Station');
 };
-
 </script>
 <template>
-    <h2>Train Stations</h2>
-    <v-data-table
-      :headers="[
-        { title: 'Station Name', key: 'name', width: '40%' },
-        { title: 'Cargo Type', key: 'cargoType' },
-        { title: 'Type', key: 'isUnload' },
-        { title: 'Trains', key: 'trains' }
-      ]"
-      :items="sortedTrainStations"
-      item-key="id"
-      show-expand
-      class="elevation-1"
-      hide-footer
-      :items-per-page="-1"
-    >
+  <h2>Train Stations</h2>
+  <div style="display: flex; gap: 32px; align-items: flex-start;">
+    <v-data-table :headers="[
+      { title: 'Station Name', key: 'name', width: '40%' },
+      { title: 'Cargo Type', key: 'cargoType' },
+      { title: 'Type', key: 'isUnload' },
+      { title: 'Trains', key: 'trains' }
+    ]" :items="sortedTrainStations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1"
+      v-model="selectedStations" select-strategy="single"
+      @click:row="(_: unknown, { internalItem, toggleSelect }: { internalItem: TrainStation, toggleSelect: (item: TrainStation) => void }) => toggleSelect(internalItem)"
+      :row-props="rowProps">
       <template #item.cargoType="{ item }">
         {{ item?.cargoType || 'Unknown' }}
       </template>
@@ -72,28 +87,31 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
       <template #item.trains="{ item }">
         {{ item?.trains?.length || 0 }}
       </template>
-      <template #expanded-row="{ columns, item }">
-        <tr>
-          <td :colspan="columns.length">
-            <strong>Train Routes:</strong>
-            <div v-if="item?.trains && item.trains.length > 0" style="margin-top: 4px;">
-              <div v-for="train in item.trains" :key="train?.id || 'unknown-train'" style="margin-bottom: 8px;">
-                <span style="font-family: monospace; font-weight: bold;">{{ train?.id }}</span>
-                <span style="margin-left: 8px; color: #666;">→</span>
-                <span v-if="getTrainDestinations(train?.id || '', item?.id || '').length > 0" style="margin-left: 8px;">
-                  {{ getTrainDestinations(train?.id || '', item?.id || '').join(', ') }}
-                </span>
-                <span v-else style="margin-left: 8px; color: #999;">No other destinations</span>
-              </div>
-            </div>
-            <div v-else style="margin-top: 4px; color: #666;">
-              No trains associated with this station
-            </div>
-          </td>
-        </tr>
-      </template>
     </v-data-table>
-    <div v-if="!resultSaveDetails?.saveDetails?.trainStations">
-      <p>Loading train stations...</p>
+    <div v-if="selectedStation" style="min-width: 320px; max-width: 400px;">
+      <h3>Station Details</h3>
+      <div><strong>Name:</strong> {{ selectedStation.name || 'Unnamed Station' }}</div>
+      <div><strong>Type:</strong> {{ selectedStation.isUnload ? 'Unload' : 'Load' }}</div>
+      <div><strong>Cargo Type:</strong> {{ selectedStation.cargoType || 'Unknown' }}</div>
+      <div style="margin-top: 12px;"><strong>Trains:</strong></div>
+      <div v-if="selectedStationTrains.length > 0" style="margin-top: 4px;">
+        <ul style="padding-left: 18px;">
+          <li v-for="train in selectedStationTrains" :key="train?.id || 'unknown-train'">
+            {{ train?.id }} -> {{ train?.destinations.join(', ') }}
+          </li>
+        </ul>
+      </div>
+      <div v-else style="margin-top: 4px; color: #666;">
+        No trains associated with this station
+      </div>
     </div>
-</template> 
+    <div v-else style="min-width: 320px; max-width: 400px; color: #999;">
+      <h3>Station Details</h3>
+      <div>Select a station to see details</div>
+    </div>
+  </div>
+  <div v-if="!resultSaveDetails?.saveDetails?.trainStations">
+    <p>Loading train stations...</p>
+  </div>
+</template>
+<style></style>
