@@ -97,8 +97,12 @@ const downloadLog = async () => {
         <v-app-bar-title>Satisfactory Server Status</v-app-bar-title>
         <span class="mr-4"><strong>Status:</strong> {{ status }}</span>
         <span class="mr-4"><strong>Detail:</strong> {{ detailStatus }}</span>
-        <v-btn variant="outlined" @click="startServer" class="mr-4">Start server</v-btn>
-        <v-btn variant="outlined" @click="downloadSave" class="mr-4">Download last save</v-btn>
-        <v-btn variant="outlined" @click="downloadLog">Download last log</v-btn>
+        <v-btn variant="outlined" @click="startServer" class="mr-4" prepend-icon="mdi-play-box">Start</v-btn>
+        <v-btn variant="outlined" @click="downloadSave" class="mr-4" prepend-icon="mdi-file-download">
+            Save
+        </v-btn>
+        <v-btn variant="outlined" @click="downloadLog" prepend-icon="mdi-file-download">
+            Log
+        </v-btn>
     </v-app-bar>
 </template>
