@@ -5,6 +5,7 @@ import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-li
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link';
 import { createVuetify } from 'vuetify';
 import '@mdi/font/css/materialdesignicons.css';
+import 'vuetify/styles'
 
 import App from './App.vue'
 
