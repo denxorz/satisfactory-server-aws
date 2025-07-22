@@ -4,7 +4,6 @@ import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/clien
 import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-link';
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link';
 import { createVuetify } from 'vuetify';
-import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css';
 
 import App from './App.vue'
