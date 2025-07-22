@@ -70,19 +70,27 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
   <h2>Train Stations</h2>
   <div style="display: flex; gap: 32px; align-items: flex-start;">
     <v-data-table :headers="[
-      { title: 'Station Name', key: 'name', width: '40%' },
-      { title: 'Cargo Type', key: 'cargoType' },
-      { title: 'Type', key: 'isUnload' },
+      { title: '', key: 'type', width: '48px' },
+      { title: '', key: 'transfer', width: '48px' },
+      { title: 'Station', key: 'name', width: '40%' },
+      { title: 'Cargo', key: 'cargoType' },
       { title: 'Trains', key: 'trains' }
     ]" :items="sortedTrainStations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1"
       v-model="selectedStations" select-strategy="single"
       @click:row="(_: unknown, { internalItem, toggleSelect }: { internalItem: TrainStation, toggleSelect: (item: TrainStation) => void }) => toggleSelect(internalItem)"
       :row-props="rowProps">
+      <template #item.type="">
+        <v-icon>
+          mdi-train
+        </v-icon>
+      </template>
+      <template #item.transfer="{ item }">
+        <v-icon>
+          {{ item?.isUnload ? 'mdi-tray-arrow-up' : 'mdi-tray-arrow-down' }}
+        </v-icon>
+      </template>
       <template #item.cargoType="{ item }">
         {{ item?.cargoType || 'Unknown' }}
-      </template>
-      <template #item.isUnload="{ item }">
-        {{ item?.isUnload ? 'Unload' : 'Load' }}
       </template>
       <template #item.trains="{ item }">
         {{ item?.trains?.length || 0 }}
@@ -90,7 +98,8 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
     </v-data-table>
     <div v-if="selectedStation" style="min-width: 320px; max-width: 400px;">
       <h3>Station Details</h3>
-      <div><strong>Name:</strong> {{ selectedStation.name || 'Unnamed Station' }}</div>
+      <div><strong>Id:</strong> {{ selectedStation.id || '??' }}</div>
+      <div><strong>Name:</strong> {{ selectedStation.name || '??' }}</div>
       <div><strong>Type:</strong> {{ selectedStation.isUnload ? 'Unload' : 'Load' }}</div>
       <div><strong>Cargo Type:</strong> {{ selectedStation.cargoType || 'Unknown' }}</div>
       <div style="margin-top: 12px;"><strong>Trains:</strong></div>
