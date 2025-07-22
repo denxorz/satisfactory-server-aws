@@ -95,7 +95,6 @@ const downloadLog = async () => {
             <v-img :src="ctorImg" alt="constructor" class="mr-4 ml-4" style="height: 40px; width: 40px;" />
         </template>
         <v-app-bar-title>Satisfactory Server Status</v-app-bar-title>
-        <v-spacer />
         <span class="mr-4"><strong>Status:</strong> {{ status }}</span>
         <span class="mr-4"><strong>Detail:</strong> {{ detailStatus }}</span>
         <v-btn variant="outlined" @click="startServer" class="mr-4">Start server</v-btn>
