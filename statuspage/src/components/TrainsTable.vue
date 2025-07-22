@@ -4,7 +4,6 @@ import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
 import type { TrainStation, Train } from "../gql/graphql";
-import type { RowProps } from "vuetify/lib/components/VDataTable/types.mjs";
 import { useTheme } from 'vuetify';
 
 const { result: resultSaveDetails } = useQuery(
