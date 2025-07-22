@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: 20
       - run: pnpm install
+      - name: Create .env file
+        run: |
+          echo "VITE_GraphQLAPI=${{ secrets.VITE_GraphQLAPI }}" >> .env
+          echo "VITE_GraphQLAPIKey=${{ secrets.VITE_GraphQLAPIKey }}" >> .env
+          echo "VITE_GraphQLAPIRegion=${{ secrets.VITE_GraphQLAPIRegion }}" >> .env
+        working-directory: statuspage
       - run: pnpm build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
