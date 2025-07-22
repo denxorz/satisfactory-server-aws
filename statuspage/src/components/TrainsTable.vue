@@ -60,6 +60,8 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
       item-key="id"
       show-expand
       class="elevation-1"
+      hide-footer
+      :items-per-page="-1"
     >
       <template #item.cargoType="{ item }">
         {{ item?.cargoType || 'Unknown' }}
