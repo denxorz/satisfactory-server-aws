@@ -30,7 +30,13 @@ const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-const vuetify = createVuetify();
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+const vuetify = createVuetify({
+  theme: {
+    defaultTheme: prefersDark ? 'dark' : 'light',
+  },
+});
 
 const app = createApp(App);
 app.use(vuetify);
