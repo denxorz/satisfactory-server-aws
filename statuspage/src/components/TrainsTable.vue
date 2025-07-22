@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
+import type { TrainStation, Train } from "../gql/graphql";
 
 const { result: resultSaveDetails } = useQuery(
   graphql(`
@@ -22,23 +23,27 @@ const { result: resultSaveDetails } = useQuery(
   `));
 
 const sortedTrainStations = computed(() => {
-  const stations = resultSaveDetails.value?.saveDetails?.trainStations;
+  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (TrainStation | null)[] | undefined;
   if (!stations) return [];
-  return [...stations].sort((a, b) => {
-    const nameA = (a?.name || 'Unnamed Station').toLowerCase();
-    const nameB = (b?.name || 'Unnamed Station').toLowerCase();
-    return nameA.localeCompare(nameB);
-  });
+  return [...stations]
+    .filter((s): s is TrainStation => !!s)
+    .sort((a: TrainStation, b: TrainStation) => {
+      const nameA = (a?.name || 'Unnamed Station').toLowerCase();
+      const nameB = (b?.name || 'Unnamed Station').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 });
 
 const getTrainDestinations = (trainId: string, currentStationId: string) => {
-  const stations = resultSaveDetails.value?.saveDetails?.trainStations;
+  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (TrainStation | null)[] | undefined;
   if (!stations) return [];
-  const destinations = stations.filter(station =>
-    station?.trains?.some(train => train?.id === trainId) &&
-    station?.id !== currentStationId
-  );
-  return destinations.map(station => station?.name || 'Unnamed Station');
+  const destinations = stations
+    .filter((station): station is TrainStation => !!station)
+    .filter((station: TrainStation) =>
+      station?.trains?.some((train): train is Train => !!train && train.id === trainId) &&
+      station?.id !== currentStationId
+    );
+  return destinations.map((station: TrainStation) => station?.name || 'Unnamed Station');
 };
 
 </script>
