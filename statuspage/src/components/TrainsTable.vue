@@ -41,9 +41,9 @@ const selectedStation = computed(() => sortedTrainStations.value.find(s => s.id 
 const selectedStationTrains = computed(() => selectedStation.value?.trains?.map(t => ({ id: t?.id ?? '', destinations: getTrainDestinations(t?.id ?? '', selectedStation.value?.id || '') })) ?? []);
 
 const theme = useTheme();
-const isDark = theme.global.current.value.dark;
 
 function rowProps({ internalItem }: { internalItem: { value: string } }) {
+  const isDark = theme.global.current.value.dark;
   if (internalItem.value && selectedStations.value.includes(internalItem.value)) {
     return {
       style: isDark
