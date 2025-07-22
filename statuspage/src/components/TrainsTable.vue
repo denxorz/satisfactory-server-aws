@@ -1,18 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useQuery, useMutation } from "@vue/apollo-composable";
+import { computed } from "vue";
+import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
-
-const expandedRows = ref(new Set<string>());
-
-const toggleRow = (stationId: string) => {
-  if (expandedRows.value.has(stationId)) {
-    expandedRows.value.delete(stationId);
-  } else {
-    expandedRows.value.add(stationId);
-  }
-};
 
 const { result: resultSaveDetails } = useQuery(
   graphql(`
