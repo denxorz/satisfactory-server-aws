@@ -247,7 +247,7 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "cargoType",
+            "name": "cargoTypes",
             "description": null,
             "args": [],
             "type": {

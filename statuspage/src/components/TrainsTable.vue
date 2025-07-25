@@ -11,7 +11,7 @@ const { result: resultSaveDetails } = useQuery(
     query saveDetails {
       saveDetails {
         trainStations {
-          cargoType
+          cargoTypes
           id
           isUnload
           name
@@ -89,7 +89,7 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
         </v-icon>
       </template>
       <template #item.cargoType="{ item }">
-        {{ item?.cargoType || 'Unknown' }}
+        {{ item?.cargoTypes?.join('/') || 'Unknown' }}
       </template>
       <template #item.trains="{ item }">
         {{ item?.trains?.length || 0 }}
@@ -100,7 +100,7 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
       <div><strong>Id:</strong> {{ selectedStation.id || '??' }}</div>
       <div><strong>Name:</strong> {{ selectedStation.name || '??' }}</div>
       <div><strong>Type:</strong> {{ selectedStation.isUnload ? 'Unload' : 'Load' }}</div>
-      <div><strong>Cargo Type:</strong> {{ selectedStation.cargoType?.join('/') || 'Unknown' }}</div>
+      <div><strong>Cargo Type:</strong> {{ selectedStation.cargoTypes?.join('/') || 'Unknown' }}</div>
       <div style="margin-top: 12px;"><strong>Trains:</strong></div>
       <div v-if="selectedStationTrains.length > 0" style="margin-top: 4px;">
         <ul style="padding-left: 18px;">
