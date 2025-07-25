@@ -11,7 +11,7 @@ type File {
 type TrainStation {
     id: String
     name: String
-    cargoType: String
+    cargoType: [String]
     trains: [Train]
     isUnload: Boolean
 }

@@ -53,7 +53,7 @@ export type Train = {
 
 export type TrainStation = {
   __typename?: 'TrainStation';
-  cargoType?: Maybe<Scalars['String']['output']>;
+  cargoType?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   id?: Maybe<Scalars['String']['output']>;
   isUnload?: Maybe<Scalars['Boolean']['output']>;
   name?: Maybe<Scalars['String']['output']>;
@@ -83,7 +83,7 @@ export type LastLogQuery = { __typename?: 'Query', lastLog?: { __typename?: 'Fil
 export type SaveDetailsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SaveDetailsQuery = { __typename?: 'Query', saveDetails?: { __typename?: 'SaveDetails', trainStations?: Array<{ __typename?: 'TrainStation', cargoType?: string | null, id?: string | null, isUnload?: boolean | null, name?: string | null, trains?: Array<{ __typename?: 'Train', id?: string | null } | null> | null } | null> | null } | null };
+export type SaveDetailsQuery = { __typename?: 'Query', saveDetails?: { __typename?: 'SaveDetails', trainStations?: Array<{ __typename?: 'TrainStation', cargoType?: Array<string | null> | null, id?: string | null, isUnload?: boolean | null, name?: string | null, trains?: Array<{ __typename?: 'Train', id?: string | null } | null> | null } | null> | null } | null };
 
 
 export const StatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"status"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"previousStatus"}},{"kind":"Field","name":{"kind":"Name","value":"detail"}}]}}]}}]} as unknown as DocumentNode<StatusQuery, StatusQueryVariables>;
