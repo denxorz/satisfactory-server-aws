@@ -8,20 +8,21 @@ type File {
     url: String
 }
 
-type TrainStation {
+type Station {
     id: String
     name: String
     cargoTypes: [String]
-    trains: [Train]
+    transporters: [Transporter]
     isUnload: Boolean
 }
 
-type Train {
+type Transporter {
     id: String
 }
 
 type SaveDetails {
-    trainStations: [TrainStation]
+    trainStations: [Station]
+    droneStations: [Station]
 }
 
 type Mutation {

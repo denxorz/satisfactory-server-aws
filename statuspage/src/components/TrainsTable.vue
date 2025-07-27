@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
-import type { TrainStation, Train } from "../gql/graphql";
+import type { Station, Transporter } from "../gql/graphql";
 import { useTheme } from 'vuetify';
 
 const { result: resultSaveDetails } = useQuery(
@@ -15,7 +15,7 @@ const { result: resultSaveDetails } = useQuery(
           id
           isUnload
           name
-          trains {
+          transporters {
             id
           }
         }
@@ -24,11 +24,11 @@ const { result: resultSaveDetails } = useQuery(
   `));
 
 const sortedTrainStations = computed(() => {
-  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (TrainStation | null)[] | undefined;
+  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (Station | null)[] | undefined;
   if (!stations) return [];
   return [...stations]
-    .filter((s): s is TrainStation => !!s)
-    .sort((a: TrainStation, b: TrainStation) => {
+    .filter((s): s is Station => !!s)
+    .sort((a: Station, b: Station) => {
       const nameA = (a?.name || 'Unnamed Station').toLowerCase();
       const nameB = (b?.name || 'Unnamed Station').toLowerCase();
       return nameA.localeCompare(nameB);
@@ -37,7 +37,7 @@ const sortedTrainStations = computed(() => {
 
 const selectedStations = ref<string[]>([]);
 const selectedStation = computed(() => sortedTrainStations.value.find(s => s.id === selectedStations.value[0]));
-const selectedStationTrains = computed(() => selectedStation.value?.trains?.map(t => ({ id: t?.id ?? '', destinations: getTrainDestinations(t?.id ?? '', selectedStation.value?.id || '') })) ?? []);
+const selectedStationTrains = computed(() => selectedStation.value?.transporters?.map(t => ({ id: t?.id ?? '', destinations: getTrainDestinations(t?.id ?? '', selectedStation.value?.id || '') })) ?? []);
 
 const theme = useTheme();
 
@@ -53,16 +53,16 @@ function rowProps({ internalItem }: { internalItem: { value: string } }) {
   return {};
 }
 
-const getTrainDestinations = (trainId: string, currentStationId: string) => {
-  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (TrainStation | null)[] | undefined;
+const getTrainDestinations = (transporterId: string, currentStationId: string) => {
+  const stations = resultSaveDetails.value?.saveDetails?.trainStations as (Station | null)[] | undefined;
   if (!stations) return [];
   const destinations = stations
-    .filter((station): station is TrainStation => !!station)
-    .filter((station: TrainStation) =>
-      station?.trains?.some((train): train is Train => !!train && train.id === trainId) &&
+    .filter((station): station is Station => !!station)
+    .filter((station: Station) =>
+      station?.transporters?.some((transporter): transporter is Transporter => !!transporter && transporter.id === transporterId) &&
       station?.id !== currentStationId
     );
-  return destinations.map((station: TrainStation) => station?.name || 'Unnamed Station');
+  return destinations.map((station: Station) => station?.name || 'Unnamed Station');
 };
 </script>
 <template>
@@ -76,7 +76,7 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
       { title: 'Trains', key: 'trains' }
     ]" :items="sortedTrainStations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1"
       v-model="selectedStations" select-strategy="single"
-      @click:row="(_: unknown, { internalItem, toggleSelect }: { internalItem: TrainStation, toggleSelect: (item: TrainStation) => void }) => toggleSelect(internalItem)"
+      @click:row="(_: unknown, { internalItem, toggleSelect }: { internalItem: Station, toggleSelect: (item: Station) => void }) => toggleSelect(internalItem)"
       :row-props="rowProps">
       <template #item.type="">
         <v-icon>
@@ -92,7 +92,7 @@ const getTrainDestinations = (trainId: string, currentStationId: string) => {
         {{ item?.cargoTypes?.join('/') || 'Unknown' }}
       </template>
       <template #item.trains="{ item }">
-        {{ item?.trains?.length || 0 }}
+        {{ item?.transporters?.length || 0 }}
       </template>
     </v-data-table>
     <div v-if="selectedStation" style="min-width: 320px; max-width: 400px;">
