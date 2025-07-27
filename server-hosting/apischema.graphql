@@ -11,9 +11,12 @@ type File {
 type Station {
     id: String
     name: String
+    type: String
     cargoTypes: [String]
     transporters: [Transporter]
     isUnload: Boolean
+    x: Float
+    y: Float
 }
 
 type Transporter {
@@ -21,8 +24,7 @@ type Transporter {
 }
 
 type SaveDetails {
-    trainStations: [Station]
-    droneStations: [Station]
+    stations: [Station]
 }
 
 type Mutation {

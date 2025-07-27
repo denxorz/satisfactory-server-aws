@@ -4,15 +4,7 @@ import { Types } from '@graphql-codegen/plugin-helpers';
 
 const config: CodegenConfig = {
   overwrite: true,
-  schema: [
-    {
-      [process.env.VITE_GraphQLAPI ?? ""]: <Types.UrlSchemaWithOptions>{
-        headers: {
-          "x-api-key": process.env.GraphQLAPIKey,
-        },
-      }
-    },
-  ],
+  schema: "../server-hosting/apischema.graphql",
   documents: "src/**/*.vue",
   ignoreNoDocuments: true,
   generates: {

@@ -1,4 +1,5 @@
-﻿using SatisfactorySaveNet;
+﻿using System.Linq;
+using SatisfactorySaveNet;
 using SatisfactorySaveNet.Abstracts;
 using SatisfactorySaveNet.Abstracts.Model;
 using SatisfactorySaveNet.Abstracts.Model.Properties;
@@ -6,7 +7,7 @@ using SatisfactorySaveNet.Abstracts.Model.Typed;
 
 namespace SaveParser;
 
-public record SaveDetails(List<Station> TrainStations, List<Station> DroneStations)
+public record SaveDetails(List<Station> Stations)
 {
     public static SaveDetails LoadFromStream(Stream stream)
     {
@@ -92,9 +93,12 @@ public record SaveDetails(List<Station> TrainStations, List<Station> DroneStatio
                 return new Station(
                     id.Split("_")[^1],
                     stationIdentifier.Name,
+                    "train",
                     ToCargoTypes(inventory),
                     platforms.Count > 0 && platforms[0]!.IsUnloadMode,
-                    [.. trainTimeTablesRefined.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))]
+                    [.. trainTimeTablesRefined.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))],
+                    t.Position.X,
+                    t.Position.Y
                 );
             })
             .ToList();
@@ -141,15 +145,18 @@ public record SaveDetails(List<Station> TrainStations, List<Station> DroneStatio
                 return new Station(
                     id.Split("_")[^1],
                     stationIdentifier.Name,
-                    inputCargoTypes.Concat(outputCargoTypes).ToList(),
+                    "drone",
+                    [.. inputCargoTypes, .. outputCargoTypes],
                     isUnload,
-                    [new Transporter(drone.Split("_")[^1])]
+                    [new Transporter(drone.Split("_")[^1])],
+                    t.Position.X,
+                    t.Position.Y
                 );
             })
             .ToList();
 
 
-        return new(trainStationsRefined, droneStationsRefined);
+        return new([.. trainStationsRefined, .. droneStationsRefined]);
     }
 
     private static string[] ToStops(Property? p)
