@@ -26,20 +26,13 @@ const { result: resultSaveDetails } = useQuery(
     }
   `));
 
-const sortedStations = computed(() => {
-  const stations = resultSaveDetails.value?.saveDetails?.stations as (Station | null)[] | undefined ?? [];
-
-  return [...stations]
-    .filter((s): s is Station => !!s)
-    .sort((a: Station, b: Station) => {
-      const nameA = (a?.name || 'Unnamed Station').toLowerCase();
-      const nameB = (b?.name || 'Unnamed Station').toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+const stations = computed(() => {
+  const stationsData = resultSaveDetails.value?.saveDetails?.stations as (Station | null)[] | undefined ?? [];
+  return stationsData.filter((s): s is Station => !!s);
 });
 
 const selectedStations = ref<string[]>([]);
-const selectedStation = computed(() => sortedStations.value.find(s => s.id === selectedStations.value[0]));
+const selectedStation = computed(() => stations.value.find(s => s.id === selectedStations.value[0]));
 const selectedStationVehicles = computed(() => selectedStation.value?.transporters?.map(t => ({ id: t?.id ?? '', destinations: getDestinations(t?.id ?? '', selectedStation.value?.id || '') })) ?? []);
 
 const theme = useTheme();
@@ -80,12 +73,12 @@ const icon = (type?: Maybe<string>) => {
   <div style="display: flex; gap: 32px; align-items: flex-start;">
     <v-data-table :headers="[
       { title: '', key: 'type', width: '48px' },
-      { title: '', key: 'transfer', width: '48px' },
+      { title: '', key: 'transfer', width: '48px', sortRaw: (a: Station, b: Station) => (a.isUnload ? 1 : 0) - (b.isUnload ? 1 : 0) },
       { title: 'Station', key: 'name', width: '40%' },
-      { title: 'Cargo', key: 'cargoType' },
+      { title: 'Cargo', key: 'cargoType', sortRaw: (a: Station, b: Station) => (a.cargoTypes?.join('/') || 'Unknown').localeCompare(b.cargoTypes?.join('/') || 'Unknown') },
       { title: 'Vehicles', key: 'transporters' }
-    ]" :items="sortedStations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1"
-      v-model="selectedStations" select-strategy="single"
+    ]" :items="stations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1" v-model="selectedStations"
+      select-strategy="single"
       @click:row="(_: unknown, { internalItem, toggleSelect }: { internalItem: Station, toggleSelect: (item: Station) => void }) => toggleSelect(internalItem)"
       :row-props="rowProps">
       <template #item.type="{ item }">
