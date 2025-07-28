@@ -25,6 +25,8 @@ public record SaveDetails(List<Station> Stations)
         var objectsByName = objects
             .ToDictionary(o => o.ObjectReference.PathName, o => o);
 
+        var tmp = objectsByName["Persistent_Level:PersistentLevel.FGDockingStationInfo_2146384413"];
+
         // Train parts By TypePath
         var trainRelatedObjects = objects
             .Where(o => o.TypePath.Contains("train", StringComparison.InvariantCultureIgnoreCase) || o.TypePath.Contains("rail", StringComparison.InvariantCultureIgnoreCase))
@@ -88,7 +90,6 @@ public record SaveDetails(List<Station> Stations)
                 var stationIdentifier = trainStationIdentifiersRefined[id];
                 var platforms = trainStationConnectionToPlatformsRefined[id];
                 var inventory = platforms.Count > 0 ? objectsByName[platforms[0]!.InventoryId] : null;
-                // TODO: Add t.Position
 
                 return new Station(
                     id.Split("_")[^1],
@@ -140,7 +141,6 @@ public record SaveDetails(List<Station> Stations)
                 var inputCargoTypes = ToCargoTypes(inputInventory);
                 var outputCargoTypes = ToCargoTypes(outputInventory);
                 var isUnload = inputCargoTypes.Count <= outputCargoTypes.Count;
-                // TODO: Add t.Position
 
                 return new Station(
                     id.Split("_")[^1],
@@ -155,8 +155,60 @@ public record SaveDetails(List<Station> Stations)
             })
             .ToList();
 
+        // Truck parts By TypePath
+        var truckRelatedObjects = objects
+            .Where(o => o.TypePath.Contains("truck", StringComparison.InvariantCultureIgnoreCase) 
+            || o.TypePath.Contains("vehicle", StringComparison.InvariantCultureIgnoreCase) 
+            || o.TypePath.Contains("docking", StringComparison.InvariantCultureIgnoreCase)
+            || o.TypePath.Contains("driving", StringComparison.InvariantCultureIgnoreCase)
+            )
+            .ToList();
 
-        return new([.. trainStationsRefined, .. droneStationsRefined]);
+        var truckRelatedObjectsByType = truckRelatedObjects
+            .GroupBy(o => o.TypePath)
+            .ToDictionary(o => o.Key, o => o.ToList());
+
+        // Truck Station Identifier, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TruckStation_C_2144148257
+        var truckStationIdentifiers = truckRelatedObjectsByType["/Script/FactoryGame.FGDockingStationInfo"];
+        var truckStationIdentifiersRefined = truckStationIdentifiers
+            .Select(t => new
+            {
+                Id = t.ObjectReference.PathName,
+                Name = (t.Properties.FirstOrDefault(p => p.Name == "mBuildingTag") as StrProperty)?.Value ?? "??",
+                TruckStationId = (t.Properties.FirstOrDefault(p => p.Name == "mStation") as ObjectProperty)?.Value.PathName ?? "??",
+                PairedStationId = (t.Properties.FirstOrDefault(p => p.Name == "mPairedStation") as ObjectProperty)?.Value.PathName ?? "??", //Persistent_Level:PersistentLevel.FGTruckStationInfo_2147135058
+            })
+            .ToDictionary(t => t.TruckStationId, t => t);
+
+        // Truck Station, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TruckStation_C_2144148257
+        var truckStations = truckRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/TruckStation/Build_TruckStation.Build_TruckStation_C"];
+        var truckStationsRefined = truckStations
+            .OfType<ActorObject>()
+            .Select(t =>
+            {
+                var id = t.ObjectReference.PathName;
+                var stationIdentifier = truckStationIdentifiersRefined[id];
+                var inventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mInventory") as ObjectProperty)?.Value.PathName ?? "??"];
+                var cargoTypes = ToCargoTypes(inventory);
+                var output0 = objectsByName[t.Components.First(c => c.PathName.Contains("output0", StringComparison.InvariantCultureIgnoreCase)).PathName];
+                var output1 = objectsByName[t.Components.First(c => c.PathName.Contains("output1", StringComparison.InvariantCultureIgnoreCase)).PathName];
+                var isUnload = output0.Properties.Count > 0 || output1.Properties.Count > 0;
+
+                return new Station(
+                    id.Split("_")[^1],
+                    stationIdentifier.Name,
+                    "truck",
+                    cargoTypes,
+                    isUnload,
+                    [],
+                    t.Position.X,
+                    t.Position.Y
+                );
+            })
+            .ToList();
+
+
+        return new([.. trainStationsRefined, .. droneStationsRefined, .. truckStationsRefined]);
     }
 
     private static string[] ToStops(Property? p)

@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useQuery } from "@vue/apollo-composable";
 
 import { graphql } from "../gql";
-import type { Station, Transporter } from "../gql/graphql";
+import type { Maybe, Station, Transporter } from "../gql/graphql";
 import { useTheme } from 'vuetify';
 
 const { result: resultSaveDetails } = useQuery(
@@ -67,6 +67,13 @@ const getDestinations = (transporterId: string, currentStationId: string) => {
     );
   return destinations.map((station: Station) => station?.name || 'Unnamed Station');
 };
+
+const icon = (type?: Maybe<string>) => {
+  if (type === 'train') return 'mdi-train';
+  if (type === 'truck') return 'mdi-truck';
+  if (type === 'drone') return 'mdi-quadcopter';
+  return 'mdi-help-box';
+};
 </script>
 <template>
   <h2>Stations</h2>
@@ -83,7 +90,7 @@ const getDestinations = (transporterId: string, currentStationId: string) => {
       :row-props="rowProps">
       <template #item.type="{ item }">
         <v-icon>
-          {{ item?.type === 'train' ? 'mdi-train' : 'mdi-quadcopter' }}
+          {{ icon(item?.type) }}
         </v-icon>
       </template>
       <template #item.transfer="{ item }">
