@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using SatisfactorySaveNet;
+﻿using SatisfactorySaveNet;
 using SatisfactorySaveNet.Abstracts;
 using SatisfactorySaveNet.Abstracts.Model;
 using SatisfactorySaveNet.Abstracts.Model.Properties;
@@ -21,12 +20,17 @@ public record SaveDetails(List<Station> Stations)
                 .ToList()
             : [];
 
-        // By PathName
-        var objectsByName = objects
-            .ToDictionary(o => o.ObjectReference.PathName, o => o);
+        var objectsByName = objects.ToDictionary(o => o.ObjectReference.PathName, o => o);
 
-        var tmp = objectsByName["Persistent_Level:PersistentLevel.FGDockingStationInfo_2146384413"];
+        return new([
+            .. ParseTrainStations(objects, objectsByName),
+            .. ParseDroneStations(objects, objectsByName),
+            .. ParseTruckStations(objects, objectsByName),
+        ]);
+    }
 
+    public static IEnumerable<Station> ParseTrainStations(List<ComponentObject> objects, Dictionary<string, ComponentObject> objectsByName)
+    {
         // Train parts By TypePath
         var trainRelatedObjects = objects
             .Where(o => o.TypePath.Contains("train", StringComparison.InvariantCultureIgnoreCase) || o.TypePath.Contains("rail", StringComparison.InvariantCultureIgnoreCase))
@@ -82,7 +86,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Train Station, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TrainStation_C_2147007670
         var trainStations = trainRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainStation.Build_TrainStation_C"];
-        var trainStationsRefined = trainStations
+        return trainStations
             .OfType<ActorObject>()
             .Select(t =>
             {
@@ -101,11 +105,11 @@ public record SaveDetails(List<Station> Stations)
                     t.Position.X,
                     t.Position.Y
                 );
-            })
-            .ToList();
+            });
+    }
 
-
-
+    public static IEnumerable<Station> ParseDroneStations(List<ComponentObject> objects, Dictionary<string, ComponentObject> objectsByName)
+    {
         // Drone parts By TypePath
         var droneRelatedObjects = objects
             .Where(o => o.TypePath.Contains("drone", StringComparison.InvariantCultureIgnoreCase))
@@ -129,14 +133,14 @@ public record SaveDetails(List<Station> Stations)
 
         // Drone Station, by StationId. I.e. Persistent_Level:PersistentLevel.Build_DroneStation_C_2144148257
         var droneStations = droneRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/DroneStation/Build_DroneStation.Build_DroneStation_C"];
-        var droneStationsRefined = droneStations
+        return droneStations
             .OfType<ActorObject>()
             .Select(t =>
             {
                 var id = t.ObjectReference.PathName;
                 var stationIdentifier = droneStationIdentifiersRefined[id];
                 var drone = (t.Properties.FirstOrDefault(p => p.Name == "mStationDrone") as ObjectProperty)?.Value.PathName ?? "??";
-                var inputInventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mInputInventory") as ObjectProperty)?.Value.PathName ?? "??"]; 
+                var inputInventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mInputInventory") as ObjectProperty)?.Value.PathName ?? "??"];
                 var outputInventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mOutputInventory") as ObjectProperty)?.Value.PathName ?? "??"];
                 var inputCargoTypes = ToCargoTypes(inputInventory);
                 var outputCargoTypes = ToCargoTypes(outputInventory);
@@ -152,13 +156,15 @@ public record SaveDetails(List<Station> Stations)
                     t.Position.X,
                     t.Position.Y
                 );
-            })
-            .ToList();
+            });
+    }
 
+    public static IEnumerable<Station> ParseTruckStations(List<ComponentObject> objects, Dictionary<string, ComponentObject> objectsByName)
+    {
         // Truck parts By TypePath
         var truckRelatedObjects = objects
-            .Where(o => o.TypePath.Contains("truck", StringComparison.InvariantCultureIgnoreCase) 
-            || o.TypePath.Contains("vehicle", StringComparison.InvariantCultureIgnoreCase) 
+            .Where(o => o.TypePath.Contains("truck", StringComparison.InvariantCultureIgnoreCase)
+            || o.TypePath.Contains("vehicle", StringComparison.InvariantCultureIgnoreCase)
             || o.TypePath.Contains("docking", StringComparison.InvariantCultureIgnoreCase)
             || o.TypePath.Contains("driving", StringComparison.InvariantCultureIgnoreCase)
             )
@@ -182,7 +188,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Truck Station, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TruckStation_C_2144148257
         var truckStations = truckRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/TruckStation/Build_TruckStation.Build_TruckStation_C"];
-        var truckStationsRefined = truckStations
+        return truckStations
             .OfType<ActorObject>()
             .Select(t =>
             {
@@ -204,11 +210,7 @@ public record SaveDetails(List<Station> Stations)
                     t.Position.X,
                     t.Position.Y
                 );
-            })
-            .ToList();
-
-
-        return new([.. trainStationsRefined, .. droneStationsRefined, .. truckStationsRefined]);
+            });
     }
 
     private static string[] ToStops(Property? p)
