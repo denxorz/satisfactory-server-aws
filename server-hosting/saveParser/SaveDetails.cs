@@ -42,7 +42,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Train Timetable, by PathName. I.e. Persistent_Level:PersistentLevel.FGRailroadTimeTable_2146071228
         var trainTimeTables = trainRelatedObjectsByType["/Script/FactoryGame.FGRailroadTimeTable"];
-        var trainTimeTablesRefined = trainTimeTables
+        var trainTimeTablesWithStops = trainTimeTables
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
@@ -52,7 +52,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Train Station Identifier, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TrainStation_C_2147007670
         var trainStationIdentifiers = trainRelatedObjectsByType["/Script/FactoryGame.FGTrainStationIdentifier"];
-        var trainStationIdentifiersRefined = trainStationIdentifiers
+        var trainStationIdentifiersByStationId = trainStationIdentifiers
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
@@ -63,7 +63,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Train Station Docking Platform, by DockingStationId. I.e. Persistent_Level:PersistentLevel.Build_TrainDockingStation_C_2147007379
         var trainStationDockings = trainRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainDockingStation.Build_TrainDockingStation_C"];
-        var trainStationDockingsRefined = trainStationDockings
+        var trainStationDockingsByStationId = trainStationDockings
             .OfType<ActorObject>()
             .Select(t => new
             {
@@ -75,12 +75,12 @@ public record SaveDetails(List<Station> Stations)
 
         // Train Station Docking Platform, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TrainStation_C_2147007670
         var trainStationConnections = trainRelatedObjectsByType["/Script/FactoryGame.FGTrainPlatformConnection"];
-        var trainStationConnectionsRefined = trainStationConnections.GroupBy(t => t.ParentActorName).ToDictionary(t => t.Key, t => t.ToList());
-        var trainStationConnectionToPlatformsRefined = trainStationConnectionsRefined
+        var trainStationConnectionsByStationId = trainStationConnections.GroupBy(t => t.ParentActorName).ToDictionary(t => t.Key, t => t.ToList());
+        var trainStationConnectionToPlatformsByStationId = trainStationConnectionsByStationId
             .ToDictionary(
                 t => t.Key,
                 t => t.Value
-                .Select(tt => trainStationDockingsRefined.TryGetValue(string.Join('.', (tt.Properties.FirstOrDefault(o => o.Name == "mConnectedTo") as ObjectProperty)?.Value.PathName.Split('.')[..^1] ?? []), out var aa0) ? aa0 : null)
+                .Select(tt => trainStationDockingsByStationId.TryGetValue(string.Join('.', (tt.Properties.FirstOrDefault(o => o.Name == "mConnectedTo") as ObjectProperty)?.Value.PathName.Split('.')[..^1] ?? []), out var aa0) ? aa0 : null)
                 .Where(tt => tt is not null)
                 .ToList());
 
@@ -91,8 +91,8 @@ public record SaveDetails(List<Station> Stations)
             .Select(t =>
             {
                 var id = t.ObjectReference.PathName;
-                var stationIdentifier = trainStationIdentifiersRefined[id];
-                var platforms = trainStationConnectionToPlatformsRefined[id];
+                var stationIdentifier = trainStationIdentifiersByStationId[id];
+                var platforms = trainStationConnectionToPlatformsByStationId[id];
                 var inventory = platforms.Count > 0 ? objectsByName[platforms[0]!.InventoryId] : null;
 
                 return new Station(
@@ -101,7 +101,7 @@ public record SaveDetails(List<Station> Stations)
                     "train",
                     ToCargoTypes(inventory),
                     platforms.Count > 0 && platforms[0]!.IsUnloadMode,
-                    [.. trainTimeTablesRefined.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))],
+                    [.. trainTimeTablesWithStops.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))],
                     t.Position.X,
                     t.Position.Y
                 );
@@ -121,7 +121,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Drone Station Identifier, by StationId. I.e. Persistent_Level:PersistentLevel.Build_DroneStation_C_2144148257
         var droneStationIdentifiers = droneRelatedObjectsByType["/Script/FactoryGame.FGDroneStationInfo"];
-        var droneStationIdentifiersRefined = droneStationIdentifiers
+        var droneStationIdentifiersByStationId = droneStationIdentifiers
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
@@ -138,7 +138,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t =>
             {
                 var id = t.ObjectReference.PathName;
-                var stationIdentifier = droneStationIdentifiersRefined[id];
+                var stationIdentifier = droneStationIdentifiersByStationId[id];
                 var drone = (t.Properties.FirstOrDefault(p => p.Name == "mStationDrone") as ObjectProperty)?.Value.PathName ?? "??";
                 var inputInventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mInputInventory") as ObjectProperty)?.Value.PathName ?? "??"];
                 var outputInventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mOutputInventory") as ObjectProperty)?.Value.PathName ?? "??"];
@@ -176,7 +176,7 @@ public record SaveDetails(List<Station> Stations)
 
         // Truck Station Identifier, by StationId. I.e. Persistent_Level:PersistentLevel.Build_TruckStation_C_2144148257
         var truckStationIdentifiers = truckRelatedObjectsByType["/Script/FactoryGame.FGDockingStationInfo"];
-        var truckStationIdentifiersRefined = truckStationIdentifiers
+        var truckStationIdentifiersByStationId = truckStationIdentifiers
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
@@ -193,7 +193,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t =>
             {
                 var id = t.ObjectReference.PathName;
-                var stationIdentifier = truckStationIdentifiersRefined[id];
+                var stationIdentifier = truckStationIdentifiersByStationId[id];
                 var inventory = objectsByName[(t.Properties.FirstOrDefault(p => p.Name == "mInventory") as ObjectProperty)?.Value.PathName ?? "??"];
                 var cargoTypes = ToCargoTypes(inventory);
                 var output0 = objectsByName[t.Components.First(c => c.PathName.Contains("output0", StringComparison.InvariantCultureIgnoreCase)).PathName];
