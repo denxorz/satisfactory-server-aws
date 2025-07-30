@@ -1,6 +1,5 @@
 
 import type { CodegenConfig } from '@graphql-codegen/cli';
-import { Types } from '@graphql-codegen/plugin-helpers';
 
 const config: CodegenConfig = {
   overwrite: true,

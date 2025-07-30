@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Generated files
+*.min.js
+*.min.css
+graphql.schema.json
+src/gql/ 
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Environment files
+.env*
