@@ -1,4 +1,6 @@
-﻿using SatisfactorySaveNet;
+﻿using System.Text.RegularExpressions;
+using FuzzySharp;
+using SatisfactorySaveNet;
 using SatisfactorySaveNet.Abstracts;
 using SatisfactorySaveNet.Abstracts.Model;
 using SatisfactorySaveNet.Abstracts.Model.Properties;
@@ -56,7 +58,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
-                Name = (t.Properties.FirstOrDefault(p => p.Name == "mStationName") as TextProperty)?.Value ?? "??",
+                Name = (t.Properties.FirstOrDefault(p => p.Name == "mStationName") as TextProperty)?.Value ?? "No custom name",
                 TrainStationId = (t.Properties.FirstOrDefault(p => p.Name == "mStation") as ObjectProperty)?.Value.PathName ?? "??",
             })
             .ToDictionary(t => t.TrainStationId, t => t);
@@ -94,12 +96,15 @@ public record SaveDetails(List<Station> Stations)
                 var stationIdentifier = trainStationIdentifiersByStationId[id];
                 var platforms = trainStationConnectionToPlatformsByStationId[id];
                 var inventory = platforms.Count > 0 ? objectsByName[platforms[0]!.InventoryId] : null;
+                var cargoTypes = ToCargoTypes(inventory);
+                var cargo = GetFlowPerMinuteFromName(stationIdentifier.Name, cargoTypes);
 
                 return new Station(
                     id.Split("_")[^1],
-                    stationIdentifier.Name,
+                    GetNameFromName(stationIdentifier.Name),
                     "train",
-                    ToCargoTypes(inventory),
+                    cargoTypes,
+                    cargo,
                     platforms.Count > 0 && platforms[0]!.IsUnloadMode,
                     [.. trainTimeTablesWithStops.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))],
                     t.Position.X,
@@ -125,7 +130,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
-                Name = (t.Properties.FirstOrDefault(p => p.Name == "mBuildingTag") as StrProperty)?.Value ?? "??",
+                Name = (t.Properties.FirstOrDefault(p => p.Name == "mBuildingTag") as StrProperty)?.Value ?? "No custom name",
                 DroneStationId = (t.Properties.FirstOrDefault(p => p.Name == "mStation") as ObjectProperty)?.Value.PathName ?? "??",
                 PairedStationId = (t.Properties.FirstOrDefault(p => p.Name == "mPairedStation") as ObjectProperty)?.Value.PathName ?? "??", //Persistent_Level:PersistentLevel.FGDroneStationInfo_2147135058
             })
@@ -145,12 +150,15 @@ public record SaveDetails(List<Station> Stations)
                 var inputCargoTypes = ToCargoTypes(inputInventory);
                 var outputCargoTypes = ToCargoTypes(outputInventory);
                 var isUnload = inputCargoTypes.Count <= outputCargoTypes.Count;
+                List<string> cargoTypes = [.. inputCargoTypes, .. outputCargoTypes];
+                var cargo = GetFlowPerMinuteFromName(stationIdentifier.Name, cargoTypes);
 
                 return new Station(
                     id.Split("_")[^1],
-                    stationIdentifier.Name,
+                    GetNameFromName(stationIdentifier.Name),
                     "drone",
-                    [.. inputCargoTypes, .. outputCargoTypes],
+                    cargoTypes,
+                    cargo,
                     isUnload,
                     [new Transporter(drone.Split("_")[^1])],
                     t.Position.X,
@@ -180,7 +188,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t => new
             {
                 Id = t.ObjectReference.PathName,
-                Name = (t.Properties.FirstOrDefault(p => p.Name == "mBuildingTag") as StrProperty)?.Value ?? "??",
+                Name = (t.Properties.FirstOrDefault(p => p.Name == "mBuildingTag") as StrProperty)?.Value ?? "No custom name",
                 TruckStationId = (t.Properties.FirstOrDefault(p => p.Name == "mStation") as ObjectProperty)?.Value.PathName ?? "??",
                 PairedStationId = (t.Properties.FirstOrDefault(p => p.Name == "mPairedStation") as ObjectProperty)?.Value.PathName ?? "??", //Persistent_Level:PersistentLevel.FGTruckStationInfo_2147135058
             })
@@ -199,12 +207,14 @@ public record SaveDetails(List<Station> Stations)
                 var output0 = objectsByName[t.Components.First(c => c.PathName.Contains("output0", StringComparison.InvariantCultureIgnoreCase)).PathName];
                 var output1 = objectsByName[t.Components.First(c => c.PathName.Contains("output1", StringComparison.InvariantCultureIgnoreCase)).PathName];
                 var isUnload = output0.Properties.Count > 0 || output1.Properties.Count > 0;
+                var cargo = GetFlowPerMinuteFromName(stationIdentifier.Name, cargoTypes);
 
                 return new Station(
                     id.Split("_")[^1],
-                    stationIdentifier.Name,
+                    GetNameFromName(stationIdentifier.Name),
                     "truck",
                     cargoTypes,
+                    cargo,
                     isUnload,
                     [],
                     t.Position.X,
@@ -238,8 +248,64 @@ public record SaveDetails(List<Station> Stations)
         var stacks = ((inventory.Properties.FirstOrDefault(p => p.Name == "mInventoryStacks") as ArrayProperty)?.Property as ArrayStructProperty)?.Values as TypedData[] ?? [];
         var inventoryItemStacks = stacks.Select(s => ((s as ArrayProperties)?.Values.FirstOrDefault() as StructProperty)?.Value as InventoryItem);
         var allStacksWithItems = inventoryItemStacks.Where(item => item?.ExtraProperty is IntProperty { Value: > 0 });
-        var allStacksWithItemsDistinct = allStacksWithItems.Select(s => s?.ItemType?.Split("/")[5] ?? "").Distinct().Where(s => !string.IsNullOrWhiteSpace(s));
+        var allStacksWithItemsDistinct = allStacksWithItems.Select(s => PrettyItemName(s?.ItemType?.Split(".")[^1] ?? "")).Distinct().Where(s => !string.IsNullOrWhiteSpace(s));
+
+        static string PrettyItemName(string dirtyItemName) => dirtyItemName
+                .Replace("Desc_", null, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("BP_", null, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("ItemDescriptor", null, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("_C", null, StringComparison.InvariantCultureIgnoreCase);
+
         return [.. allStacksWithItemsDistinct];
+    }
+
+    private static string GetNameFromName(string name)
+    {
+        if (name.StartsWith('['))
+        {
+            return name.Split('[')[0].Trim(']');
+        }
+
+        return name.Split('[')[0].Trim();
+    }
+
+    private static List<CargoFlow> GetFlowPerMinuteFromName(string name, List<string> cargoTypes)
+    {
+        var flowSpecPattern = @"\[([^\]]+)\]";
+        var flows = new List<CargoFlow>(1);
+
+        Regex r = new(flowSpecPattern, RegexOptions.IgnoreCase);
+        Match m = r.Match(name);
+        while (m.Success)
+        {
+            for (int i = 1; i < m.Groups.Count; i++)
+            {
+                Group g = m.Groups[i];
+
+                var splittedGroup = g.ToString().Split(' ');
+                if (splittedGroup.Length == 3)
+                {
+                    string flowAsString = splittedGroup[1];
+                    string flowWithoutVariable = flowAsString.Replace("~", null);
+                    string flowLowest = flowWithoutVariable.Split('-')[0];
+
+                    var potential = Process.ExtractOne(splittedGroup[2], cargoTypes.Count == 0 ? GameItems.AvailableItems : cargoTypes);
+                    //Console.WriteLine($"{splittedGroup[2]}: {potential.Value} {potential}");
+
+                    var cargoType = potential.Score >= 20 ? potential.Value : splittedGroup[2];
+
+                    flows.Add(new(
+                        cargoType,
+                        splittedGroup[0].StartsWith("in", StringComparison.InvariantCultureIgnoreCase),
+                        float.TryParse(flowLowest, out float f) ? (int)Math.Ceiling(f) : null,
+                        !flowAsString.StartsWith('~')));
+                }
+
+            }
+            m = m.NextMatch();
+        }
+
+        return flows;
     }
 }
 

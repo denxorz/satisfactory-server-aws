@@ -12,6 +12,12 @@ const { result: resultSaveDetails } = useQuery(
       saveDetails {
         stations {
           cargoTypes
+          cargoFlows {
+            type
+            isUnload
+            flowPerMinute
+            isExact
+          }
           id
           isUnload
           name
@@ -75,7 +81,7 @@ const icon = (type?: Maybe<string>) => {
       { title: '', key: 'type', width: '48px' },
       { title: '', key: 'transfer', width: '48px', sortRaw: (a: Station, b: Station) => (a.isUnload ? 1 : 0) - (b.isUnload ? 1 : 0) },
       { title: 'Station', key: 'name', width: '40%' },
-      { title: 'Cargo', key: 'cargoType', sortRaw: (a: Station, b: Station) => (a.cargoTypes?.join('/') || 'Unknown').localeCompare(b.cargoTypes?.join('/') || 'Unknown') },
+      { title: 'Cargo', key: 'cargoFlows', sortRaw: (a: Station, b: Station) => (a.cargoFlows?.join('/') || 'Unknown').localeCompare(b.cargoFlows?.join('/') || 'Unknown') },
       { title: 'Vehicles', key: 'transporters' }
     ]" :items="stations" item-key="id" class="elevation-1" hide-footer :items-per-page="-1" v-model="selectedStations"
       select-strategy="single"
@@ -91,8 +97,8 @@ const icon = (type?: Maybe<string>) => {
           {{ item?.isUnload ? 'mdi-tray-arrow-up' : 'mdi-tray-arrow-down' }}
         </v-icon>
       </template>
-      <template #item.cargoType="{ item }">
-        {{ item?.cargoTypes?.join('/') || 'Unknown' }}
+      <template #item.cargoFlows="{ item }">
+        {{item?.cargoFlows?.map(c => `${c?.flowPerMinute ?? '??'} ${c?.type}`)?.join(' / ') || 'Unknown'}}
       </template>
       <template #item.transporters="{ item }">
         {{ item?.transporters?.length || 0 }}

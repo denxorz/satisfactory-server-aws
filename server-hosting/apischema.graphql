@@ -13,6 +13,7 @@ type Station {
     name: String
     type: String
     cargoTypes: [String]
+    cargoFlows: [CargoFlow]
     transporters: [Transporter]
     isUnload: Boolean
     x: Float
@@ -21,6 +22,13 @@ type Station {
 
 type Transporter {
     id: String
+}
+
+type CargoFlow   {
+    type: String
+    isUnload: Boolean
+    flowPerMinute: Int
+    isExact: Boolean
 }
 
 type SaveDetails {
