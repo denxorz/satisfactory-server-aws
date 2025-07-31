@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "codegen": "graphql-codegen -r dotenv/config --config codegen.ts dotenv_config_path=.env.local",
     "codegen-watch": "graphql-codegen -r dotenv/config --config codegen.ts dotenv_config_path=.env.local --watch",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .eslintignore",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write src/",
     "type-check": "vue-tsc --noEmit"
   },
@@ -28,25 +28,26 @@
     "vuetify": "^3.9.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.32.0",
     "@graphql-codegen/cli": "^5.0.7",
     "@graphql-codegen/introspection": "^4.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@nabla/vite-plugin-eslint": "^2.0.6",
     "@parcel/watcher": "^2.5.1",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/eslint-config-prettier": "^9.0.0",
-    "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/tsconfig": "^0.7.0",
     "esbuild": "0.25.8",
-    "eslint": "^8.57.0",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-vue": "^9.0.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.4.0",
     "prettier": "^3.0.0",
     "typescript": "^5.5.0",
     "vite": "^7.0.5",
-    "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-vuetify": "^2.1.1",
+    "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.0.3"
   }
 }
+
