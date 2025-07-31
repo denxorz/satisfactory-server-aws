@@ -263,7 +263,7 @@ public record SaveDetails(List<Station> Stations)
     {
         if (name.StartsWith('['))
         {
-            return name.Split('[')[0].Trim(']');
+            return name.Split('[')[1].Trim(']');
         }
 
         return name.Split('[')[0].Trim();
