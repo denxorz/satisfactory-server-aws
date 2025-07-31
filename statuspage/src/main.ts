@@ -1,9 +1,20 @@
-import { createApp } from 'vue'
+import {
+  ApolloClient,
+  ApolloLink,
+  HttpLink,
+  InMemoryCache,
+} from '@apollo/client/core'
 import { DefaultApolloClient } from '@vue/apollo-composable'
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/client/core'
-import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-link'
+import {
+  AUTH_TYPE,
+  createAuthLink,
+  type AuthOptions,
+} from 'aws-appsync-auth-link'
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link'
+import { createApp } from 'vue'
+import VueApexCharts from 'vue3-apexcharts'
 import { createVuetify } from 'vuetify'
+
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/lib/styles/main.css'
 
@@ -40,6 +51,7 @@ const vuetify = createVuetify({
 
 const app = createApp(App)
 app.use(vuetify)
+app.use(VueApexCharts)
 app.provide(DefaultApolloClient, apolloClient)
 
 app.mount('#app')

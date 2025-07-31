@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Toolbar from './components/Toolbar.vue'
-import TrainsTable from './components/TrainsTable.vue'
+  import Toolbar from './components/Toolbar.vue'
+  import TrainsTable from './components/TrainsTable.vue'
 </script>
 
 <template>
