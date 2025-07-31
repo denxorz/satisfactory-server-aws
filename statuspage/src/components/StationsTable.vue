@@ -110,8 +110,8 @@
         title: 'Cargo',
         key: 'cargoFlows',
         sortRaw: (a: Station, b: Station) =>
-          (a.cargoFlows?.join('/') || 'Unknown').localeCompare(
-            b.cargoFlows?.join('/') || 'Unknown'
+          (a.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown').localeCompare(
+            b.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown'
           ),
       },
       { title: 'Vehicles', key: 'transporters' },
