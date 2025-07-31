@@ -5,11 +5,7 @@ import {
   InMemoryCache,
 } from '@apollo/client/core'
 import { DefaultApolloClient } from '@vue/apollo-composable'
-import {
-  AUTH_TYPE,
-  createAuthLink,
-  type AuthOptions,
-} from 'aws-appsync-auth-link'
+import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-link'
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link'
 import { createApp } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
@@ -51,7 +47,8 @@ const vuetify = createVuetify({
 
 const app = createApp(App)
 app.use(vuetify)
-app.use(VueApexCharts)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+app.use(VueApexCharts as any)
 app.provide(DefaultApolloClient, apolloClient)
 
 app.mount('#app')
