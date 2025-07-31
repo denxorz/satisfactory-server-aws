@@ -1,10 +1,11 @@
 <script setup lang="ts">
   import { useQuery } from '@vue/apollo-composable'
-  import { computed, ref } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
 
   import { graphql } from '../gql'
-  import type { Maybe, Station, Transporter } from '../gql/graphql'
+  import type { Maybe, Station } from '../gql/graphql'
+  import StationDetails from './StationDetails.vue'
 
   const { result: resultSaveDetails } = useQuery(
     graphql(`
@@ -124,13 +125,18 @@
   const selectedStation = computed(() =>
     preFilteredStations.value.find(s => s.id === selectedStations.value[0])
   )
-  const selectedStationVehicles = computed(
-    () =>
-      selectedStation.value?.transporters?.map(t => ({
-        id: t?.id ?? '',
-        destinations: getDestinations(t?.id ?? '', selectedStation.value?.id || ''),
-      })) ?? []
-  )
+  const showStationDetails = ref(false)
+
+  // Show bottom sheet when a station is selected
+  watch(selectedStation, newStation => {
+    showStationDetails.value = !!newStation
+  })
+
+  // Clear selection when bottom sheet is closed
+  const closeStationDetails = () => {
+    showStationDetails.value = false
+    selectedStations.value = []
+  }
 
   const theme = useTheme()
 
@@ -146,36 +152,11 @@
     return {}
   }
 
-  const getDestinations = (transporterId: string, currentStationId: string) => {
-    const stations = resultSaveDetails.value?.saveDetails?.stations as
-      | (Station | null)[]
-      | undefined
-    if (!stations) return []
-    const destinations = stations
-      .filter((station): station is Station => !!station)
-      .filter(
-        (station: Station) =>
-          station?.transporters?.some(
-            (transporter): transporter is Transporter =>
-              !!transporter && transporter.id === transporterId
-          ) && station?.id !== currentStationId
-      )
-    return destinations.map((station: Station) => station?.name || 'Unnamed Station')
-  }
-
   const icon = (type?: Maybe<string>) => {
     if (type === 'train') return 'mdi-train'
     if (type === 'truck') return 'mdi-truck'
     if (type === 'drone') return 'mdi-quadcopter'
     return 'mdi-help-box'
-  }
-
-  // Clear all filters
-  const clearFilters = () => {
-    searchText.value = ''
-    selectedStationTypes.value = undefined
-    selectedTransferTypes.value = undefined
-    selectedCargoTypes.value = []
   }
 </script>
 
@@ -316,43 +297,15 @@
       {{ item?.transporters?.length || 0 }}
     </template>
   </v-data-table>
-  <div v-if="selectedStation" style="min-width: 320px; max-width: 400px">
-    <h3>Station Details</h3>
-    <div>
-      <strong>Id:</strong>
-      {{ selectedStation.id || '??' }}
-    </div>
-    <div>
-      <strong>Name:</strong>
-      {{ selectedStation.name || '??' }}
-    </div>
-    <div>
-      <strong>Type:</strong>
-      {{ selectedStation.isUnload ? 'Unload' : 'Load' }}
-    </div>
-    <div>
-      <strong>Cargo Type:</strong>
-      {{ selectedStation.cargoTypes?.join('/') || 'Unknown' }}
-    </div>
-    <div style="margin-top: 12px"><strong>Vehicles:</strong></div>
-    <div v-if="selectedStationVehicles.length > 0" style="margin-top: 4px">
-      <ul style="padding-left: 18px">
-        <li
-          v-for="vehicle in selectedStationVehicles"
-          :key="vehicle?.id || 'unknown-vehicle'"
-        >
-          {{ vehicle?.id }} -> {{ vehicle?.destinations.join(', ') }}
-        </li>
-      </ul>
-    </div>
-    <div v-else style="margin-top: 4px; color: #666">
-      No vehicles associated with this station
-    </div>
-  </div>
-  <div v-else style="min-width: 320px; max-width: 400px; color: #999">
-    <h3>Station Details</h3>
-    <div>Select a station to see details</div>
-  </div>
+
+  <v-bottom-sheet v-model="showStationDetails" :retain-focus="false" inset>
+    <StationDetails
+      :station="selectedStation"
+      :save-details="resultSaveDetails?.saveDetails"
+      :on-close="closeStationDetails"
+    />
+  </v-bottom-sheet>
+
   <div v-if="!resultSaveDetails?.saveDetails?.stations">
     <p>Loading stations...</p>
   </div>
