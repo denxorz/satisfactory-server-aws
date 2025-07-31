@@ -201,6 +201,7 @@
       ) => toggleSelect(internalItem)
     "
     :row-props="rowProps"
+    :sort-by="[{ key: 'name', order: 'asc' }]"
   >
     <!-- Filters Section -->
     <template v-slot:top>
