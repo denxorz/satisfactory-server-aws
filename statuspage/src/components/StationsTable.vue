@@ -132,149 +132,157 @@
 </script>
 
 <template>
-  <h2>List</h2>
+  <v-card>
+    <v-card-title>Stations</v-card-title>
+    <v-card-text>
+      <v-data-table
+        :headers="[
+          { title: '', key: 'type', width: '48px' },
+          {
+            title: '',
+            key: 'transfer',
+            width: '48px',
+            sortRaw: (a: Station, b: Station) =>
+              (a.isUnload ? 1 : 0) - (b.isUnload ? 1 : 0),
+          },
+          { title: 'Station', key: 'name', width: '40%' },
+          {
+            title: 'Cargo',
+            key: 'cargoFlows',
+            sortRaw: (a: Station, b: Station) =>
+              (
+                a.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown'
+              ).localeCompare(
+                b.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown'
+              ),
+          },
+          { title: 'Vehicles', key: 'transporters' },
+        ]"
+        :items="preFilteredStations"
+        item-key="id"
+        class="elevation-1 mt-4"
+        hide-footer
+        :items-per-page="15"
+        v-model="selectedStations"
+        select-strategy="single"
+        @click:row="
+          (
+            _: unknown,
+            {
+              internalItem,
+              toggleSelect,
+            }: { internalItem: Station; toggleSelect: (item: Station) => void }
+          ) => toggleSelect(internalItem)
+        "
+        :row-props="rowProps"
+        :sort-by="[{ key: 'name', order: 'asc' }]"
+      >
+        <!-- Filters Section -->
+        <template v-slot:top>
+          <v-row dense class="mt-1 ml-1 mr-1">
+            <!-- Search -->
+            <v-col cols="12" sm="6" md="3">
+              <v-text-field
+                v-model="searchText"
+                label="Search Stations"
+                prepend-inner-icon="mdi-magnify"
+                clearable
+                density="compact"
+                variant="outlined"
+              />
+            </v-col>
 
-  <v-data-table
-    :headers="[
-      { title: '', key: 'type', width: '48px' },
-      {
-        title: '',
-        key: 'transfer',
-        width: '48px',
-        sortRaw: (a: Station, b: Station) =>
-          (a.isUnload ? 1 : 0) - (b.isUnload ? 1 : 0),
-      },
-      { title: 'Station', key: 'name', width: '40%' },
-      {
-        title: 'Cargo',
-        key: 'cargoFlows',
-        sortRaw: (a: Station, b: Station) =>
-          (a.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown').localeCompare(
-            b.cargoFlows?.map(c => c?.type)?.join('/') || 'Unknown'
-          ),
-      },
-      { title: 'Vehicles', key: 'transporters' },
-    ]"
-    :items="preFilteredStations"
-    item-key="id"
-    class="elevation-1 mt-4"
-    hide-footer
-    :items-per-page="15"
-    v-model="selectedStations"
-    select-strategy="single"
-    @click:row="
-      (
-        _: unknown,
-        {
-          internalItem,
-          toggleSelect,
-        }: { internalItem: Station; toggleSelect: (item: Station) => void }
-      ) => toggleSelect(internalItem)
-    "
-    :row-props="rowProps"
-    :sort-by="[{ key: 'name', order: 'asc' }]"
-  >
-    <!-- Filters Section -->
-    <template v-slot:top>
-      <v-row dense class="mt-1 ml-1 mr-1">
-        <!-- Search -->
-        <v-col cols="12" sm="6" md="3">
-          <v-text-field
-            v-model="searchText"
-            label="Search Stations"
-            prepend-inner-icon="mdi-magnify"
-            clearable
-            density="compact"
-            variant="outlined"
-          />
-        </v-col>
-
-        <!-- Station Type Filter -->
-        <v-col cols="12" sm="6" md="3">
-          <v-select
-            v-model="selectedStationTypes"
-            :items="stationTypeOptions"
-            label="Station Type"
-            clearable
-            density="compact"
-            variant="outlined"
-            prepend-inner-icon="mdi-train"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props">
-                <template v-slot:prepend>
-                  <v-icon>{{ item.raw.prependIcon }}</v-icon>
+            <!-- Station Type Filter -->
+            <v-col cols="12" sm="6" md="3">
+              <v-select
+                v-model="selectedStationTypes"
+                :items="stationTypeOptions"
+                label="Station Type"
+                clearable
+                density="compact"
+                variant="outlined"
+                prepend-inner-icon="mdi-train"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:prepend>
+                      <v-icon>{{ item.raw.prependIcon }}</v-icon>
+                    </template>
+                  </v-list-item>
                 </template>
-              </v-list-item>
-            </template>
-          </v-select>
-        </v-col>
+              </v-select>
+            </v-col>
 
-        <!-- Transfer Type Filter -->
-        <v-col cols="12" sm="6" md="3">
-          <v-select
-            v-model="selectedTransferTypes"
-            :items="transferTypeOptions"
-            label="Transfer Type"
-            clearable
-            density="compact"
-            variant="outlined"
-            prepend-inner-icon="mdi-tray-arrow-up"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props">
-                <template v-slot:prepend>
-                  <v-icon>{{ item.raw.prependIcon }}</v-icon>
+            <!-- Transfer Type Filter -->
+            <v-col cols="12" sm="6" md="3">
+              <v-select
+                v-model="selectedTransferTypes"
+                :items="transferTypeOptions"
+                label="Transfer Type"
+                clearable
+                density="compact"
+                variant="outlined"
+                prepend-inner-icon="mdi-tray-arrow-up"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:prepend>
+                      <v-icon>{{ item.raw.prependIcon }}</v-icon>
+                    </template>
+                  </v-list-item>
                 </template>
-              </v-list-item>
-            </template>
-          </v-select>
-        </v-col>
+              </v-select>
+            </v-col>
 
-        <!-- Cargo Type Filter -->
-        <v-col cols="12" sm="6" md="3">
-          <v-autocomplete
-            v-model="selectedCargoTypes"
-            :items="cargoTypeOptions"
-            label="Cargo Type"
-            multiple
-            clearable
-            density="compact"
-            variant="outlined"
-            prepend-inner-icon="mdi-package-variant"
-            chips
-            closable-chips
-          />
-        </v-col>
-      </v-row>
-    </template>
-    <template v-slot:item.type="{ item }">
-      <v-icon>
-        {{ icon(item?.type) }}
-      </v-icon>
-    </template>
-    <template v-slot:item.transfer="{ item }">
-      <v-icon>
-        {{ item?.isUnload ? 'mdi-tray-arrow-up' : 'mdi-tray-arrow-down' }}
-      </v-icon>
-    </template>
-    <template v-slot:item.cargoFlows="{ item }">
-      {{
-        item?.cargoFlows
-          ?.map(c => `${c?.flowPerMinute ?? '??'} ${c?.type}`)
-          ?.join(' / ') || 'Unknown'
-      }}
-    </template>
-    <template v-slot:item.transporters="{ item }">
-      {{ item?.transporters?.length || 0 }}
-    </template>
-  </v-data-table>
+            <!-- Cargo Type Filter -->
+            <v-col cols="12" sm="6" md="3">
+              <v-autocomplete
+                v-model="selectedCargoTypes"
+                :items="cargoTypeOptions"
+                label="Cargo Type"
+                multiple
+                clearable
+                density="compact"
+                variant="outlined"
+                prepend-inner-icon="mdi-package-variant"
+                chips
+                closable-chips
+              />
+            </v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.type="{ item }">
+          <v-icon>
+            {{ icon(item?.type) }}
+          </v-icon>
+        </template>
+        <template v-slot:item.transfer="{ item }">
+          <v-icon>
+            {{ item?.isUnload ? 'mdi-tray-arrow-up' : 'mdi-tray-arrow-down' }}
+          </v-icon>
+        </template>
+        <template v-slot:item.cargoFlows="{ item }">
+          {{
+            item?.cargoFlows
+              ?.map(c => `${c?.flowPerMinute ?? '??'} ${c?.type}`)
+              ?.join(' / ') || 'Unknown'
+          }}
+        </template>
+        <template v-slot:item.transporters="{ item }">
+          {{ item?.transporters?.length || 0 }}
+        </template>
+      </v-data-table>
 
-  <v-bottom-sheet v-model="showStationDetails" :retain-focus="false" inset>
-    <StationDetails :station="selectedStation" :on-close="closeStationDetails" />
-  </v-bottom-sheet>
+      <v-bottom-sheet v-model="showStationDetails" :retain-focus="false" inset>
+        <StationDetails :station="selectedStation" :on-close="closeStationDetails" />
+      </v-bottom-sheet>
 
-  <div v-if="!props.stations.length">
-    <p>Loading stations...</p>
-  </div>
+      <div v-if="!props.stations.length" class="text-center pa-8">
+        <v-alert type="info" variant="tonal">
+          <template #title>Loading Stations</template>
+          <template #text>Please wait while station data is being loaded.</template>
+        </v-alert>
+      </div>
+    </v-card-text>
+  </v-card>
 </template>

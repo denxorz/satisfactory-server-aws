@@ -12,7 +12,6 @@
 
   const stations = computed(() => props.stations)
 
-  const graphContainer = ref()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const graphviz = ref()
@@ -189,58 +188,11 @@
       console.error('Failed to merge images:', err)
     }
   }
-
-  const downloadDotFile = () => {
-    const blob = new Blob([dotContent.value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'station-network.dot'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  const downloadSvgFile = () => {
-    if (!graphContainer.value) return
-
-    const svgElement = graphContainer.value.querySelector('svg')
-    if (!svgElement) return
-
-    const svgData = new XMLSerializer().serializeToString(svgElement)
-    const blob = new Blob([svgData], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'station-network.svg'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
 </script>
 
 <template>
   <v-card>
-    <v-card-title class="d-flex align-center justify-space-between">
-      <span>Map</span>
-      <div>
-        <v-btn size="small" variant="outlined" @click="downloadDotFile" class="mr-2">
-          <v-icon start>mdi-download</v-icon>
-          DOT
-        </v-btn>
-        <v-btn
-          size="small"
-          variant="outlined"
-          @click="downloadSvgFile"
-          :disabled="!graphContainer?.querySelector('svg')"
-        >
-          <v-icon start>mdi-download</v-icon>
-          SVG
-        </v-btn>
-      </div>
-    </v-card-title>
+    <v-card-title>Map</v-card-title>
 
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">

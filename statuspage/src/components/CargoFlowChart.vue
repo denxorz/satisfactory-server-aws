@@ -116,14 +116,22 @@
 
 <template>
   <v-card>
-    <div v-if="cargoFlowChartData.categories.length > 0">
-      <apexchart
-        :options="chartOptions"
-        :series="cargoFlowChartData.series"
-        type="bar"
-        height="400"
-      />
-    </div>
-    <v-card-text v-else>No cargo flow data available</v-card-text>
+    <v-card-title>Cargo Flow</v-card-title>
+    <v-card-text>
+      <div v-if="cargoFlowChartData.categories.length > 0">
+        <apexchart
+          :options="chartOptions"
+          :series="cargoFlowChartData.series"
+          type="bar"
+          height="400"
+        />
+      </div>
+      <div v-else class="text-center pa-8">
+        <v-alert type="info" variant="tonal">
+          <template #title>No Cargo Flow Data Available</template>
+          <template #text>This will be automatically updated daily.</template>
+        </v-alert>
+      </div>
+    </v-card-text>
   </v-card>
 </template>
