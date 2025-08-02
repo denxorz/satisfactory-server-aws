@@ -1,46 +1,17 @@
 <script setup lang="ts">
-  import { useQuery } from '@vue/apollo-composable'
   import { computed, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
 
-  import { graphql } from '../gql'
   import type { Maybe, Station } from '../gql/graphql'
   import StationDetails from './StationDetails.vue'
 
-  const { result: resultSaveDetails } = useQuery(
-    graphql(`
-      query saveDetails {
-        saveDetails {
-          stations {
-            cargoTypes
-            cargoFlows {
-              type
-              isUnload
-              flowPerMinute
-              isExact
-            }
-            id
-            isUnload
-            name
-            type
-            transporters {
-              id
-            }
-            x
-            y
-          }
-        }
-      }
-    `)
-  )
+  interface Props {
+    stations: Station[]
+  }
 
-  const stations = computed(() => {
-    const stationsData =
-      (resultSaveDetails.value?.saveDetails?.stations as
-        | (Station | null)[]
-        | undefined) ?? []
-    return stationsData.filter((s): s is Station => !!s)
-  })
+  const props = defineProps<Props>()
+
+  const stations = computed(() => props.stations)
 
   // Filter state - keeping complex filters that v-data-table can't handle
   const searchText = ref('')
@@ -161,7 +132,7 @@
 </script>
 
 <template>
-  <h2>Stations</h2>
+  <h2>List</h2>
 
   <v-data-table
     :headers="[
@@ -188,7 +159,7 @@
     item-key="id"
     class="elevation-1 mt-4"
     hide-footer
-    :items-per-page="-1"
+    :items-per-page="15"
     v-model="selectedStations"
     select-strategy="single"
     @click:row="
@@ -300,14 +271,10 @@
   </v-data-table>
 
   <v-bottom-sheet v-model="showStationDetails" :retain-focus="false" inset>
-    <StationDetails
-      :station="selectedStation"
-      :save-details="resultSaveDetails?.saveDetails"
-      :on-close="closeStationDetails"
-    />
+    <StationDetails :station="selectedStation" :on-close="closeStationDetails" />
   </v-bottom-sheet>
 
-  <div v-if="!resultSaveDetails?.saveDetails?.stations">
+  <div v-if="!props.stations.length">
     <p>Loading stations...</p>
   </div>
 </template>

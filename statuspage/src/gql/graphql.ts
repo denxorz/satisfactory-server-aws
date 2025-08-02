@@ -18,10 +18,10 @@ export type Scalars = {
 
 export type CargoFlow = {
   __typename?: 'CargoFlow';
-  flowPerMinute?: Maybe<Scalars['Int']['output']>;
-  isExact?: Maybe<Scalars['Boolean']['output']>;
-  isUnload?: Maybe<Scalars['Boolean']['output']>;
-  type?: Maybe<Scalars['String']['output']>;
+  flowPerMinute: Scalars['Int']['output'];
+  isExact: Scalars['Boolean']['output'];
+  isUnload: Scalars['Boolean']['output'];
+  type: Scalars['String']['output'];
 };
 
 export type File = {
@@ -44,20 +44,20 @@ export type Query = {
 
 export type SaveDetails = {
   __typename?: 'SaveDetails';
-  stations?: Maybe<Array<Maybe<Station>>>;
+  stations?: Maybe<Array<Station>>;
 };
 
 export type Station = {
   __typename?: 'Station';
-  cargoFlows?: Maybe<Array<Maybe<CargoFlow>>>;
-  cargoTypes?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
-  id?: Maybe<Scalars['String']['output']>;
-  isUnload?: Maybe<Scalars['Boolean']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  transporters?: Maybe<Array<Maybe<Transporter>>>;
-  type?: Maybe<Scalars['String']['output']>;
-  x?: Maybe<Scalars['Float']['output']>;
-  y?: Maybe<Scalars['Float']['output']>;
+  cargoFlows?: Maybe<Array<CargoFlow>>;
+  cargoTypes?: Maybe<Array<Scalars['String']['output']>>;
+  id: Scalars['String']['output'];
+  isUnload: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  transporters?: Maybe<Array<Transporter>>;
+  type: Scalars['String']['output'];
+  x: Scalars['Float']['output'];
+  y: Scalars['Float']['output'];
 };
 
 export type Status = {
@@ -69,13 +69,15 @@ export type Status = {
 
 export type Transporter = {
   __typename?: 'Transporter';
-  id?: Maybe<Scalars['String']['output']>;
+  from: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  to?: Maybe<Scalars['String']['output']>;
 };
 
 export type SaveDetailsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SaveDetailsQuery = { __typename?: 'Query', saveDetails?: { __typename?: 'SaveDetails', stations?: Array<{ __typename?: 'Station', cargoTypes?: Array<string | null> | null, id?: string | null, isUnload?: boolean | null, name?: string | null, type?: string | null, x?: number | null, y?: number | null, cargoFlows?: Array<{ __typename?: 'CargoFlow', type?: string | null, isUnload?: boolean | null, flowPerMinute?: number | null, isExact?: boolean | null } | null> | null, transporters?: Array<{ __typename?: 'Transporter', id?: string | null } | null> | null } | null> | null } | null };
+export type SaveDetailsQuery = { __typename?: 'Query', saveDetails?: { __typename?: 'SaveDetails', stations?: Array<{ __typename?: 'Station', cargoTypes?: Array<string> | null, id: string, isUnload: boolean, name: string, type: string, x: number, y: number, cargoFlows?: Array<{ __typename?: 'CargoFlow', type: string, isUnload: boolean, flowPerMinute: number, isExact: boolean }> | null, transporters?: Array<{ __typename?: 'Transporter', id: string, from: string, to?: string | null }> | null }> | null } | null };
 
 export type StatusQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -98,7 +100,7 @@ export type LastLogQueryVariables = Exact<{ [key: string]: never; }>;
 export type LastLogQuery = { __typename?: 'Query', lastLog?: { __typename?: 'File', url?: string | null } | null };
 
 
-export const SaveDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"saveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"stations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cargoTypes"}},{"kind":"Field","name":{"kind":"Name","value":"cargoFlows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isUnload"}},{"kind":"Field","name":{"kind":"Name","value":"flowPerMinute"}},{"kind":"Field","name":{"kind":"Name","value":"isExact"}}]}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"isUnload"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"transporters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"x"}},{"kind":"Field","name":{"kind":"Name","value":"y"}}]}}]}}]}}]} as unknown as DocumentNode<SaveDetailsQuery, SaveDetailsQueryVariables>;
+export const SaveDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"saveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"stations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cargoTypes"}},{"kind":"Field","name":{"kind":"Name","value":"cargoFlows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isUnload"}},{"kind":"Field","name":{"kind":"Name","value":"flowPerMinute"}},{"kind":"Field","name":{"kind":"Name","value":"isExact"}}]}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"isUnload"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"transporters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"from"}},{"kind":"Field","name":{"kind":"Name","value":"to"}}]}},{"kind":"Field","name":{"kind":"Name","value":"x"}},{"kind":"Field","name":{"kind":"Name","value":"y"}}]}}]}}]}}]} as unknown as DocumentNode<SaveDetailsQuery, SaveDetailsQueryVariables>;
 export const StatusDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"status"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"previousStatus"}},{"kind":"Field","name":{"kind":"Name","value":"detail"}}]}}]}}]} as unknown as DocumentNode<StatusQuery, StatusQueryVariables>;
 export const StartDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"start"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"start"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"previousStatus"}},{"kind":"Field","name":{"kind":"Name","value":"detail"}}]}}]}}]} as unknown as DocumentNode<StartMutation, StartMutationVariables>;
 export const LastSaveDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"lastSave"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"lastSave"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]} as unknown as DocumentNode<LastSaveQuery, LastSaveQueryVariables>;

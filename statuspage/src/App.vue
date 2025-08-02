@@ -3,7 +3,9 @@
   import { computed } from 'vue'
 
   import CargoFlowChart from './components/CargoFlowChart.vue'
+  import StationGraph from './components/StationGraph.vue'
   import StationsTable from './components/StationsTable.vue'
+
   import Toolbar from './components/Toolbar.vue'
   import { graphql } from './gql'
   import type { Station } from './gql/graphql'
@@ -26,6 +28,8 @@
             type
             transporters {
               id
+              from
+              to
             }
             x
             y
@@ -53,8 +57,12 @@
           <v-col cols="12">
             <CargoFlowChart :stations="stations" />
           </v-col>
-          <v-col cols="12">
-            <StationsTable />
+
+          <v-col cols="6">
+            <StationGraph :stations="stations" />
+          </v-col>
+          <v-col cols="6">
+            <StationsTable :stations="stations" />
           </v-col>
         </v-row>
       </v-container>

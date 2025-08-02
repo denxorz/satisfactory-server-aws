@@ -63,6 +63,8 @@ public record SaveDetails(List<Station> Stations)
             })
             .ToDictionary(t => t.TrainStationId, t => t);
 
+        var trainStationIdsByStationIdentifierId = trainStationIdentifiersByStationId.Values.ToDictionary(t => t.Id, t => t.TrainStationId);
+
         // Train Station Docking Platform, by DockingStationId. I.e. Persistent_Level:PersistentLevel.Build_TrainDockingStation_C_2147007379
         var trainStationDockings = trainRelatedObjectsByType["/Game/FactoryGame/Buildable/Factory/Train/Station/Build_TrainDockingStation.Build_TrainDockingStation_C"];
         var trainStationDockingsByStationId = trainStationDockings
@@ -106,7 +108,12 @@ public record SaveDetails(List<Station> Stations)
                     cargoTypes,
                     cargo,
                     platforms.Count > 0 && platforms[0]!.IsUnloadMode,
-                    [.. trainTimeTablesWithStops.Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id)).Select(ttt => new Transporter(ttt.Id.Split("_")[^1]))],
+                    [.. trainTimeTablesWithStops
+                        .Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id))
+                        .Select(ttt => new Transporter(
+                            ttt.Id.Split("_")[^1], 
+                            id.Split("_")[^1],
+                            trainStationIdsByStationIdentifierId[ttt.StopStationIds.FirstOrDefault(ssi => ssi != id) ?? "??"]?.Split("_")[^1] ?? "??"))],
                     t.Position.X,
                     t.Position.Y
                 );
@@ -160,7 +167,7 @@ public record SaveDetails(List<Station> Stations)
                     cargoTypes,
                     cargo,
                     isUnload,
-                    [new Transporter(drone.Split("_")[^1])],
+                    [new Transporter(drone.Split("_")[^1], "??", "??")],
                     t.Position.X,
                     t.Position.Y
                 );

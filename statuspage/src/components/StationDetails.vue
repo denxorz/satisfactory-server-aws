@@ -1,15 +1,10 @@
 <script setup lang="ts">
   import { computed } from 'vue'
-  import type { Station, Transporter } from '../gql/graphql'
+  import type { SaveDetails, Station, Transporter } from '../gql/graphql'
 
   interface Props {
     station: Station | null | undefined
-    saveDetails?:
-      | {
-          stations?: (Station | null)[] | null
-        }
-      | null
-      | undefined
+    saveDetails?: SaveDetails
     onClose?: () => void
   }
 

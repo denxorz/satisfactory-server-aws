@@ -9,30 +9,32 @@ type File {
 }
 
 type Station {
-    id: String
-    name: String
-    type: String
-    cargoTypes: [String]
-    cargoFlows: [CargoFlow]
-    transporters: [Transporter]
-    isUnload: Boolean
-    x: Float
-    y: Float
+    id: String!
+    name: String!
+    type: String!
+    cargoTypes: [String!]
+    cargoFlows: [CargoFlow!]
+    transporters: [Transporter!]
+    isUnload: Boolean!
+    x: Float!
+    y: Float!
 }
 
 type Transporter {
-    id: String
+    id: String!
+    from: String!
+    to: String
 }
 
 type CargoFlow   {
-    type: String
-    isUnload: Boolean
+    type: String!
+    isUnload: Boolean!
     flowPerMinute: Int
-    isExact: Boolean
+    isExact: Boolean!
 }
 
 type SaveDetails {
-    stations: [Station]
+    stations: [Station!]
 }
 
 type Mutation {
