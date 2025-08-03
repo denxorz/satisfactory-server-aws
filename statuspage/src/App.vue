@@ -3,6 +3,7 @@
   import { computed, watch } from 'vue'
 
   import CargoFlowChart from './components/CargoFlowChart.vue'
+  import StationFilters from './components/StationFilters.vue'
   import StationGraph from './components/StationGraph.vue'
   import StationsTable from './components/StationsTable.vue'
 
@@ -71,14 +72,17 @@
       <v-container class="pa-8" fluid>
         <v-row>
           <v-col cols="12">
-            <CargoFlowChart :stations="stationsStore.stations" />
+            <StationFilters :stations="stationsStore.stations" />
+          </v-col>
+          <v-col cols="12">
+            <CargoFlowChart :stations="stationsStore.filteredStations" />
           </v-col>
 
           <v-col cols="6">
-            <StationGraph :stations="stationsStore.stations" />
+            <StationGraph :stations="stationsStore.filteredStations" />
           </v-col>
           <v-col cols="6">
-            <StationsTable :stations="stationsStore.stations" />
+            <StationsTable :stations="stationsStore.filteredStations" />
           </v-col>
         </v-row>
       </v-container>

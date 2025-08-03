@@ -30,7 +30,13 @@
     const scaleX = (mapWidth - 2) / (maxX - minX)
     const scaleY = (mapHeight - 2) / (maxY - minY)
 
-    const dotId = (id?: string) => id?.replace(/[^a-zA-Z0-9]/g, '_') ?? '??'
+    const dotId = (name?: string) => {
+      if (!name) return 'unknown'
+      // Sanitize the name for DOT syntax - replace invalid characters with underscores
+      // and ensure it starts with a letter or underscore
+      const sanitized = name.replace(/[^a-zA-Z0-9_]/g, '_')
+      return sanitized.startsWith('_') ? `station_${sanitized}` : sanitized
+    }
 
     let dot = `
       digraph G {
@@ -72,6 +78,9 @@
         .forEach(transporter => {
           const toStation = stations.value.find(s => s.id === transporter.to)
 
+          // Skip if either station has no name
+          if (!station.name || !toStation?.name) return
+
           let edgeColor = '#9E9E9E'
           switch (station.type) {
             case 'train':
@@ -86,9 +95,9 @@
           }
 
           if (station.isUnload) {
-            dot += `\n${dotId(station.name)} -> ${dotId(toStation?.name)} [dir=back, color="${edgeColor}", penwidth=1.5];`
+            dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [dir=back, color="${edgeColor}", penwidth=1.5];`
           } else {
-            dot += `\n${dotId(station.name)} -> ${dotId(toStation?.name)} [color="${edgeColor}", penwidth=1.5];`
+            dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [color="${edgeColor}", penwidth=1.5];`
           }
         })
     })

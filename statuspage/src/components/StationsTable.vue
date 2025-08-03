@@ -13,88 +13,9 @@
 
   const stations = computed(() => props.stations)
 
-  // Filter state - keeping complex filters that v-data-table can't handle
-  const searchText = ref('')
-  const selectedStationTypes = ref<string | undefined>(undefined)
-  const selectedTransferTypes = ref<string | undefined>(undefined)
-  const selectedCargoTypes = ref<string[]>([])
-
-  // Available filter options
-  const stationTypeOptions = computed(() => {
-    const types = new Set(stations.value.map(s => s.type).filter(Boolean))
-    return Array.from(types).map(type => ({
-      title: (type && type.charAt(0).toUpperCase() + type.slice(1)) || 'Unknown',
-      value: type || 'unknown',
-      prependIcon: icon(type),
-    }))
-  })
-
-  const transferTypeOptions = [
-    { title: 'Load', value: 'load', prependIcon: 'mdi-tray-arrow-down' },
-    { title: 'Unload', value: 'unload', prependIcon: 'mdi-tray-arrow-up' },
-  ]
-
-  const cargoTypeOptions = computed(() => {
-    const cargoTypes = new Set<string>()
-    stations.value.forEach(station => {
-      station.cargoTypes?.forEach(type => {
-        if (type) cargoTypes.add(type)
-      })
-    })
-    return Array.from(cargoTypes)
-      .sort()
-      .map(type => ({
-        title: type,
-        value: type,
-      }))
-  })
-
-  // Pre-filtered stations for complex filters that v-data-table can't handle
-  const preFilteredStations = computed(() => {
-    return stations.value.filter(station => {
-      // Text search
-      if (
-        searchText.value &&
-        !station.name?.toLowerCase().includes(searchText.value.toLowerCase())
-      ) {
-        return false
-      }
-
-      // Station type filter
-      if (
-        selectedStationTypes.value &&
-        selectedStationTypes.value !== (station.type || 'unknown')
-      ) {
-        return false
-      }
-
-      // Transfer type filter
-      if (selectedTransferTypes.value) {
-        const isUnload = station.isUnload
-        const transferType = isUnload ? 'unload' : 'load'
-        if (selectedTransferTypes.value !== transferType) {
-          return false
-        }
-      }
-
-      // Cargo type filter
-      if (selectedCargoTypes.value.length > 0) {
-        const stationCargoTypes = station.cargoTypes || []
-        const hasMatchingCargo = selectedCargoTypes.value.some(selectedType =>
-          stationCargoTypes.includes(selectedType)
-        )
-        if (!hasMatchingCargo) {
-          return false
-        }
-      }
-
-      return true
-    })
-  })
-
   const selectedStations = ref<string[]>([])
   const selectedStation = computed(() =>
-    preFilteredStations.value.find(s => s.id === selectedStations.value[0])
+    stations.value.find(s => s.id === selectedStations.value[0])
   )
   const showStationDetails = ref(false)
 
@@ -158,7 +79,7 @@
           },
           { title: 'Vehicles', key: 'transporters' },
         ]"
-        :items="preFilteredStations"
+        :items="stations"
         item-key="id"
         class="elevation-1 mt-4"
         hide-footer
@@ -177,80 +98,6 @@
         :row-props="rowProps"
         :sort-by="[{ key: 'name', order: 'asc' }]"
       >
-        <!-- Filters Section -->
-        <template v-slot:top>
-          <v-row dense class="mt-1 ml-1 mr-1">
-            <!-- Search -->
-            <v-col cols="12" sm="6" md="3">
-              <v-text-field
-                v-model="searchText"
-                label="Search Stations"
-                prepend-inner-icon="mdi-magnify"
-                clearable
-                density="compact"
-                variant="outlined"
-              />
-            </v-col>
-
-            <!-- Station Type Filter -->
-            <v-col cols="12" sm="6" md="3">
-              <v-select
-                v-model="selectedStationTypes"
-                :items="stationTypeOptions"
-                label="Station Type"
-                clearable
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-train"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props">
-                    <template v-slot:prepend>
-                      <v-icon>{{ item.raw.prependIcon }}</v-icon>
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
-            </v-col>
-
-            <!-- Transfer Type Filter -->
-            <v-col cols="12" sm="6" md="3">
-              <v-select
-                v-model="selectedTransferTypes"
-                :items="transferTypeOptions"
-                label="Transfer Type"
-                clearable
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-tray-arrow-up"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props">
-                    <template v-slot:prepend>
-                      <v-icon>{{ item.raw.prependIcon }}</v-icon>
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
-            </v-col>
-
-            <!-- Cargo Type Filter -->
-            <v-col cols="12" sm="6" md="3">
-              <v-autocomplete
-                v-model="selectedCargoTypes"
-                :items="cargoTypeOptions"
-                label="Cargo Type"
-                multiple
-                clearable
-                density="compact"
-                variant="outlined"
-                prepend-inner-icon="mdi-package-variant"
-                chips
-                closable-chips
-              />
-            </v-col>
-          </v-row>
-        </template>
         <template v-slot:item.type="{ item }">
           <v-icon>
             {{ icon(item?.type) }}
