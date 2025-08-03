@@ -7,6 +7,7 @@ import {
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import { AUTH_TYPE, createAuthLink, type AuthOptions } from 'aws-appsync-auth-link'
 import { createSubscriptionHandshakeLink } from 'aws-appsync-subscription-link'
+import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { createVuetify } from 'vuetify'
@@ -47,6 +48,7 @@ const vuetify = createVuetify({
 
 const app = createApp(App)
 app.use(vuetify)
+app.use(createPinia())
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use(VueApexCharts as any)
 app.provide(DefaultApolloClient, apolloClient)
