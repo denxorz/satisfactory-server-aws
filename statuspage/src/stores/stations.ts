@@ -4,8 +4,8 @@ import type { Station } from '../gql/graphql'
 
 interface Filters {
   searchText: string
-  selectedStationTypes: string | undefined
-  selectedTransferTypes: string | undefined
+  selectedStationTypes: string[]
+  selectedTransferTypes: string[]
   selectedCargoTypes: string[]
 }
 
@@ -18,8 +18,8 @@ export const useStationsStore = defineStore('stations', () => {
   // Filter state
   const filters = ref<Filters>({
     searchText: '',
-    selectedStationTypes: undefined,
-    selectedTransferTypes: undefined,
+    selectedStationTypes: [],
+    selectedTransferTypes: [],
     selectedCargoTypes: [],
   })
 
@@ -54,14 +54,38 @@ export const useStationsStore = defineStore('stations', () => {
     filters.value.searchText = searchText
   }
 
-  const updateSelectedStationTypes = (selectedStationTypes: string | undefined) => {
+  const updateSelectedStationTypes = (selectedStationTypes: string[]) => {
     filters.value.selectedStationTypes = selectedStationTypes
   }
 
-  const updateSelectedTransferTypes = (
-    selectedTransferTypes: string | undefined
-  ) => {
+  const toggleStationType = (stationType: string) => {
+    const currentTypes = filters.value.selectedStationTypes
+    const index = currentTypes.indexOf(stationType)
+    if (index > -1) {
+      // Remove if already selected
+      currentTypes.splice(index, 1)
+    } else {
+      // Add if not selected
+      currentTypes.push(stationType)
+    }
+    filters.value.selectedStationTypes = [...currentTypes]
+  }
+
+  const updateSelectedTransferTypes = (selectedTransferTypes: string[]) => {
     filters.value.selectedTransferTypes = selectedTransferTypes
+  }
+
+  const toggleTransferType = (transferType: string) => {
+    const currentTypes = filters.value.selectedTransferTypes
+    const index = currentTypes.indexOf(transferType)
+    if (index > -1) {
+      // Remove if already selected
+      currentTypes.splice(index, 1)
+    } else {
+      // Add if not selected
+      currentTypes.push(transferType)
+    }
+    filters.value.selectedTransferTypes = [...currentTypes]
   }
 
   const updateSelectedCargoTypes = (selectedCargoTypes: string[]) => {
@@ -77,8 +101,8 @@ export const useStationsStore = defineStore('stations', () => {
   const clearFilters = () => {
     filters.value = {
       searchText: '',
-      selectedStationTypes: undefined,
-      selectedTransferTypes: undefined,
+      selectedStationTypes: [],
+      selectedTransferTypes: [],
       selectedCargoTypes: [],
     }
   }
@@ -125,18 +149,18 @@ export const useStationsStore = defineStore('stations', () => {
       }
 
       // Station type filter
-      if (
-        filters.value.selectedStationTypes &&
-        filters.value.selectedStationTypes !== (station.type || 'unknown')
-      ) {
-        return false
+      if (filters.value.selectedStationTypes.length > 0) {
+        const stationType = station.type || 'unknown'
+        if (!filters.value.selectedStationTypes.includes(stationType)) {
+          return false
+        }
       }
 
       // Transfer type filter
-      if (filters.value.selectedTransferTypes) {
+      if (filters.value.selectedTransferTypes.length > 0) {
         const isUnload = station.isUnload
         const transferType = isUnload ? 'unload' : 'load'
-        if (filters.value.selectedTransferTypes !== transferType) {
+        if (!filters.value.selectedTransferTypes.includes(transferType)) {
           return false
         }
       }
@@ -179,7 +203,9 @@ export const useStationsStore = defineStore('stations', () => {
     clearStations,
     updateSearchText,
     updateSelectedStationTypes,
+    toggleStationType,
     updateSelectedTransferTypes,
+    toggleTransferType,
     updateSelectedCargoTypes,
     updateFilters,
     clearFilters,

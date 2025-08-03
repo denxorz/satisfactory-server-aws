@@ -224,23 +224,6 @@
             <template #text>This will be automatically updated daily.</template>
           </v-alert>
         </div>
-
-        <div v-else class="mb-4">
-          <v-chip-group>
-            <v-chip color="success" size="small">
-              <v-icon start>mdi-train</v-icon>
-              Train Stations
-            </v-chip>
-            <v-chip color="warning" size="small">
-              <v-icon start>mdi-truck</v-icon>
-              Truck Stations
-            </v-chip>
-            <v-chip color="primary" size="small">
-              <v-icon start>mdi-quadcopter</v-icon>
-              Drone Stations
-            </v-chip>
-          </v-chip-group>
-        </div>
       </div>
 
       <div
