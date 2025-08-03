@@ -16,6 +16,8 @@
   const error = ref<string | null>(null)
   const graphviz = ref()
 
+  const showBottomSheet = ref(false)
+
   const dotContent = computed(() => {
     const minX = -320000
     const maxX = 350000
@@ -244,11 +246,30 @@
           padding: 8px;
         "
       >
-        <v-img
-          :src="mergedImageUrl"
-          alt="Station Network Graph with Background"
-          style="width: 100%; height: 100%; object-fit: contain"
-        />
+        <div
+          style="position: relative; cursor: pointer"
+          @click="showBottomSheet = true"
+        >
+          <v-img
+            :src="mergedImageUrl"
+            alt="Station Network Graph with Background"
+            style="object-fit: contain; transition: opacity 0.2s"
+          />
+          <div
+            style="
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background: rgba(0, 0, 0, 0.7);
+              color: white;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 12px;
+            "
+          >
+            <v-icon size="small">mdi-fullscreen</v-icon>
+          </div>
+        </div>
       </div>
 
       <!-- Loading placeholder -->
@@ -272,5 +293,20 @@
       </div>
     </v-card-text>
   </v-card>
+
+  <v-bottom-sheet v-model="showBottomSheet" :retain-focus="false">
+    <v-card>
+      <v-toolbar>
+        <v-toolbar-title>Map (Large)</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="showBottomSheet = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-card-text>
+        <v-img :src="mergedImageUrl" alt="Station Network Map" />
+      </v-card-text>
+    </v-card>
+  </v-bottom-sheet>
 </template>
 
