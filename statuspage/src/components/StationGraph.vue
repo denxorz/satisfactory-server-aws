@@ -62,17 +62,53 @@
 
           if (!station.name || !toStation?.name) return
 
-          let edgeColor = '#9E9E9E'
-          switch (station.type) {
-            case 'train':
-              edgeColor = '#4CAF50'
-              break
-            case 'truck':
-              edgeColor = '#FF9800'
-              break
-            case 'drone':
-              edgeColor = '#2196F3'
-              break
+          let edgeColor = '#FF0000'
+          const cargoFlows = station.cargoFlows || []
+          const unloadFlows = cargoFlows.filter(flow => flow.isUnload)
+          const loadFlows = cargoFlows.filter(flow => !flow.isUnload)
+
+          // If station is unloading, use the cargo type being unloaded
+          // If station is loading, use the cargo type being loaded
+          const relevantFlows = station.isUnload ? unloadFlows : loadFlows
+
+          if (relevantFlows.length > 0) {
+            const cargoType = relevantFlows[0].type.toLowerCase()
+
+            switch (cargoType) {
+              case 'coal':
+                edgeColor = '#2F4F4F'
+                break
+              case 'plastic':
+                edgeColor = '#4169E1'
+                break
+              case 'rubber':
+                edgeColor = '#06402B'
+                break
+              case 'modularframefused':
+                edgeColor = '#FFFF00' // Yellow
+                break
+              case 'computer':
+                edgeColor = '#00CED1' // Dark turquoise
+                break
+              case 'oreuranium':
+                edgeColor = '#00FF00'
+                break
+              case 'modularframeheavy':
+                edgeColor = '#F5F5F5'
+                break
+              case 'aluminumcasing':
+                edgeColor = 'darkgray'
+                break
+              case 'aluminumplate':
+                edgeColor = 'gray'
+                break
+              case 'ficsiteingot':
+                edgeColor = 'gold'
+                break
+              case 'spaceelevatorpart_7':
+                edgeColor = 'orange'
+                break
+            }
           }
 
           requiredStations.push(station.name)
