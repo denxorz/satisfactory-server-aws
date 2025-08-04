@@ -3,15 +3,12 @@
   import { useTheme } from 'vuetify'
 
   import type { Maybe, Station } from '../gql/graphql'
+  import { useStationsStore } from '../stores/stations'
   import StationDetails from './StationDetails.vue'
 
-  interface Props {
-    stations: Station[]
-  }
+  const stationsStore = useStationsStore()
 
-  const props = defineProps<Props>()
-
-  const stations = computed(() => props.stations)
+  const stations = computed(() => stationsStore.filteredStations)
 
   const selectedStations = ref<string[]>([])
   const selectedStation = computed(() =>
@@ -124,7 +121,7 @@
         <StationDetails :station="selectedStation" :on-close="closeStationDetails" />
       </v-bottom-sheet>
 
-      <div v-if="!props.stations.length" class="text-center pa-8">
+      <div v-if="!stations.length" class="text-center pa-8">
         <v-alert type="info" variant="tonal">
           <template #title>Loading Stations</template>
           <template #text>Please wait while station data is being loaded.</template>

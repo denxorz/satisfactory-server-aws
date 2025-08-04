@@ -3,14 +3,11 @@
   import { computed, onMounted, ref, watch } from 'vue'
 
   import type { Station } from '../gql/graphql'
+  import { useStationsStore } from '../stores/stations'
 
-  interface Props {
-    stations: Station[]
-  }
+  const stationsStore = useStationsStore()
 
-  const props = defineProps<Props>()
-
-  const stations = computed(() => props.stations)
+  const stations = computed(() => stationsStore.filteredStations)
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -218,7 +215,7 @@
       </div>
 
       <div v-else>
-        <div v-if="!props.stations.length" class="text-center pa-8">
+        <div v-if="!stations.length" class="text-center pa-8">
           <v-alert type="info" variant="tonal">
             <template #title>No Station Data Available</template>
             <template #text>This will be automatically updated daily.</template>
@@ -227,7 +224,7 @@
       </div>
 
       <div
-        v-if="mergedImageUrl && !isLoading && !error && props.stations.length"
+        v-if="mergedImageUrl && !isLoading && !error && stations.length"
         style="
           position: relative;
           border-radius: 4px;

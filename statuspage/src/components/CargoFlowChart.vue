@@ -1,22 +1,16 @@
 <script setup lang="ts">
   import { computed } from 'vue'
 
-  import type { Station } from '../gql/graphql'
+  import { useStationsStore } from '../stores/stations'
 
-  interface Props {
-    stations: Station[]
-  }
-
-  const props = defineProps<Props>()
-
-  console.log('CargoFlowChart - Stations received:', props.stations)
+  const stationsStore = useStationsStore()
 
   const cargoFlowChartData = computed(() => {
     const flowData: {
       [key: string]: { delta: number; consumed: number; produced: number }
     } = {}
 
-    props.stations.forEach(station => {
+    stationsStore.filteredStations.forEach(station => {
       station.cargoFlows?.forEach(flow => {
         if (flow && flow.type && flow.flowPerMinute) {
           const type = flow.type
@@ -54,9 +48,6 @@
         },
       ],
     }
-
-    // Debug: Log the computed chart data
-    console.log('CargoFlowChart - Computed data:', result)
 
     return result
   })

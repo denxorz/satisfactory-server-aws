@@ -72,17 +72,17 @@
       <v-container class="pa-8" fluid>
         <v-row>
           <v-col cols="12">
-            <StationFilters :stations="stationsStore.stations" />
+            <StationFilters />
           </v-col>
           <v-col cols="12">
-            <CargoFlowChart :stations="stationsStore.filteredStations" />
+            <CargoFlowChart />
           </v-col>
 
           <v-col cols="6">
-            <StationGraph :stations="stationsStore.filteredStations" />
+            <StationGraph />
           </v-col>
           <v-col cols="6">
-            <StationsTable :stations="stationsStore.filteredStations" />
+            <StationsTable />
           </v-col>
         </v-row>
       </v-container>
