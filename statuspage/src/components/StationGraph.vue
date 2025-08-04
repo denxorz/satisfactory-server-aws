@@ -7,7 +7,8 @@
 
   const stationsStore = useStationsStore()
 
-  const stations = computed(() => stationsStore.filteredStations)
+  const stations = computed(() => stationsStore.stations)
+  const filteredStations = computed(() => stationsStore.filteredStations)
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -45,37 +46,20 @@
         graph [ranksep=0, nodesep=0, splines=curved];
     `
 
-    const uniqueStations = new Map<string, Station>()
-    stations.value.forEach(station => {
-      const name = station.name || `Station ${station.id}`
-      if (!uniqueStations.has(name)) {
-        uniqueStations.set(name, station)
-      }
-    })
-
-    uniqueStations.forEach((station, name) => {
-      const color = '#666666'
-      const borderColor = '#333333'
-
-      const x = (station.x - minX) * scaleX
-      const y = mapHeight - (station.y - minY) * scaleY
-
-      dot += `\n${dotId(name)} [label="${name}", fillcolor="${color}", fontcolor="white", color="${borderColor}", pos="${x.toFixed(2)},${y.toFixed(2)}!", penwidth=0.5];`
-    })
-
     const cornerSize = 0.001
     dot += `\n_tl [label="", pos="0,${mapHeight}!", width=${cornerSize}, height=${cornerSize}];`
     dot += `\n_tr [label="", pos="${mapWidth},${mapHeight}!", width=${cornerSize}, height=${cornerSize}];`
     dot += `\n_bl [label="", pos="0,0!", width=${cornerSize}, height=${cornerSize}];`
     dot += `\n_br [label="", pos="${mapWidth},0!", width=${cornerSize}, height=${cornerSize}];`
 
-    stations.value.forEach(station => {
+    let requiredStations: string[] = []
+
+    filteredStations.value.forEach(station => {
       ;(station.transporters ?? [])
         .filter(t => !!t.to && t.to !== '??' && t.to !== station.id)
         .forEach(transporter => {
           const toStation = stations.value.find(s => s.id === transporter.to)
 
-          // Skip if either station has no name
           if (!station.name || !toStation?.name) return
 
           let edgeColor = '#9E9E9E'
@@ -91,12 +75,33 @@
               break
           }
 
+          requiredStations.push(station.name)
+          requiredStations.push(toStation.name)
+
           if (station.isUnload) {
             dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [dir=back, color="${edgeColor}", penwidth=1.5];`
           } else {
             dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [color="${edgeColor}", penwidth=1.5];`
           }
         })
+    })
+
+    const uniqueStations = new Map<string, Station>()
+    stations.value.forEach(station => {
+      const name = station.name || `Station ${station.id}`
+      if (!uniqueStations.has(name) && requiredStations.includes(name)) {
+        uniqueStations.set(name, station)
+      }
+    })
+
+    uniqueStations.forEach((station, name) => {
+      const color = '#666666'
+      const borderColor = '#333333'
+
+      const x = (station.x - minX) * scaleX
+      const y = mapHeight - (station.y - minY) * scaleY
+
+      dot += `\n${dotId(name)} [label="${name}", fillcolor="${color}", fontcolor="white", color="${borderColor}", pos="${x.toFixed(2)},${y.toFixed(2)}!", penwidth=0.5];`
     })
 
     dot += '\n}'
@@ -215,7 +220,7 @@
       </div>
 
       <div v-else>
-        <div v-if="!stations.length" class="text-center pa-8">
+        <div v-if="!filteredStations.length" class="text-center pa-8">
           <v-alert type="info" variant="tonal">
             <template #title>No Station Data Available</template>
             <template #text>This will be automatically updated daily.</template>
@@ -224,7 +229,7 @@
       </div>
 
       <div
-        v-if="mergedImageUrl && !isLoading && !error && stations.length"
+        v-if="mergedImageUrl && !isLoading && !error && filteredStations.length"
         style="
           position: relative;
           border-radius: 4px;
