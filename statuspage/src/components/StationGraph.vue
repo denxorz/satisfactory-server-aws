@@ -41,8 +41,8 @@
         layout=neato;
         size="${mapWidth},${mapHeight}";
         bgcolor="transparent";
-        node [shape=box, style=filled, fontname="Arial"];
-        edge [fontname="Arial"];
+        node [shape=box, style=filled, fontname="Arial", fontcolor="white", penwidth=0.5];
+        edge [fontname="Arial", penwidth=1.5];
         graph [ranksep=0, nodesep=0, splines=curved];
     `
 
@@ -54,25 +54,22 @@
 
     let requiredStations: string[] = []
 
-    filteredStations.value.forEach(station => {
-      ;(station.transporters ?? [])
-        .filter(t => !!t.to && t.to !== '??' && t.to !== station.id)
-        .forEach(transporter => {
+    console.log(filteredStations.value)
+
+    const edges = filteredStations.value.flatMap(station => {
+      return (station.transporters ?? [])
+        .map(transporter => {
+          const fromStation = stations.value.find(s => s.id === transporter.from)
           const toStation = stations.value.find(s => s.id === transporter.to)
 
-          if (!station.name || !toStation?.name) return
+          if (!fromStation?.name || !toStation?.name) return
 
           let edgeColor = '#FF0000'
-          const cargoFlows = station.cargoFlows || []
-          const unloadFlows = cargoFlows.filter(flow => flow.isUnload)
-          const loadFlows = cargoFlows.filter(flow => !flow.isUnload)
 
-          // If station is unloading, use the cargo type being unloaded
-          // If station is loading, use the cargo type being loaded
-          const relevantFlows = station.isUnload ? unloadFlows : loadFlows
+          const relevantFlows = fromStation.cargoTypes ?? []
 
           if (relevantFlows.length > 0) {
-            const cargoType = relevantFlows[0].type.toLowerCase()
+            const cargoType = relevantFlows[0].toLowerCase()
 
             switch (cargoType) {
               case 'coal':
@@ -85,10 +82,10 @@
                 edgeColor = '#06402B'
                 break
               case 'modularframefused':
-                edgeColor = '#FFFF00' // Yellow
+                edgeColor = '#FFFF00'
                 break
               case 'computer':
-                edgeColor = '#00CED1' // Dark turquoise
+                edgeColor = '#00CED1'
                 break
               case 'oreuranium':
                 edgeColor = '#00FF00'
@@ -108,19 +105,38 @@
               case 'spaceelevatorpart_7':
                 edgeColor = 'orange'
                 break
+              default:
+                console.log(cargoType)
+                break
             }
           }
 
-          requiredStations.push(station.name)
+          requiredStations.push(fromStation.name)
           requiredStations.push(toStation.name)
 
-          if (station.isUnload) {
-            dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [dir=back, color="${edgeColor}", penwidth=1.5];`
-          } else {
-            dot += `\n${dotId(station.name)} -> ${dotId(toStation.name)} [color="${edgeColor}", penwidth=1.5];`
-          }
+          return fromStation.isUnload
+            ? {
+                from: toStation.name,
+                to: fromStation.name,
+                color: edgeColor,
+              }
+            : {
+                from: fromStation.name,
+                to: toStation.name,
+                color: edgeColor,
+              }
         })
+        .filter(t => !!t)
     })
+
+    edges
+      .filter(
+        (edge, index, self) =>
+          index === self.findIndex(e => e.from === edge.from && e.to === edge.to)
+      )
+      .forEach(edge => {
+        dot += `\n${dotId(edge.from)} -> ${dotId(edge.to)} [color="${edge.color}"];`
+      })
 
     const uniqueStations = new Map<string, Station>()
     stations.value.forEach(station => {
@@ -137,7 +153,7 @@
       const x = (station.x - minX) * scaleX
       const y = mapHeight - (station.y - minY) * scaleY
 
-      dot += `\n${dotId(name)} [label="${name}", fillcolor="${color}", fontcolor="white", color="${borderColor}", pos="${x.toFixed(2)},${y.toFixed(2)}!", penwidth=0.5];`
+      dot += `\n${dotId(name)} [label="${name}", fillcolor="${color}", color="${borderColor}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
     })
 
     dot += '\n}'
