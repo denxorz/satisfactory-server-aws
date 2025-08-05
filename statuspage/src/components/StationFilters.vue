@@ -2,6 +2,30 @@
   import { useStationsStore } from '../stores/stations'
 
   const stationsStore = useStationsStore()
+
+  function debounce<T extends (...args: never[]) => unknown>(
+    func: T,
+    delay: number = 150
+  ): T {
+    let timeoutId: number
+    return ((...args: Parameters<T>) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func(...args), delay)
+    }) as T
+  }
+
+  const debouncedUpdateSearchText = debounce((searchText: string) =>
+    stationsStore.updateSearchText(searchText)
+  )
+  const debouncedUpdateSelectedCargoTypes = debounce((cargoTypes: string[]) =>
+    stationsStore.updateSelectedCargoTypes(cargoTypes)
+  )
+  const debouncedToggleStationType = debounce((stationType: string) =>
+    stationsStore.toggleStationType(stationType)
+  )
+  const debouncedToggleTransferType = debounce((transferType: string) =>
+    stationsStore.toggleTransferType(transferType)
+  )
 </script>
 
 <template>
@@ -13,7 +37,7 @@
         <v-col cols="12" sm="6">
           <v-text-field
             :model-value="stationsStore.filters.searchText"
-            @update:model-value="stationsStore.updateSearchText"
+            @update:model-value="debouncedUpdateSearchText"
             label="Search Stations"
             prepend-inner-icon="mdi-magnify"
             clearable
@@ -27,7 +51,7 @@
         <v-col cols="12" sm="6">
           <v-autocomplete
             :model-value="stationsStore.filters.selectedCargoTypes"
-            @update:model-value="stationsStore.updateSelectedCargoTypes"
+            @update:model-value="debouncedUpdateSelectedCargoTypes"
             :items="stationsStore.cargoTypeOptions"
             label="Cargo Type"
             multiple
@@ -58,7 +82,7 @@
                   : 'outlined'
               "
               size="small"
-              @click="stationsStore.toggleStationType('train')"
+              @click="debouncedToggleStationType('train')"
             >
               <v-icon start>mdi-train</v-icon>
               Train Stations
@@ -75,7 +99,7 @@
                   : 'outlined'
               "
               size="small"
-              @click="stationsStore.toggleStationType('truck')"
+              @click="debouncedToggleStationType('truck')"
             >
               <v-icon start>mdi-truck</v-icon>
               Truck Stations
@@ -92,7 +116,7 @@
                   : 'outlined'
               "
               size="small"
-              @click="stationsStore.toggleStationType('drone')"
+              @click="debouncedToggleStationType('drone')"
             >
               <v-icon start>mdi-quadcopter</v-icon>
               Drone Stations
@@ -115,7 +139,7 @@
                   : 'outlined'
               "
               size="small"
-              @click="stationsStore.toggleTransferType('load')"
+              @click="debouncedToggleTransferType('load')"
             >
               <v-icon start>mdi-tray-arrow-down</v-icon>
               Load
@@ -132,7 +156,7 @@
                   : 'outlined'
               "
               size="small"
-              @click="stationsStore.toggleTransferType('unload')"
+              @click="debouncedToggleTransferType('unload')"
             >
               <v-icon start>mdi-tray-arrow-up</v-icon>
               Unload
