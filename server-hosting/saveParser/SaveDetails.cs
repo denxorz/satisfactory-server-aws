@@ -95,6 +95,7 @@ public record SaveDetails(List<Station> Stations)
             .Select(t =>
             {
                 var id = t.ObjectReference.PathName;
+                var idShort = id.Split("_")[^1];
                 var stationIdentifier = trainStationIdentifiersByStationId[id];
                 var platforms = trainStationConnectionToPlatformsByStationId[id];
                 var inventory = platforms.Count > 0 ? objectsByName[platforms[0]!.InventoryId] : null;
@@ -102,7 +103,7 @@ public record SaveDetails(List<Station> Stations)
                 var cargo = GetFlowPerMinuteFromName(stationIdentifier.Name, cargoTypes);
 
                 return new Station(
-                    id.Split("_")[^1],
+                   idShort,
                     GetNameFromName(stationIdentifier.Name),
                     "train",
                     cargoTypes,
@@ -111,9 +112,9 @@ public record SaveDetails(List<Station> Stations)
                     [.. trainTimeTablesWithStops
                         .Where(ttt => ttt.StopStationIds.Contains(stationIdentifier.Id))
                         .Select(ttt => new Transporter(
-                            ttt.Id.Split("_")[^1], 
-                            id.Split("_")[^1],
-                            trainStationIdsByStationIdentifierId[ttt.StopStationIds.FirstOrDefault(ssi => ssi != id) ?? "??"]?.Split("_")[^1] ?? "??"))],
+                            ttt.Id.Split("_")[^1],
+                            idShort,
+                            ttt.StopStationIds.Select(ssi => trainStationIdsByStationIdentifierId[ssi]).FirstOrDefault(ssi => ssi != id)?.Split("_")[^1] ?? "??"))],
                     t.Position.X,
                     t.Position.Y
                 );
