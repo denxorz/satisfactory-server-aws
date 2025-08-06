@@ -96,10 +96,41 @@
     },
     xaxis: {
       categories: cargoFlowChartData.value.categories,
+      labels: {
+        style: {
+          colors: '#e59345',
+          fontSize: '12px',
+          fontWeight: '600',
+        },
+      },
+      axisBorder: {
+        color: '#e59345',
+      },
+      axisTicks: {
+        color: '#e59345',
+      },
     },
     yaxis: {
       title: {
         text: 'Flow per Minute',
+        style: {
+          color: '#e59345',
+          fontSize: '14px',
+          fontWeight: '600',
+        },
+      },
+      labels: {
+        style: {
+          colors: '#e59345',
+          fontSize: '12px',
+          fontWeight: '600',
+        },
+      },
+      axisBorder: {
+        color: '#e59345',
+      },
+      axisTicks: {
+        color: '#e59345',
       },
     },
   }))

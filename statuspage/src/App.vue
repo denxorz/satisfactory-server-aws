@@ -94,6 +94,8 @@
   .satisfactory-theme {
     background: rgb(var(--v-theme-background));
     min-height: 100vh;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
   }
 
   .satisfactory-theme :deep(.v-card) {
@@ -114,7 +116,6 @@
     text-transform: uppercase !important;
     font-size: 0.9rem !important;
     font-weight: 550 !important;
-    font-family: 'Open Sans', sans-serif !important;
   }
 
   .satisfactory-theme :deep(.v-card-text) {
