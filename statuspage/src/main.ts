@@ -42,7 +42,23 @@ const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
 const vuetify = createVuetify({
   theme: {
-    defaultTheme: prefersDark ? 'dark' : 'light',
+    defaultTheme: 'dark',
+    themes: {
+      dark: {
+        colors: {
+          primary: '#e59345',
+          secondary: '#e59345',
+          surface: '#212121',
+          background: '#212121',
+          'on-surface': '#e59345',
+          'on-background': '#e59345',
+          'on-primary': '#202020',
+          'on-secondary': '#202020',
+          border: '#e59345',
+          'on-border': '#202020',
+        },
+      },
+    },
   },
 })
 

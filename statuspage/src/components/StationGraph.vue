@@ -262,7 +262,7 @@
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">
         <v-progress-circular indeterminate size="64"></v-progress-circular>
-        <div class="mt-4">Loading graph...</div>
+        <div class="mt-4" style="color: #e59345">Loading graph...</div>
       </div>
 
       <div v-else-if="error" class="text-center pa-8">
@@ -282,37 +282,15 @@
 
       <div
         v-if="mergedImageUrl && !isLoading && !error && filteredStations.length"
-        style="
-          position: relative;
-          border-radius: 4px;
-          overflow: hidden;
-          min-height: 400px;
-          border: none;
-          box-shadow: none;
-          padding: 8px;
-        "
+        style="position: relative; overflow: hidden; min-height: 400px"
       >
-        <div
-          style="position: relative; cursor: pointer"
-          @click="showBottomSheet = true"
-        >
+        <div class="map-wrapper" @click="showBottomSheet = true">
           <v-img
             :src="mergedImageUrl"
             alt="Station Network Graph with Background"
-            style="object-fit: contain; transition: opacity 0.2s"
+            class="map-image"
           />
-          <div
-            style="
-              position: absolute;
-              top: 8px;
-              right: 8px;
-              background: rgba(0, 0, 0, 0.7);
-              color: white;
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 12px;
-            "
-          >
+          <div class="map-overlay">
             <v-icon size="small">mdi-fullscreen</v-icon>
           </div>
         </div>
@@ -321,8 +299,12 @@
       <!-- Loading placeholder -->
       <div
         v-else-if="isLoading"
-        class="d-flex align-center justify-center"
-        style="min-height: 400px; background: #f5f5f5; border-radius: 4px"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 400px;
+        "
       >
         <v-progress-circular indeterminate size="64"></v-progress-circular>
       </div>
@@ -330,8 +312,12 @@
       <!-- Error placeholder -->
       <div
         v-else-if="error"
-        class="d-flex align-center justify-center"
-        style="min-height: 400px; background: #f5f5f5; border-radius: 4px"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 400px;
+        "
       >
         <v-alert type="error" variant="tonal">
           {{ error }}
@@ -355,4 +341,33 @@
     </v-card>
   </v-bottom-sheet>
 </template>
+
+<style scoped>
+  .map-wrapper {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .map-wrapper:hover {
+    transform: scale(1.02);
+  }
+
+  .map-image {
+    object-fit: contain;
+    transition: opacity 0.2s;
+  }
+
+  .map-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid rgba(229, 147, 69, 0.5);
+    backdrop-filter: blur(5px);
+  }
+</style>
 

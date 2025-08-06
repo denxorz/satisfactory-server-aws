@@ -31,8 +31,8 @@
 <template>
   <v-card>
     <v-card-title class="pb-2">Station Filters</v-card-title>
-    <div class="pa-4 pt-0">
-      <v-row dense class="mb-1">
+    <div class="pa-6 pt-0">
+      <v-row dense class="mb-4">
         <!-- Search -->
         <v-col cols="12" sm="6">
           <v-text-field
@@ -66,10 +66,10 @@
         </v-col>
       </v-row>
 
-      <v-row dense>
+      <v-row dense class="mt-2">
         <!-- Station Type Filter -->
         <v-col cols="12" sm="6">
-          <v-chip-group>
+          <v-chip-group class="gap-2">
             <v-chip
               :color="
                 stationsStore.filters.selectedStationTypes.includes('train')
@@ -126,7 +126,7 @@
 
         <!-- Transfer Type Filter -->
         <v-col cols="12" sm="6">
-          <v-chip-group>
+          <v-chip-group class="gap-2">
             <v-chip
               :color="
                 stationsStore.filters.selectedTransferTypes.includes('load')

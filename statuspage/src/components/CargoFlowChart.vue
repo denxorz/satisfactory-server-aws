@@ -63,7 +63,7 @@
         show: false,
       },
     },
-    colors: ['#FF6384', '#4BC0C0'],
+    colors: ['#e59345', '#5eb0c5'],
     legend: {
       show: false,
     },
