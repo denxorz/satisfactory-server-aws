@@ -111,6 +111,11 @@
   const downloadLog = async () => {
     lastLogEnabled.value = true
   }
+
+  const logout = () => {
+    window.localStorage.removeItem('satisfactory-auth')
+    window.location.reload()
+  }
 </script>
 <template>
   <v-app-bar>
@@ -157,6 +162,15 @@
         prepend-icon="mdi-file-download"
       >
         Log
+      </v-btn>
+      <v-btn
+        variant="outlined"
+        @click="logout"
+        class="mr-4 action-btn"
+        prepend-icon="mdi-logout"
+        color="error"
+      >
+        Logout
       </v-btn>
     </div>
   </v-app-bar>

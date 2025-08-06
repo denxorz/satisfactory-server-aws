@@ -6,5 +6,9 @@ import vuetify from 'vite-plugin-vuetify'
 export default defineConfig({
   plugins: [vue(), vuetify(), eslint()],
 
-  define: { 'process.env': {}, global: {} },
+  define: {
+    'process.env': {},
+    global: {},
+    __VUE_PROD_DEVTOOLS__: false,
+  },
 })
