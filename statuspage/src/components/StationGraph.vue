@@ -41,8 +41,8 @@
         layout=neato;
         size="${mapWidth},${mapHeight}";
         bgcolor="transparent";
-        node [shape=box, style=filled, fontname="Arial", fontcolor="white", penwidth=0.5];
-        edge [fontname="Arial", penwidth=1.5];
+        node [shape=box, style=filled, fontname="Arial", fontcolor="#e59345", color="#e59345", penwidth=0.5, fillcolor="#212121", fontweight=600];
+        edge [fontname="Arial", penwidth=2];
         graph [ranksep=0, nodesep=0, splines=curved];
     `
 
@@ -79,7 +79,7 @@
                 edgeColor = '#4169E1'
                 break
               case 'rubber':
-                edgeColor = '#06402B'
+                edgeColor = '#154734'
                 break
               case 'modularframefused':
                 edgeColor = '#FFFF00'
@@ -147,13 +147,10 @@
     })
 
     uniqueStations.forEach((station, name) => {
-      const color = '#666666'
-      const borderColor = '#333333'
-
       const x = (station.x - minX) * scaleX
       const y = mapHeight - (station.y - minY) * scaleY
 
-      dot += `\n${dotId(name)} [label="${name}", fillcolor="${color}", color="${borderColor}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+      dot += `\n${dotId(name)} [label="${name.toUpperCase()}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
     })
 
     dot += '\n}'
@@ -370,4 +367,3 @@
     backdrop-filter: blur(5px);
   }
 </style>
-
