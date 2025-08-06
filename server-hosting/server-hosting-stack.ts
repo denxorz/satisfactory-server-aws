@@ -7,9 +7,8 @@ import { grantReadWriteToStorage, setupStorage } from './storage';
 import { setupApi } from './api';
 import { setupStatusPage } from './status/statusPageStaticWebpage';
 import { setupSaveFileParser } from './saveFileParserLambda';
-import { Instance } from 'aws-cdk-lib/aws-ec2';
-import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { setupStatusLambda } from './statusLambda';
+import { setupEc2StatusChangeHandling } from './ec2StatusChangedLambda';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -22,6 +21,7 @@ export class ServerHostingStack extends Stack {
 
     if (Config.restartApi && Config.restartApi === true) {
       const api = setupApi(this);
+      setupEc2StatusChangeHandling(this, api, server);
       setupStatusLambda(this, api, server, storage);
       setupSaveFileParser(this, api, server, storage);
     }
@@ -31,3 +31,5 @@ export class ServerHostingStack extends Stack {
     }
   }
 }
+
+

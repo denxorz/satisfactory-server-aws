@@ -54,7 +54,7 @@
 
     let requiredStations: string[] = []
 
-    console.log(filteredStations.value)
+    //console.log(filteredStations.value)
 
     const edges = filteredStations.value.flatMap(station => {
       return (station.transporters ?? [])
@@ -155,7 +155,7 @@
 
     dot += '\n}'
 
-    console.log(dot)
+    //console.log(dot)
     return dot
   })
 

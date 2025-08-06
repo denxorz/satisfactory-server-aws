@@ -1,7 +1,7 @@
 import { CfnOutput, Duration, Expiration, Stack } from 'aws-cdk-lib';
-import { Config } from './config';
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { AuthorizationType, Definition, GraphqlApi } from 'aws-cdk-lib/aws-appsync';
+import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { Config } from './config';
 
 export const setupApi = (stack: Stack) => {
     const prefix = Config.prefix;
@@ -37,6 +37,8 @@ export const setupApi = (stack: Stack) => {
             });
 
         new CfnOutput(stack, "APIKey", { value: api.apiKey ?? "" });
+        new CfnOutput(stack, "API", { value: api.graphqlUrl ?? "" });
+
 
         return api;
     }

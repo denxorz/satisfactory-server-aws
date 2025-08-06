@@ -15,14 +15,16 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
     "\n      query saveDetails {\n        saveDetails {\n          stations {\n            cargoTypes\n            cargoFlows {\n              type\n              isUnload\n              flowPerMinute\n              isExact\n            }\n            id\n            isUnload\n            name\n            type\n            transporters {\n              id\n              from\n              to\n            }\n            x\n            y\n          }\n        }\n      }\n    ": typeof types.SaveDetailsDocument,
-    "\n      query status {\n        status {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StatusDocument,
+    "\n      query status {\n        status(id: \"last\") {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StatusDocument,
+    "\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StatusChangedDocument,
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": typeof types.LastSaveDocument,
     "\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    ": typeof types.LastLogDocument,
 };
 const documents: Documents = {
     "\n      query saveDetails {\n        saveDetails {\n          stations {\n            cargoTypes\n            cargoFlows {\n              type\n              isUnload\n              flowPerMinute\n              isExact\n            }\n            id\n            isUnload\n            name\n            type\n            transporters {\n              id\n              from\n              to\n            }\n            x\n            y\n          }\n        }\n      }\n    ": types.SaveDetailsDocument,
-    "\n      query status {\n        status {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StatusDocument,
+    "\n      query status {\n        status(id: \"last\") {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StatusDocument,
+    "\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StatusChangedDocument,
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": types.LastSaveDocument,
     "\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    ": types.LastLogDocument,
@@ -49,7 +51,11 @@ export function graphql(source: "\n      query saveDetails {\n        saveDetail
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n      query status {\n        status {\n          status\n          previousStatus\n          detail\n        }\n      }\n    "): (typeof documents)["\n      query status {\n        status {\n          status\n          previousStatus\n          detail\n        }\n      }\n    "];
+export function graphql(source: "\n      query status {\n        status(id: \"last\") {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    "): (typeof documents)["\n      query status {\n        status(id: \"last\") {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    "): (typeof documents)["\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

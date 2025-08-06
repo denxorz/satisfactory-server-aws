@@ -1,4 +1,12 @@
 type Status {
+    id: String
+    status: String
+    previousStatus: String
+    detail: String
+}
+
+input StatusInput {
+    id: String!
     status: String
     previousStatus: String
     detail: String
@@ -39,11 +47,16 @@ type SaveDetails {
 
 type Mutation {
     start : Status
+    updateStatus(input: StatusInput) : Status
 }
 
 type Query {
-    status: Status
+    status(id: String!): Status
     lastSave: File
     lastLog: File
     saveDetails: SaveDetails
+}
+
+type Subscription {
+    statusChanged: Status @aws_subscribe(mutations: ["updateStatus"])
 }

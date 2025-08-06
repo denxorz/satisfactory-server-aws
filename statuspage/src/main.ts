@@ -15,10 +15,19 @@ import { createVuetify } from 'vuetify'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/lib/styles/main.css'
 
+// Buffer is required for graphql subscriptions with appsync
+import buffer from 'buffer'
+declare global {
+  interface Window {
+    Buffer: typeof buffer.Buffer
+  }
+}
+window.Buffer = buffer.Buffer
+
 import App from './App.vue'
 
 const url = import.meta.env.VITE_GraphQLAPI
-const region = import.meta.env.VITE_GraphQLAPIKey
+const region = import.meta.env.VITE_GraphQLAPIRegion
 const auth: AuthOptions = {
   type: AUTH_TYPE.API_KEY,
   apiKey: import.meta.env.VITE_GraphQLAPIKey,

@@ -1,24 +1,34 @@
 <script setup lang="ts">
-  import { useQuery, useMutation } from '@vue/apollo-composable'
+  import { useMutation, useQuery, useSubscription } from '@vue/apollo-composable'
   import { computed, ref, watch } from 'vue'
 
   import ctorImg from '../assets/ctor.png'
   import { graphql } from '../gql'
 
-  const { result, refetch } = useQuery(
+  const { result } = useQuery(
     graphql(`
       query status {
-        status {
+        status(id: "last") {
+          id
           status
           previousStatus
           detail
         }
       }
-    `),
-    null,
-    {
-      pollInterval: 10000,
+    `)
+  )
+
+  useSubscription(
+    graphql(`
+      subscription statusChanged {
+        statusChanged {
+          id
+          status
+          previousStatus
+          detail
+        }
       }
+    `)
   )
 
   const { mutate: start } = useMutation(
@@ -75,7 +85,7 @@
 
   const startRes = ref()
   const status = computed(() => result.value?.status?.status ?? 'stopped')
-  const detailStatus = computed(() => result.value?.status?.detail ?? 'stopped')
+  //const detailStatus = computed(() => result.value?.status?.detail ?? 'stopped')
 
   const statusClass = computed(() => {
     switch (status.value) {
@@ -92,7 +102,6 @@
 
   const startServer = async () => {
     startRes.value = await start()
-    await refetch()
   }
 
   const downloadSave = async () => {
@@ -119,10 +128,10 @@
         <strong class="status-label">Status:</strong>
         <span class="status-value" :class="statusClass">{{ status }}</span>
       </div>
-      <div class="status-item">
+      <!-- <div class="status-item">
         <strong class="status-label">Detail:</strong>
         <span class="status-value">{{ detailStatus }}</span>
-      </div>
+      </div> -->
     </div>
     <div class="toolbar-actions">
       <v-btn
@@ -158,6 +167,7 @@
     display: flex;
     gap: 24px;
     margin-left: 24px;
+    margin-right: 24px;
   }
 
   .status-item {
