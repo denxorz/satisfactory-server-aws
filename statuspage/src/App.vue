@@ -114,6 +114,7 @@
     text-transform: uppercase !important;
     font-size: 0.9rem !important;
     font-weight: 550 !important;
+    font-family: 'Open Sans', sans-serif !important;
   }
 
   .satisfactory-theme :deep(.v-card-text) {
