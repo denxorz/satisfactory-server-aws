@@ -108,7 +108,10 @@
         <template v-slot:item.cargoFlows="{ item }">
           {{
             item?.cargoFlows
-              ?.map(c => `${c?.flowPerMinute ?? '??'} ${c?.type}`)
+              ?.map(
+                c =>
+                  `${item?.isUnload ? '-' : '+'}${c?.flowPerMinute ?? '??'} ${c?.type}`
+              )
               ?.join(' / ') || 'Unknown'
           }}
         </template>
