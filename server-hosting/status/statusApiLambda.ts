@@ -1,6 +1,7 @@
-import { EC2Client, StartInstancesCommand, DescribeInstanceStatusCommand } from "@aws-sdk/client-ec2";
+import { DescribeInstanceStatusCommand, EC2Client, StartInstancesCommand } from "@aws-sdk/client-ec2";
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { probe } from '@djwoodz/satisfactory-dedicated-server-lightweight-query-probe';
 
 const instanceId = process.env.INSTANCE_ID
 const bucketName = process.env.bucketName
@@ -30,6 +31,12 @@ exports.handler = async function (event: any) {
 
   if (fieldName == 'saveDetails') {
     return await readLastSave();
+  }
+
+  if (fieldName == 'gameServerProbe') {
+    const host = event.arguments?.host ?? ''
+    const port = event.arguments?.port ?? 7777
+    return await gameServerProbe(host, port);
   }
 
   console.log(`oops, fieldName not found: ${fieldName}`);
@@ -134,4 +141,30 @@ async function readLastSave() {
       status: "Failed to readLastSave " + JSON.stringify(err)
     }
   };
+}
+
+async function gameServerProbe(host: string, port: number) {
+  try {
+    console.log(`Probing ${host}:${port}`);
+    
+    const timeoutInMilliseconds = 1000;
+    const result = await probe(host, port, timeoutInMilliseconds);
+
+    return {
+      success: true,
+      serverState: result.serverState,
+      serverVersion: result.serverVersion,
+      serverName: result.serverName,
+    };
+  } catch (error) {
+    console.error('Probe error:', error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      serverState: null,
+      serverVersion: null,
+      serverName: null,
+    };
+  }
 }

@@ -45,6 +45,14 @@ type SaveDetails {
     stations: [Station!]
 }
 
+type GameServerProbe {
+    success: Boolean!
+    error: String
+    serverState: String
+    serverVersion: Int
+    serverName: String
+}
+
 type Mutation {
     start : Status
     updateStatus(input: StatusInput) : Status
@@ -55,6 +63,7 @@ type Query {
     lastSave: File
     lastLog: File
     saveDetails: SaveDetails
+    gameServerProbe(host: String, port: Int): GameServerProbe
 }
 
 type Subscription {

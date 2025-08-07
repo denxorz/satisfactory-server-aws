@@ -1,14 +1,14 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { Config } from './config';
-import { setupServer } from './server';
-import { setupNetwork } from './network';
-import { grantReadWriteToStorage, setupStorage } from './storage';
 import { setupApi } from './api';
-import { setupStatusPage } from './status/statusPageStaticWebpage';
-import { setupSaveFileParser } from './saveFileParserLambda';
-import { setupStatusLambda } from './statusLambda';
+import { Config } from './config';
 import { setupEc2StatusChangeHandling } from './ec2StatusChangedLambda';
+import { setupNetwork } from './network';
+import { setupSaveFileParser } from './saveFileParserLambda';
+import { setupServer } from './server';
+import { setupStatusPage } from './status/statusPageStaticWebpage';
+import { setupStatusLambda } from './statusLambda';
+import { grantReadWriteToStorage, setupStorage } from './storage';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {

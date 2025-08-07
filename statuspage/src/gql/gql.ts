@@ -20,6 +20,7 @@ type Documents = {
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": typeof types.LastSaveDocument,
     "\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    ": typeof types.LastLogDocument,
+    "\n      query gameServerProbe($host: String, $port: Int) {\n        gameServerProbe(host: $host, port: $port) {\n          success\n          error\n          serverState\n          serverVersion\n          serverName\n        }\n      }\n    ": typeof types.GameServerProbeDocument,
 };
 const documents: Documents = {
     "\n      query saveDetails {\n        saveDetails {\n          stations {\n            cargoTypes\n            cargoFlows {\n              type\n              isUnload\n              flowPerMinute\n              isExact\n            }\n            id\n            isUnload\n            name\n            type\n            transporters {\n              id\n              from\n              to\n            }\n            x\n            y\n          }\n        }\n      }\n    ": types.SaveDetailsDocument,
@@ -28,6 +29,7 @@ const documents: Documents = {
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": types.LastSaveDocument,
     "\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    ": types.LastLogDocument,
+    "\n      query gameServerProbe($host: String, $port: Int) {\n        gameServerProbe(host: $host, port: $port) {\n          success\n          error\n          serverState\n          serverVersion\n          serverName\n        }\n      }\n    ": types.GameServerProbeDocument,
 };
 
 /**
@@ -68,6 +70,10 @@ export function graphql(source: "\n      query lastSave {\n        lastSave {\n 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    "): (typeof documents)["\n      query lastLog {\n        lastLog {\n          url\n        }\n      }\n    "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n      query gameServerProbe($host: String, $port: Int) {\n        gameServerProbe(host: $host, port: $port) {\n          success\n          error\n          serverState\n          serverVersion\n          serverName\n        }\n      }\n    "): (typeof documents)["\n      query gameServerProbe($host: String, $port: Int) {\n        gameServerProbe(host: $host, port: $port) {\n          success\n          error\n          serverState\n          serverVersion\n          serverName\n        }\n      }\n    "];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

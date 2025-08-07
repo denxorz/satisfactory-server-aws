@@ -45,5 +45,6 @@ export const setupStatusLambda = (stack: Stack, api: GraphqlApi | null, server: 
         lambdaDataSource.createResolver(`${prefix}LastSaveResolver`, { typeName: "Query", fieldName: "lastSave" });
         lambdaDataSource.createResolver(`${prefix}LastLogResolver`, { typeName: "Query", fieldName: "lastLog" });
         lambdaDataSource.createResolver(`${prefix}SaveDetailsResolver`, { typeName: "Query", fieldName: "saveDetails" });
+        lambdaDataSource.createResolver(`${prefix}GameServerProbeResolver`, { typeName: "Query", fieldName: "gameServerProbe" });
     }
 };

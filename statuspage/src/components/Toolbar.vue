@@ -85,7 +85,29 @@
 
   const startRes = ref()
   const status = computed(() => result.value?.status?.status ?? 'stopped')
-  //const detailStatus = computed(() => result.value?.status?.detail ?? 'stopped')
+  const shouldPollGameServer = computed(() => status.value !== 'stopped')
+
+  const { result: gameServerProbeResult } = useQuery(
+    graphql(`
+      query gameServerProbe($host: String, $port: Int) {
+        gameServerProbe(host: $host, port: $port) {
+          success
+          error
+          serverState
+          serverVersion
+          serverName
+        }
+      }
+    `),
+    () => ({
+      host: import.meta.env.VITE_SatisfactoryDNS,
+      port: 7777,
+    }),
+    {
+      enabled: shouldPollGameServer,
+      pollInterval: 15000,
+    }
+  )
 
   const statusClass = computed(() => {
     switch (status.value) {
@@ -116,6 +138,16 @@
     window.localStorage.removeItem('satisfactory-auth')
     window.location.reload()
   }
+
+  const statusToShow = computed(() => {
+    if (status.value === 'running') {
+      if (gameServerProbeResult.value?.gameServerProbe?.success) {
+        return gameServerProbeResult.value.gameServerProbe.serverState
+      }
+      return 'Starting...'
+    }
+    return status.value
+  })
 </script>
 <template>
   <v-app-bar>
@@ -131,12 +163,8 @@
     <div class="status-indicators">
       <div class="status-item">
         <strong class="status-label">Status:</strong>
-        <span class="status-value" :class="statusClass">{{ status }}</span>
+        <span class="status-value" :class="statusClass">{{ statusToShow }}</span>
       </div>
-      <!-- <div class="status-item">
-        <strong class="status-label">Detail:</strong>
-        <span class="status-value">{{ detailStatus }}</span>
-      </div> -->
     </div>
     <div class="toolbar-actions">
       <v-btn
