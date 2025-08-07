@@ -14,6 +14,9 @@ USE_DYNU_DNS=${6-false}
 DYNU_DNS_USERNAME=$7
 DYNU_DNS_TOKEN=$8
 
+USE_AFRAID_DNS=${9-false}
+AFRAID_DNS_TOKEN=$10
+
 # install steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD?__cf_chl_jschl_tk__=pmd_WNQPOiK18.h0rf16RCYrARI2s8_84hUMwT.7N1xHYcs-1635248050-0-gqNtZGzNAiWjcnBszQiR#Linux.2FmacOS)
 sudo add-apt-repository multiverse
 sudo dpkg --add-architecture i386
@@ -141,11 +144,15 @@ cat << EOF | sudo tee /home/ubuntu/dns-update.sh
 #!/bin/sh
 
 if [ "$USE_DUCK_DNS" = "true" ]; then
-curl "https://www.duckdns.org/update?domains=$DUCK_DNS_DOMAIN&token=$DUCK_DNS_TOKEN"
+curl -s "https://www.duckdns.org/update?domains=$DUCK_DNS_DOMAIN&token=$DUCK_DNS_TOKEN"
 fi
 
 if [ "$USE_DYNU_DNS" = "true" ]; then
-curl "http://api.dynu.com/nic/update?username=$DYNU_DNS_USERNAME&password=$DYNU_DNS_TOKEN"
+curl -s "http://api.dynu.com/nic/update?username=$DYNU_DNS_USERNAME&password=$DYNU_DNS_TOKEN"
+fi
+
+if [ "$USE_AFRAID_DNS" = "true" ]; then
+curl -s "http://sync.afraid.org/u/$AFRAID_DNS_TOKEN/"
 fi
 EOF
 sudo chmod +x /home/ubuntu/dns-update.sh

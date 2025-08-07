@@ -39,6 +39,9 @@ export const Config = {
      dynuDnsUsername: '',
      dynuDnsToken: '',
 
+     // Needed if you want to use Afraid.org domain
+     afraidDnsToken: '',
+
      // Status page 
      statusPageDomainName: '',
      statusPageCertificateArn: '',

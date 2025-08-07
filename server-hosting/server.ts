@@ -1,9 +1,9 @@
 import { Stack } from "aws-cdk-lib";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { IBucket } from "aws-cdk-lib/aws-s3";
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
 import { Config } from './config';
-import { IBucket } from "aws-cdk-lib/aws-s3";
 
 export const setupServer = (
     stack: Stack,
@@ -64,11 +64,12 @@ const setupStartupSequence = (stack: Stack, server: ec2.Instance, storage: IBuck
 
     const useDuckDns = !!(Config.duckDnsDomain && Config.duckDnsToken);
     const useDynuDns = !!(Config.dynuDnsUsername && Config.dynuDnsToken);
+    const useAfraidDns = !!(Config.afraidDnsToken);
 
     // Ensure correct line endings and execute the script with permissions
     server.userData.addCommands(`\
       sed -i 's/\r$//' ${localPath}; \
       chmod +x ${localPath}; \
-      sudo ${localPath} ${storage.bucketName} ${Config.useExperimentalBuild} ${useDuckDns} ${Config.duckDnsDomain} ${Config.duckDnsToken} ${useDynuDns} ${Config.dynuDnsUsername} ${Config.dynuDnsToken}\
+      sudo ${localPath} ${storage.bucketName} ${Config.useExperimentalBuild} ${useDuckDns} ${Config.duckDnsDomain} ${Config.duckDnsToken} ${useDynuDns} ${Config.dynuDnsUsername} ${Config.dynuDnsToken} ${useAfraidDns} ${Config.afraidDnsToken}\
     `);
 };
