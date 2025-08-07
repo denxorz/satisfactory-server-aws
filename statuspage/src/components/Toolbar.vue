@@ -168,7 +168,6 @@
         @click="logout"
         class="mr-4 action-btn"
         prepend-icon="mdi-logout"
-        color="error"
       >
         Logout
       </v-btn>

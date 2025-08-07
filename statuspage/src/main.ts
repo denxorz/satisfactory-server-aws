@@ -14,6 +14,7 @@ import { createVuetify } from 'vuetify'
 
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/lib/styles/main.css'
+import './styles/global.css'
 
 // Buffer is required for graphql subscriptions with appsync
 import buffer from 'buffer'
@@ -48,6 +49,97 @@ const apolloClient = new ApolloClient({
 })
 
 const vuetify = createVuetify({
+  defaults: {
+    global: {
+      ripple: false,
+    },
+    VCard: {
+      style: {
+        background: 'rgb(var(--v-theme-surface))',
+        border: '4px solid rgb(var(--v-theme-primary))',
+        borderRadius: '0',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 20px rgba(229, 147, 69, 0.1)',
+      },
+    },
+    VCardTitle: {
+      style: {
+        background: 'rgb(var(--v-theme-primary))',
+        color: 'rgb(var(--v-theme-on-primary))',
+        padding: '8px 8px 2px 8px',
+        margin: '-8px -8px 10px -4px',
+        borderRadius: '0',
+        textAlign: 'left',
+        textTransform: 'uppercase',
+        fontSize: '0.9rem',
+        fontWeight: '550',
+        letterSpacing: '2px',
+      },
+    },
+    VCardText: {
+      style: {
+        padding: '0',
+      },
+    },
+    VBtn: {
+      elevation: 4,
+      style: {
+        background: 'rgba(33, 33, 33, 0.8)',
+        border: '1px solid rgb(var(--v-theme-primary))',
+        color: '#ffffff',
+      },
+    },
+    VChip: {
+      style: {
+        background: '#666666',
+        border: '1px solid #666666',
+        color: '#ffffff',
+      },
+    },
+    VTextField: {
+      style: {
+        background: 'rgba(33, 33, 33, 0.8)',
+        border: '1px solid rgb(var(--v-theme-primary))',
+        borderRadius: '6px',
+      },
+    },
+    VSelect: {
+      style: {
+        background: 'rgba(33, 33, 33, 0.8)',
+        border: '1px solid rgb(var(--v-theme-primary))',
+        borderRadius: '6px',
+      },
+    },
+    VAlert: {
+      style: {
+        background: 'rgba(33, 33, 33, 0.8)',
+        border: '1px solid rgb(var(--v-theme-primary))',
+        color: 'rgb(var(--v-theme-primary))',
+      },
+    },
+    VProgressCircular: {
+      style: {
+        color: 'rgb(var(--v-theme-primary))',
+      },
+    },
+    VIcon: {
+      style: {
+        color: 'rgb(var(--v-theme-primary))',
+      },
+    },
+    VToolbar: {
+      style: {
+        background: 'rgba(33, 33, 33, 0.9)',
+        borderBottom: '1px solid rgb(var(--v-theme-primary))',
+      },
+    },
+    VBottomSheet: {
+      style: {
+        background: 'rgba(33, 33, 33, 0.95)',
+        borderTop: '2px solid rgb(var(--v-theme-primary))',
+      },
+    },
+  },
   theme: {
     defaultTheme: 'dark',
     themes: {

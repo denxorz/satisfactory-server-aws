@@ -1,0 +1,26 @@
+.satisfactory-theme {
+  background: rgb(var(--v-theme-background));
+  min-height: 100vh;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+}
+
+.v-btn:hover {
+  background: rgba(229, 147, 69, 0.2) !important;
+}
+
+/* Global chip styling for active state */
+.v-chip.filter-chip-active {
+  background-color: rgb(var(--v-theme-primary)) !important;
+  border: 1px solid rgb(var(--v-theme-primary)) !important;
+  color: #ffffff !important;
+}
+
+.v-chip.filter-chip-active .v-icon {
+  color: #ffffff !important;
+}
+
+/* Ensure all chip icons are white */
+.v-chip .v-icon {
+  color: #ffffff !important;
+}

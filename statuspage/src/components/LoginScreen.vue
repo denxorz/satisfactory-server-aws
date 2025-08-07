@@ -59,6 +59,7 @@
             @keypress="handleKeyPress"
             :disabled="isLoading"
             hide-details="auto"
+            autofocus
           />
 
           <v-btn
@@ -66,7 +67,6 @@
             :loading="isLoading"
             :disabled="!password.trim()"
             block
-            class="login-btn"
             size="large"
             rounded="0"
           >
@@ -102,20 +102,5 @@
     flex-direction: column;
     gap: 20px;
     padding: 16px 24px;
-  }
-
-  .login-btn .v-icon {
-    color: #ffffff !important;
-    margin-right: 8px !important;
-  }
-
-  .login-btn:disabled {
-    background: #666666 !important;
-    transform: none !important;
-    box-shadow: none !important;
-  }
-
-  .login-btn:disabled .v-icon {
-    color: #ffffff !important;
   }
 </style>
