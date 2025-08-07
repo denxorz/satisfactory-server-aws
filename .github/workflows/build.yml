@@ -25,6 +25,8 @@ jobs:
           echo "VITE_GraphQLAPI=${{ secrets.VITE_GraphQLAPI }}" >> .env
           echo "VITE_GraphQLAPIKey=${{ secrets.VITE_GraphQLAPIKey }}" >> .env
           echo "VITE_GraphQLAPIRegion=${{ secrets.VITE_GraphQLAPIRegion }}" >> .env
+          echo "VITE_SatisfactoryDNS=${{ secrets.VITE_SatisfactoryDNS }}" >> .env
+          echo "VITE_APP_PASSWORD=${{ secrets.VITE_APP_PASSWORD }}" >> .env
         working-directory: statuspage
       - run: pnpm build
       - uses: aws-actions/configure-aws-credentials@v4
