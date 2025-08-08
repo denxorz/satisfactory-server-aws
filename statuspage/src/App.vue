@@ -13,8 +13,7 @@
 
   const { isAuthenticated, handleAuthenticated } = useAuthentication()
   const { serverStatus, serverProbeData } = useServerStatus()
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { stations } = useStationsData()
+  useStationsData()
 </script>
 
 <template>
