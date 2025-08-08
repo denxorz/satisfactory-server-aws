@@ -1,8 +1,7 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
-  import { useTheme } from 'vuetify'
 
-  import type { Maybe, Station } from '../gql/graphql'
+  import type { Station } from '../gql/graphql'
   import { useStationsStore } from '../stores/stations'
   import StationDetails from './StationDetails.vue'
 
@@ -27,21 +26,7 @@
     selectedStations.value = []
   }
 
-  const theme = useTheme()
-
-  function rowProps({ internalItem }: { internalItem: { value: string } }) {
-    const isDark = theme.global.current.value.dark
-    if (internalItem.value && selectedStations.value.includes(internalItem.value)) {
-      return {
-        style: isDark
-          ? 'background-color: #374151 !important; color: #fff;'
-          : 'background-color: #e3f2fd !important;',
-      }
-    }
-    return {}
-  }
-
-  const icon = (type?: Maybe<string>) => {
+  const icon = (type?: string) => {
     if (type === 'train') return 'mdi-train'
     if (type === 'truck') return 'mdi-truck'
     if (type === 'drone') return 'mdi-quadcopter'
@@ -92,7 +77,6 @@
             }: { internalItem: Station; toggleSelect: (item: Station) => void }
           ) => toggleSelect(internalItem)
         "
-        :row-props="rowProps"
         :sort-by="[{ key: 'name', order: 'asc' }]"
       >
         <template v-slot:item.type="{ item }">

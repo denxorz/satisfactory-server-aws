@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  import { useQuery, useSubscription } from '@vue/apollo-composable'
-  import { computed, ref, watch } from 'vue'
-
   import CargoFlowChart from './components/CargoFlowChart.vue'
   import LoginScreen from './components/LoginScreen.vue'
   import ServerInfo from './components/ServerInfo.vue'
@@ -10,123 +7,14 @@
   import StationsTable from './components/StationsTable.vue'
 
   import Toolbar from './components/Toolbar.vue'
-  import { graphql } from './gql'
-  import type { Station } from './gql/graphql'
-  import { useStationsStore } from './stores/stations'
+  import { useAuthentication } from './composables/useAuthentication'
+  import { useServerStatus } from './composables/useServerStatus'
+  import { useStationsData } from './composables/useStationsData'
 
-  const isAuthenticated = ref(false)
-
-  const stationsStore = useStationsStore()
-
-  const shouldSkipQuery = computed(
-    () => stationsStore.stations.length > 0 && !stationsStore.isDataStale()
-  )
-
-  const { result: resultSaveDetails } = useQuery(
-    graphql(`
-      query saveDetails {
-        saveDetails {
-          stations {
-            cargoTypes
-            cargoFlows {
-              type
-              isUnload
-              flowPerMinute
-              isExact
-            }
-            id
-            isUnload
-            name
-            type
-            transporters {
-              id
-              from
-              to
-            }
-            x
-            y
-          }
-        }
-      }
-    `),
-    undefined,
-    () => ({
-      enabled: !shouldSkipQuery.value,
-    })
-  )
-
-  const stations = computed(() => {
-    const stationsData = resultSaveDetails.value?.saveDetails?.stations ?? []
-    return stationsData.filter((s): s is Station => !!s)
-  })
-
-  watch(
-    stations,
-    newStations => {
-      stationsStore.setStations(newStations)
-    },
-    { immediate: true }
-  )
-
-  const handleAuthenticated = () => {
-    isAuthenticated.value = true
-  }
-
-  const { result: statusResult } = useQuery(
-    graphql(`
-      query status {
-        status(id: "last") {
-          id
-          status
-          previousStatus
-          detail
-        }
-      }
-    `)
-  )
-
-  useSubscription(
-    graphql(`
-      subscription statusChanged {
-        statusChanged {
-          id
-          status
-          previousStatus
-          detail
-        }
-      }
-    `)
-  )
-
-  const status = computed(() => statusResult.value?.status?.status ?? 'stopped')
-  const shouldPollGameServer = computed(() => status.value !== 'stopped')
-
-  const { result: gameServerProbeResult } = useQuery(
-    graphql(`
-      query gameServerProbe($host: String, $port: Int) {
-        gameServerProbe(host: $host, port: $port) {
-          success
-          error
-          serverState
-          serverVersion
-          serverName
-        }
-      }
-    `),
-    () => ({
-      host: import.meta.env.VITE_SatisfactoryDNS,
-      port: 7777,
-    }),
-    {
-      enabled: shouldPollGameServer,
-      pollInterval: 15000,
-    }
-  )
-
-  const serverStatus = computed(() => status.value)
-  const serverProbeData = computed(
-    () => gameServerProbeResult.value?.gameServerProbe
-  )
+  const { isAuthenticated, handleAuthenticated } = useAuthentication()
+  const { serverStatus, serverProbeData } = useServerStatus()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { stations } = useStationsData()
 </script>
 
 <template>
@@ -177,7 +65,15 @@
     flex-direction: column;
   }
 
-  .v-row > .v-col > * {
+  /* Make the v-card take full height */
+  .v-row > .v-col > .v-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure v-card-text takes remaining space */
+  .v-row > .v-col > .v-card > .v-card-text {
     flex: 1;
   }
 </style>

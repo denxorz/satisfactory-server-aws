@@ -321,22 +321,26 @@
         </v-alert>
       </div>
     </v-card-text>
-  </v-card>
 
-  <v-bottom-sheet v-model="showBottomSheet" :retain-focus="false">
-    <v-card>
-      <v-toolbar>
-        <v-toolbar-title>Map (Large)</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn icon @click="showBottomSheet = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-toolbar>
-      <v-card-text>
-        <v-img :src="mergedImageUrl" alt="Station Network Map" />
-      </v-card-text>
-    </v-card>
-  </v-bottom-sheet>
+    <v-bottom-sheet v-model="showBottomSheet" :retain-focus="false">
+      <v-card>
+        <v-toolbar>
+          <v-toolbar-title>Map (Large)</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showBottomSheet = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar>
+        <v-card-text>
+          <v-img
+            v-if="mergedImageUrl"
+            :src="mergedImageUrl"
+            alt="Station Network Map"
+          />
+        </v-card-text>
+      </v-card>
+    </v-bottom-sheet>
+  </v-card>
 </template>
 
 <style scoped>
