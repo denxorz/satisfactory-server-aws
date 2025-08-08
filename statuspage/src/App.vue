@@ -28,13 +28,13 @@
         <v-container class="pa-4" fluid>
           <v-row>
             <v-col cols="8">
-              <StationFilters class="h-100" />
+              <StationFilters class="fill-height" />
             </v-col>
             <v-col cols="4">
               <ServerInfo
                 :server-status="serverStatus"
                 :server-probe-data="serverProbeData"
-                class="h-100"
+                class="fill-height"
               />
             </v-col>
             <v-col cols="12">
@@ -42,10 +42,10 @@
             </v-col>
 
             <v-col cols="6">
-              <StationGraph class="h-100" />
+              <StationGraph class="fill-height" />
             </v-col>
             <v-col cols="6">
-              <StationsTable class="h-100" />
+              <StationsTable class="fill-height" />
             </v-col>
           </v-row>
         </v-container>
@@ -53,27 +53,3 @@
     </template>
   </v-app>
 </template>
-
-<style scoped>
-  .h-100 {
-    height: 100%;
-  }
-
-  /* Ensure cards in the same row have equal heights */
-  .v-row > .v-col {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Make the v-card take full height */
-  .v-row > .v-col > .v-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Ensure v-card-text takes remaining space */
-  .v-row > .v-col > .v-card > .v-card-text {
-    flex: 1;
-  }
-</style>
