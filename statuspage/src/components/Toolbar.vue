@@ -5,18 +5,12 @@
   import ctorImg from '../assets/ctor.png'
   import { graphql } from '../gql'
 
-  const { result } = useQuery(
-    graphql(`
-      query status {
-        status(id: "last") {
-          id
-          status
-          previousStatus
-          detail
-        }
-      }
-    `)
-  )
+  interface Props {
+    serverStatus: string
+    serverProbeData: any
+  }
+
+  const props = defineProps<Props>()
 
   useSubscription(
     graphql(`
@@ -84,30 +78,7 @@
   })
 
   const startRes = ref()
-  const status = computed(() => result.value?.status?.status ?? 'stopped')
-  const shouldPollGameServer = computed(() => status.value !== 'stopped')
-
-  const { result: gameServerProbeResult } = useQuery(
-    graphql(`
-      query gameServerProbe($host: String, $port: Int) {
-        gameServerProbe(host: $host, port: $port) {
-          success
-          error
-          serverState
-          serverVersion
-          serverName
-        }
-      }
-    `),
-    () => ({
-      host: import.meta.env.VITE_SatisfactoryDNS,
-      port: 7777,
-    }),
-    {
-      enabled: shouldPollGameServer,
-      pollInterval: 15000,
-    }
-  )
+  const status = computed(() => props.serverStatus)
 
   const statusClass = computed(() => {
     switch (status.value) {
@@ -141,8 +112,8 @@
 
   const statusToShow = computed(() => {
     if (status.value === 'running') {
-      if (gameServerProbeResult.value?.gameServerProbe?.success) {
-        return gameServerProbeResult.value.gameServerProbe.serverState
+      if (props.serverProbeData?.success) {
+        return props.serverProbeData.serverState
       }
       return 'Starting...'
     }
