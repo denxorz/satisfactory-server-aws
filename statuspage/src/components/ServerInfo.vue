@@ -11,6 +11,8 @@
 
   const props = defineProps<Props>()
 
+  const startButtonDisabled = ref(false)
+
   useSubscription(
     graphql(`
       subscription statusChanged {
@@ -117,6 +119,7 @@
   const startRes = ref()
 
   const startServer = async () => {
+    startButtonDisabled.value = true
     startRes.value = await start()
   }
 
@@ -127,6 +130,10 @@
   const downloadLog = async () => {
     lastLogEnabled.value = true
   }
+
+  watch(status, () => {
+    startButtonDisabled.value = false
+  })
 </script>
 
 <template>
@@ -159,6 +166,7 @@
             <v-btn
               variant="outlined"
               @click="startServer"
+              :disabled="startButtonDisabled"
               class="mr-4 action-btn"
               prepend-icon="mdi-play-box"
             >
