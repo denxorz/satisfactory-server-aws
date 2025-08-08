@@ -150,11 +150,16 @@ async function gameServerProbe(host: string, port: number) {
     const timeoutInMilliseconds = 1000;
     const result = await probe(host, port, timeoutInMilliseconds);
 
+    const serializableResult = {
+      ...result,
+      clientData: result.clientData.toString(),
+      serverFlags: result.serverFlags.toString(),
+    };
+    console.log(`Result: ${JSON.stringify(serializableResult)}`);
+
     return {
       success: true,
-      serverState: result.serverState,
-      serverVersion: result.serverVersion,
-      serverName: result.serverName,
+      ...serializableResult,
     };
   } catch (error) {
     console.error('Probe error:', error);
