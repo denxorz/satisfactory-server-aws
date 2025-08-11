@@ -1,6 +1,17 @@
 # Satisfactory Server AWS
 Automated Satisfactory Dedicated Server management on AWS
 
+## About the Denxorz version
+
+This version is Satisfactory 1.1 compatible and add a dashboard to control the server, and to have a quick overview of your stations.
+It includes the autoshutdown, but the server was upgraded to avoid lag. It also comes with 3 dynamic DNS providers (https://duckdns.org/, https://afraid.org/, https://dynu.com/).
+
+More info about the architecture and installation is added later TM.
+
+![dashboard](https://github.com/denxorz/satisfactory-server-aws/blob/main/dashboard.png?raw=true)
+
+
+
 ## Intro
 FICSIT Incorporated has provided you with this tool (cost deducted from your existing balance) to assist you with Project Assembly.  This tool can help you collaborate with friends on your factory projects.
 
