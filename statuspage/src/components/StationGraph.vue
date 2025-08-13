@@ -54,17 +54,23 @@
 
     let requiredStations: string[] = []
 
-    //console.log(filteredStations.value)
-
     const edges = filteredStations.value.flatMap(station => {
       return (station.transporters ?? [])
         .map(transporter => {
           const fromStation = stations.value.find(s => s.id === transporter.from)
           const toStation = stations.value.find(s => s.id === transporter.to)
 
-          if (!fromStation?.name || !toStation?.name) return
+          if (!fromStation?.shortName || !toStation?.shortName) return
 
           let edgeColor = '#FF0000'
+          let edgeStyle = 'solid'
+
+          const stationType = station.type
+          if (stationType === 'drone') {
+            edgeStyle = 'dashed'
+          } else if (stationType === 'truck') {
+            edgeStyle = 'dotted'
+          }
 
           const relevantFlows = fromStation.cargoTypes ?? []
 
@@ -111,19 +117,21 @@
             }
           }
 
-          requiredStations.push(fromStation.name)
-          requiredStations.push(toStation.name)
+          requiredStations.push(fromStation.shortName)
+          requiredStations.push(toStation.shortName)
 
           return fromStation.isUnload
             ? {
-                from: toStation.name,
-                to: fromStation.name,
+                from: toStation.shortName,
+                to: fromStation.shortName,
                 color: edgeColor,
+                style: edgeStyle,
               }
             : {
-                from: fromStation.name,
-                to: toStation.name,
+                from: fromStation.shortName,
+                to: toStation.shortName,
                 color: edgeColor,
+                style: edgeStyle,
               }
         })
         .filter(t => !!t)
@@ -135,12 +143,12 @@
           index === self.findIndex(e => e.from === edge.from && e.to === edge.to)
       )
       .forEach(edge => {
-        dot += `\n${dotId(edge.from)} -> ${dotId(edge.to)} [color="${edge.color}"];`
+        dot += `\n${dotId(edge.from)} -> ${dotId(edge.to)} [color="${edge.color}", style="${edge.style}"];`
       })
 
     const uniqueStations = new Map<string, Station>()
     stations.value.forEach(station => {
-      const name = station.name || `Station ${station.id}`
+      const name = station.shortName || `Station ${station.id}`
       if (!uniqueStations.has(name) && requiredStations.includes(name)) {
         uniqueStations.set(name, station)
       }

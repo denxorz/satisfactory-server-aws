@@ -4,6 +4,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.S3;
+using Denxorz.Satisfactory.Routes;
 
 namespace SaveParser;
 

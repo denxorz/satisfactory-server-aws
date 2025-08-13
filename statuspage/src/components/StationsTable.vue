@@ -48,7 +48,7 @@
             sortRaw: (a: Station, b: Station) =>
               (a.isUnload ? 1 : 0) - (b.isUnload ? 1 : 0),
           },
-          { title: 'Station', key: 'name', width: '40%' },
+          { title: 'Station', key: 'shortName', width: '40%' },
           {
             title: 'Cargo',
             key: 'cargoFlows',
@@ -77,7 +77,7 @@
             }: { internalItem: Station; toggleSelect: (item: Station) => void }
           ) => toggleSelect(internalItem)
         "
-        :sort-by="[{ key: 'name', order: 'asc' }]"
+        :sort-by="[{ key: 'shortName', order: 'asc' }]"
       >
         <template v-slot:item.type="{ item }">
           <v-icon>

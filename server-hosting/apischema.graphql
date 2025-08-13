@@ -19,6 +19,7 @@ type File {
 type Station {
     id: String!
     name: String!
+    shortName: String!
     type: String!
     cargoTypes: [String!]
     cargoFlows: [CargoFlow!]
