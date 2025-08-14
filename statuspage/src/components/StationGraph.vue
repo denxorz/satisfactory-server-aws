@@ -111,6 +111,30 @@
               case 'spaceelevatorpart_7':
                 edgeColor = 'orange'
                 break
+              case 'gastank':
+                edgeColor = '#FF6B6B'
+                break
+              case 'fuel':
+                edgeColor = '#FFD700'
+                break
+              case 'quartzcrystal':
+                edgeColor = '#E6E6FA'
+                break
+              case 'singularitycell':
+                edgeColor = '#FF1493'
+                break
+              case 'computersuper':
+                edgeColor = '#00BFFF'
+                break
+              case 'spaceelevatorpart_9':
+                edgeColor = '#FF4500'
+                break
+              case 'turbofuel':
+                edgeColor = '#FF8C00'
+                break
+              case 'sam':
+                edgeColor = '#9932CC'
+                break
               default:
                 console.log(cargoType)
                 break
@@ -163,7 +187,6 @@
 
     dot += '\n}'
 
-    //console.log(dot)
     return dot
   })
 
