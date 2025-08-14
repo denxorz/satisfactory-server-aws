@@ -64,12 +64,14 @@
 
           let edgeColor = '#FF0000'
           let edgeStyle = 'solid'
+          let edgePenwidth = 2
 
           const stationType = station.type
           if (stationType === 'drone') {
             edgeStyle = 'dashed'
           } else if (stationType === 'truck') {
             edgeStyle = 'dotted'
+            edgePenwidth = 4
           }
 
           const relevantFlows = fromStation.cargoTypes ?? []
@@ -79,7 +81,7 @@
 
             switch (cargoType) {
               case 'coal':
-                edgeColor = '#2F4F4F'
+                edgeColor = '#000000'
                 break
               case 'plastic':
                 edgeColor = '#4169E1'
@@ -118,10 +120,10 @@
                 edgeColor = '#FFD700'
                 break
               case 'quartzcrystal':
-                edgeColor = '#E6E6FA'
+                edgeColor = '#FF1493'
                 break
               case 'singularitycell':
-                edgeColor = '#FF1493'
+                edgeColor = '#E6E6FA'
                 break
               case 'computersuper':
                 edgeColor = '#00BFFF'
@@ -150,12 +152,14 @@
                 to: fromStation.shortName,
                 color: edgeColor,
                 style: edgeStyle,
+                penwidth: edgePenwidth,
               }
             : {
                 from: fromStation.shortName,
                 to: toStation.shortName,
                 color: edgeColor,
                 style: edgeStyle,
+                penwidth: edgePenwidth,
               }
         })
         .filter(t => !!t)
@@ -167,7 +171,7 @@
           index === self.findIndex(e => e.from === edge.from && e.to === edge.to)
       )
       .forEach(edge => {
-        dot += `\n${dotId(edge.from)} -> ${dotId(edge.to)} [color="${edge.color}", style="${edge.style}"];`
+        dot += `\n${dotId(edge.from)} -> ${dotId(edge.to)} [color="${edge.color}", style="${edge.style}", penwidth=${edge.penwidth}];`
       })
 
     const uniqueStations = new Map<string, Station>()
