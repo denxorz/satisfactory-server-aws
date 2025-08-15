@@ -107,21 +107,6 @@ export const useStationsStore = defineStore('stations', () => {
     }
   }
 
-  // Available filter options
-  const stationTypeOptions = computed(() => {
-    const types = new Set(stations.value.map(s => s.type).filter(Boolean))
-    return Array.from(types).map(type => ({
-      title: (type && type.charAt(0).toUpperCase() + type.slice(1)) || 'Unknown',
-      value: type || 'unknown',
-      prependIcon: icon(type),
-    }))
-  })
-
-  const transferTypeOptions = [
-    { title: 'Load', value: 'load', prependIcon: 'mdi-tray-arrow-down' },
-    { title: 'Unload', value: 'unload', prependIcon: 'mdi-tray-arrow-up' },
-  ]
-
   const cargoTypeOptions = computed(() => {
     const cargoTypes = new Set<string>()
     stations.value.forEach(station => {
@@ -141,11 +126,17 @@ export const useStationsStore = defineStore('stations', () => {
   const filteredStations = computed(() => {
     return stations.value.filter(station => {
       // Text search
-      if (
-        filters.value.searchText &&
-        !station.name?.toLowerCase().includes(filters.value.searchText.toLowerCase())
-      ) {
-        return false
+      if (filters.value.searchText) {
+        const searchText = filters.value.searchText.toLowerCase()
+        const stationName = station.name?.toLowerCase() || ''
+        const stationShortName = station.shortName?.toLowerCase() || ''
+
+        if (
+          !stationName.includes(searchText) &&
+          !stationShortName.includes(searchText)
+        ) {
+          return false
+        }
       }
 
       // Station type filter
@@ -180,19 +171,10 @@ export const useStationsStore = defineStore('stations', () => {
     })
   })
 
-  const icon = (type?: string) => {
-    if (type === 'train') return 'mdi-train'
-    if (type === 'truck') return 'mdi-truck'
-    if (type === 'drone') return 'mdi-quadcopter'
-    return 'mdi-help-box'
-  }
-
   return {
     stations,
     filteredStations,
     filters,
-    stationTypeOptions,
-    transferTypeOptions,
     cargoTypeOptions,
     isLoading: readonly(isLoading),
     error: readonly(error),
