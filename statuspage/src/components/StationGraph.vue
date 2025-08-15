@@ -74,10 +74,13 @@
             edgePenwidth = 4
           }
 
-          const relevantFlows = fromStation.cargoTypes ?? []
+          let cargoTypes = fromStation.cargoTypes ?? []
+          if (cargoTypes.length === 0) {
+            cargoTypes = fromStation.cargoFlows?.map(c => c.type) ?? []
+          }
 
-          if (relevantFlows.length > 0) {
-            const cargoType = relevantFlows[0].toLowerCase()
+          if (cargoTypes.length > 0) {
+            const cargoType = cargoTypes[0].toLowerCase()
 
             switch (cargoType) {
               case 'coal':
@@ -406,3 +409,4 @@
     backdrop-filter: blur(5px);
   }
 </style>
+
