@@ -24,7 +24,7 @@
     <template v-else>
       <Toolbar :server-status="serverStatus" :server-probe-data="serverProbeData" />
       <v-main class="satisfactory-theme">
-        <v-container class="pa-4" fluid>
+        <v-container class="pa-4" max-width="1400">
           <v-row>
             <v-col cols="8">
               <StationFilters class="fill-height" />

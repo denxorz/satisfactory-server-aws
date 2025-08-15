@@ -65,7 +65,7 @@
         item-key="id"
         class="elevation-1 mt-4"
         hide-footer
-        :items-per-page="15"
+        :items-per-page="10"
         v-model="selectedStations"
         select-strategy="single"
         @click:row="
