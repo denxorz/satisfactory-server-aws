@@ -26,10 +26,10 @@
       <v-main class="satisfactory-theme">
         <v-container class="pa-4" max-width="1400">
           <v-row>
-            <v-col cols="8">
+            <v-col cols="12" md="8">
               <StationFilters class="fill-height" />
             </v-col>
-            <v-col cols="4">
+            <v-col cols="12" md="4">
               <ServerInfo
                 :server-status="serverStatus"
                 :server-probe-data="serverProbeData"
@@ -40,10 +40,10 @@
               <CargoFlowChart />
             </v-col>
 
-            <v-col cols="6">
+            <v-col cols="12" lg="6">
               <StationGraph class="fill-height" />
             </v-col>
-            <v-col cols="6">
+            <v-col cols="12" lg="6">
               <StationsTable class="fill-height" />
             </v-col>
           </v-row>
