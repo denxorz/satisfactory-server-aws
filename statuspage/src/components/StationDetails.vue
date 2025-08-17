@@ -16,6 +16,7 @@
     return (
       props.station.transporters?.map(t => ({
         id: t?.id ?? '',
+        name: t?.name ?? '',
         destinations: getDestinations(t?.id ?? '', props.station?.id || ''),
       })) ?? []
     )
@@ -72,7 +73,8 @@
               v-for="vehicle in selectedStationVehicles"
               :key="vehicle?.id || 'unknown-vehicle'"
             >
-              {{ vehicle?.id }} -> {{ vehicle?.destinations.join(', ') }}
+              {{ vehicle?.name }} ({{ vehicle?.id }}) ->
+              {{ vehicle?.destinations.join(', ') }}
             </li>
           </ul>
         </div>

@@ -26,10 +26,12 @@ export function useStationsData() {
             }
             id
             isUnload
+            name
             shortName
             type
             transporters {
               id
+              name
               from
               to
             }
