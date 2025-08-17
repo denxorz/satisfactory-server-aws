@@ -14,6 +14,8 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n      mutation RebuildSaveDetails {\n        rebuildSaveDetails {\n          status\n        }\n      }\n    ": typeof types.RebuildSaveDetailsDocument,
+    "\n      query SaveDetailsBuildInfo {\n        saveDetailsBuildInfo {\n          fileName\n          fileDate\n          parsedDate\n        }\n      }\n    ": typeof types.SaveDetailsBuildInfoDocument,
     "\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StatusChangedDocument,
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": typeof types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": typeof types.LastSaveDocument,
@@ -23,6 +25,8 @@ type Documents = {
     "\n      query saveDetails {\n        saveDetails {\n          stations {\n            cargoTypes\n            cargoFlows {\n              type\n              isUnload\n              flowPerMinute\n              isExact\n            }\n            id\n            isUnload\n            shortName\n            type\n            transporters {\n              id\n              from\n              to\n            }\n            x\n            y\n          }\n        }\n      }\n    ": typeof types.SaveDetailsDocument,
 };
 const documents: Documents = {
+    "\n      mutation RebuildSaveDetails {\n        rebuildSaveDetails {\n          status\n        }\n      }\n    ": types.RebuildSaveDetailsDocument,
+    "\n      query SaveDetailsBuildInfo {\n        saveDetailsBuildInfo {\n          fileName\n          fileDate\n          parsedDate\n        }\n      }\n    ": types.SaveDetailsBuildInfoDocument,
     "\n      subscription statusChanged {\n        statusChanged {\n          id\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StatusChangedDocument,
     "\n      mutation start {\n        start {\n          status\n          previousStatus\n          detail\n        }\n      }\n    ": types.StartDocument,
     "\n      query lastSave {\n        lastSave {\n          url\n        }\n      }\n    ": types.LastSaveDocument,
@@ -46,6 +50,14 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n      mutation RebuildSaveDetails {\n        rebuildSaveDetails {\n          status\n        }\n      }\n    "): (typeof documents)["\n      mutation RebuildSaveDetails {\n        rebuildSaveDetails {\n          status\n        }\n      }\n    "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n      query SaveDetailsBuildInfo {\n        saveDetailsBuildInfo {\n          fileName\n          fileDate\n          parsedDate\n        }\n      }\n    "): (typeof documents)["\n      query SaveDetailsBuildInfo {\n        saveDetailsBuildInfo {\n          fileName\n          fileDate\n          parsedDate\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

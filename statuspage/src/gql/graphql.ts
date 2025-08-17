@@ -40,6 +40,7 @@ export type GameServerProbe = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  rebuildSaveDetails?: Maybe<Status>;
   start?: Maybe<Status>;
   updateStatus?: Maybe<Status>;
 };
@@ -55,6 +56,7 @@ export type Query = {
   lastLog?: Maybe<File>;
   lastSave?: Maybe<File>;
   saveDetails?: Maybe<SaveDetails>;
+  saveDetailsBuildInfo?: Maybe<SaveDetailsBuildInfo>;
   status?: Maybe<Status>;
 };
 
@@ -72,6 +74,13 @@ export type QueryStatusArgs = {
 export type SaveDetails = {
   __typename?: 'SaveDetails';
   stations?: Maybe<Array<Station>>;
+};
+
+export type SaveDetailsBuildInfo = {
+  __typename?: 'SaveDetailsBuildInfo';
+  fileDate?: Maybe<Scalars['String']['output']>;
+  fileName?: Maybe<Scalars['String']['output']>;
+  parsedDate?: Maybe<Scalars['String']['output']>;
 };
 
 export type Station = {
@@ -115,6 +124,16 @@ export type Transporter = {
   to?: Maybe<Scalars['String']['output']>;
 };
 
+export type RebuildSaveDetailsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RebuildSaveDetailsMutation = { __typename?: 'Mutation', rebuildSaveDetails?: { __typename?: 'Status', status?: string | null } | null };
+
+export type SaveDetailsBuildInfoQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SaveDetailsBuildInfoQuery = { __typename?: 'Query', saveDetailsBuildInfo?: { __typename?: 'SaveDetailsBuildInfo', fileName?: string | null, fileDate?: string | null, parsedDate?: string | null } | null };
+
 export type StatusChangedSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -154,6 +173,8 @@ export type SaveDetailsQueryVariables = Exact<{ [key: string]: never; }>;
 export type SaveDetailsQuery = { __typename?: 'Query', saveDetails?: { __typename?: 'SaveDetails', stations?: Array<{ __typename?: 'Station', cargoTypes?: Array<string> | null, id: string, isUnload: boolean, shortName: string, type: string, x: number, y: number, cargoFlows?: Array<{ __typename?: 'CargoFlow', type: string, isUnload: boolean, flowPerMinute?: number | null, isExact: boolean }> | null, transporters?: Array<{ __typename?: 'Transporter', id: string, from: string, to?: string | null }> | null }> | null } | null };
 
 
+export const RebuildSaveDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RebuildSaveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rebuildSaveDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<RebuildSaveDetailsMutation, RebuildSaveDetailsMutationVariables>;
+export const SaveDetailsBuildInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SaveDetailsBuildInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveDetailsBuildInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fileName"}},{"kind":"Field","name":{"kind":"Name","value":"fileDate"}},{"kind":"Field","name":{"kind":"Name","value":"parsedDate"}}]}}]}}]} as unknown as DocumentNode<SaveDetailsBuildInfoQuery, SaveDetailsBuildInfoQueryVariables>;
 export const StatusChangedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"statusChanged"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"statusChanged"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"previousStatus"}},{"kind":"Field","name":{"kind":"Name","value":"detail"}}]}}]}}]} as unknown as DocumentNode<StatusChangedSubscription, StatusChangedSubscriptionVariables>;
 export const StartDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"start"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"start"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"previousStatus"}},{"kind":"Field","name":{"kind":"Name","value":"detail"}}]}}]}}]} as unknown as DocumentNode<StartMutation, StartMutationVariables>;
 export const LastSaveDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"lastSave"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"lastSave"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]} as unknown as DocumentNode<LastSaveQuery, LastSaveQueryVariables>;

@@ -1,4 +1,5 @@
 import { DescribeInstanceStatusCommand, EC2Client, StartInstancesCommand } from "@aws-sdk/client-ec2";
+import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { probe } from '@djwoodz/satisfactory-dedicated-server-lightweight-query-probe';
@@ -9,6 +10,7 @@ const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
 const commandStart = new StartInstancesCommand({ InstanceIds: [instanceId!] });
 const commandStatus = new DescribeInstanceStatusCommand({ InstanceIds: [instanceId!], IncludeAllInstances: true });
 const s3Client = new S3Client({});
+const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION });
 
 exports.handler = async function (event: any) {
   const fieldName = event.info.fieldName;
@@ -33,10 +35,18 @@ exports.handler = async function (event: any) {
     return await readLastSave();
   }
 
+  if (fieldName == 'saveDetailsBuildInfo') {
+    return await getSaveDetailsBuildInfo();
+  }
+
   if (fieldName == 'gameServerProbe') {
     const host = event.arguments?.host ?? ''
     const port = event.arguments?.port ?? 7777
     return await gameServerProbe(host, port);
+  }
+
+  if (fieldName == 'rebuildSaveDetails') {
+    return await rebuildSaveDetails();
   }
 
   console.log(`oops, fieldName not found: ${fieldName}`);
@@ -131,6 +141,27 @@ async function getSaveDetails() {
   return JSON.parse(await details.Body?.transformToString() ?? '{}');
 }
 
+async function getSaveDetailsBuildInfo() {
+  try {
+    const saveDetailsBuildInfo = await s3Client.send(new GetObjectCommand({ Bucket: bucketName, Key: 'saveDetails/saveDetailsBuildInfo.txt' }));
+    const info = JSON.parse(await saveDetailsBuildInfo.Body?.transformToString() ?? '{}');
+    
+    return {
+      fileName: info.fileName,
+      fileDate: info.fileDate ? new Date(info.fileDate).toISOString() : null,
+      parsedDate: info.parsedDate ? new Date(info.parsedDate).toISOString() : null
+    };
+  }
+  catch (err) {
+    console.log(JSON.stringify(err));
+    return {
+      fileName: null,
+      fileDate: null,
+      parsedDate: null
+    }
+  };
+}
+
 async function readLastSave() {
   try {
     return await getSaveDetails();
@@ -171,5 +202,25 @@ async function gameServerProbe(host: string, port: number) {
       serverVersion: null,
       serverName: null,
     };
+  }
+}
+
+async function rebuildSaveDetails() {
+  try {
+    console.log("Triggering save file parser lambda with force rebuild parameter");
+    
+    const invokeCommand = new InvokeCommand({
+      FunctionName: 'SaveFileParserLambda',
+      InvocationType: 'Event',
+      Payload: JSON.stringify({ forceRebuild: true })
+    });
+    
+    await lambdaClient.send(invokeCommand);
+    
+    return { status: "ok" };
+  } catch (error) {
+    console.error('Rebuild error:', error);
+    
+    return { status: "Failed" };
   }
 }

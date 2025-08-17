@@ -21,7 +21,7 @@ public static class Function
 
     private static async Task Main()
     {
-        await LambdaBootstrapBuilder.Create(FunctionHandler, new DefaultLambdaJsonSerializer())
+        await LambdaBootstrapBuilder.Create<LambdaInput>(FunctionHandler, new DefaultLambdaJsonSerializer())
             .Build()
             .RunAsync();
     }
@@ -49,29 +49,66 @@ public static class Function
 
     }
 
-    public static async Task<string> FunctionHandler(ILambdaContext context)
+    private static async Task<DateTime?> GetFileDate(string? fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return null;
+
+        try
+        {
+            var savesListResponse = await s3Client.ListObjectsV2Async(new() { BucketName = bucketName, Prefix = "saves" });
+            var file = savesListResponse.S3Objects.FirstOrDefault(s => s.Key == fileName);
+            return file?.LastModified;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetFileDate error: {ex.Message}");
+        }
+        return null;
+    }
+
+    public class SaveDetailsBuildInfo
+    {
+        public string? FileName { get; set; }
+        public DateTime? FileDate { get; set; }
+        public DateTime ParsedDate { get; set; }
+    }
+
+    public class LambdaInput
+    {
+        public bool ForceRebuild { get; set; }
+    }
+
+    public static async Task<string> FunctionHandler(LambdaInput? input, ILambdaContext context)
     {
         Console.WriteLine($"Starting...");
 
         const string lastFileParsedKey = "saveDetails/details.txt";
-        const string lastFileParsedInfoKey = "saveDetails/lastFileParsed.txt";
+        const string saveDetailsBuildInfoKey = "saveDetails/saveDetailsBuildInfo.txt";
         string? lastProcessedFile = null;
+        bool forceRebuild = input?.ForceRebuild ?? false;
 
-        try
+        Console.WriteLine($"Force rebuild requested: {forceRebuild}");
+
+        if (!forceRebuild)
         {
-            using var response = await s3Client.GetObjectStreamAsync(bucketName, lastFileParsedInfoKey, null);
-            using StreamReader reader = new(response);
-            lastProcessedFile = await reader.ReadToEndAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"lastProcessedFile not found: {ex.Message}");
+            try
+            {
+                var saveDetailsBuildInfoResponse = await s3Client.GetObjectStreamAsync(bucketName, saveDetailsBuildInfoKey, null);
+                var saveDetailsBuildInfoJson = await new StreamReader(saveDetailsBuildInfoResponse).ReadToEndAsync();
+                var saveDetailsBuildInfo = JsonSerializer.Deserialize<SaveDetailsBuildInfo>(saveDetailsBuildInfoJson, serializeOptions);
+                lastProcessedFile = saveDetailsBuildInfo?.FileName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"saveDetailsBuildInfo not found: {ex.Message}");
+            }
         }
 
         var file = await LastSaveFileName();
 
-        Console.WriteLine($"LastSave: {file} LastProcessed: {lastProcessedFile}");
-        if (file != lastProcessedFile)
+        Console.WriteLine($"LastSave: {file} LastProcessed: {lastProcessedFile} ForceRebuild: {forceRebuild}");
+        if (file != lastProcessedFile || forceRebuild)
         {
             using var saveFileStream = await s3Client.GetObjectStreamAsync(bucketName, file, null);
             using var saveFileMemoryStream = new MemoryStream();
@@ -85,13 +122,50 @@ public static class Function
             outputMemoryStream.Position = 0;
 
             await s3Client.PutObjectAsync(new() { BucketName = bucketName, Key = lastFileParsedKey, InputStream = outputMemoryStream });
-            await s3Client.PutObjectAsync(new() { BucketName = bucketName, Key = lastFileParsedInfoKey, ContentBody = file });
+
+            var saveDetailsBuildInfo = new SaveDetailsBuildInfo
+            {
+                FileName = file,
+                FileDate = await GetFileDate(file),
+                ParsedDate = DateTime.UtcNow
+            };
+
+            var saveDetailsBuildInfoMemoryStream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(saveDetailsBuildInfoMemoryStream, saveDetailsBuildInfo, serializeOptions);
+            saveDetailsBuildInfoMemoryStream.Position = 0;
+
+            await s3Client.PutObjectAsync(new() { BucketName = bucketName, Key = saveDetailsBuildInfoKey, InputStream = saveDetailsBuildInfoMemoryStream });
 
             Console.WriteLine($"Done");
         }
         else
         {
             Console.WriteLine($"Skipping");
+            
+            if (!string.IsNullOrEmpty(file))
+            {
+                try
+                {
+                    await s3Client.GetObjectAsync(bucketName, saveDetailsBuildInfoKey);
+                }
+                catch
+                {
+                    var saveDetailsBuildInfo = new SaveDetailsBuildInfo
+                    {
+                        FileName = file,
+                        FileDate = await GetFileDate(file),
+                        ParsedDate = DateTime.UtcNow
+                    };
+
+                    var saveDetailsBuildInfoMemoryStream = new MemoryStream();
+                    await JsonSerializer.SerializeAsync(saveDetailsBuildInfoMemoryStream, saveDetailsBuildInfo, serializeOptions);
+                    saveDetailsBuildInfoMemoryStream.Position = 0;
+
+                    await s3Client.PutObjectAsync(new() { BucketName = bucketName, Key = saveDetailsBuildInfoKey, InputStream = saveDetailsBuildInfoMemoryStream });
+                    
+                    Console.WriteLine($"Created save details build info for existing file");
+                }
+            }
         }
 
         return "";

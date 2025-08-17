@@ -22,7 +22,7 @@
       <LoginScreen @authenticated="handleAuthenticated" />
     </div>
     <template v-else>
-      <Toolbar :server-status="serverStatus" :server-probe-data="serverProbeData" />
+      <Toolbar />
       <v-main class="satisfactory-theme">
         <v-container class="pa-4" max-width="1400">
           <v-row>

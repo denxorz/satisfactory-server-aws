@@ -39,12 +39,23 @@ export const setupStatusLambda = (stack: Stack, api: GraphqlApi | null, server: 
         ]
     }))
 
+    startServerLambda.addToRolePolicy(new iam.PolicyStatement({
+        actions: [
+            'lambda:InvokeFunction',
+        ],
+        resources: [
+            `arn:aws:lambda:*:${Config.account}:function:SaveFileParserLambda`,
+        ]
+    }))
+
     if (api) {
         const lambdaDataSource = api.addLambdaDataSource(`${prefix}StatusLambdaDataSource`, startServerLambda);
         lambdaDataSource.createResolver(`${prefix}StartResolver`, { typeName: "Mutation", fieldName: "start" });
+        lambdaDataSource.createResolver(`${prefix}RebuildSaveDetailsResolver`, { typeName: "Mutation", fieldName: "rebuildSaveDetails" });
         lambdaDataSource.createResolver(`${prefix}LastSaveResolver`, { typeName: "Query", fieldName: "lastSave" });
         lambdaDataSource.createResolver(`${prefix}LastLogResolver`, { typeName: "Query", fieldName: "lastLog" });
         lambdaDataSource.createResolver(`${prefix}SaveDetailsResolver`, { typeName: "Query", fieldName: "saveDetails" });
+        lambdaDataSource.createResolver(`${prefix}SaveDetailsBuildInfoResolver`, { typeName: "Query", fieldName: "saveDetailsBuildInfo" });
         lambdaDataSource.createResolver(`${prefix}GameServerProbeResolver`, { typeName: "Query", fieldName: "gameServerProbe" });
     }
 };
