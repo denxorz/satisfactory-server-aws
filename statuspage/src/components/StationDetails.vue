@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import type { SaveDetails, Station, Transporter } from '../gql/graphql'
+  import { useStationsStore } from '../stores/stations'
 
   interface Props {
     station: Station | null | undefined
@@ -9,6 +10,7 @@
   }
 
   const props = defineProps<Props>()
+  const stationsStore = useStationsStore()
 
   const selectedStationVehicles = computed(() => {
     if (!props.station) return []
@@ -17,25 +19,26 @@
       props.station.transporters?.map(t => ({
         id: t?.id ?? '',
         name: t?.name ?? '',
-        destinations: getDestinations(t?.id ?? '', props.station?.id || ''),
+        destinations: getDestinations(t, props.station?.id || ''),
       })) ?? []
     )
   })
 
-  const getDestinations = (transporterId: string, currentStationId: string) => {
-    const stations = props.saveDetails?.stations
+  const getDestinations = (transporter: Transporter, currentStationId: string) => {
+    const stations = stationsStore.stations
+
     if (!stations) return []
 
-    const destinations = stations
-      .filter((station): station is Station => !!station)
-      .filter(
-        (station: Station) =>
-          station?.transporters?.some(
-            (transporter): transporter is Transporter =>
-              !!transporter && transporter.id === transporterId
-          ) && station?.id !== currentStationId
-      )
-    return destinations.map((station: Station) => station?.name || 'Unnamed Station')
+    const destinationIds: string[] = []
+    if (transporter.from) destinationIds.push(transporter.from)
+    if (transporter.to) destinationIds.push(transporter.to)
+
+    const destinationStations = stations.filter(
+      station =>
+        destinationIds.includes(station.id || '') && station.id !== currentStationId
+    )
+
+    return destinationStations.map(station => station.name || 'Unnamed Station')
   }
 </script>
 
@@ -73,8 +76,8 @@
               v-for="vehicle in selectedStationVehicles"
               :key="vehicle?.id || 'unknown-vehicle'"
             >
-              {{ vehicle?.name }} ({{ vehicle?.id }}) ->
-              {{ vehicle?.destinations.join(', ') }}
+              {{ vehicle?.name ?? vehicle?.id }} (Destinations:
+              {{ vehicle?.destinations.join(', ') }})
             </li>
           </ul>
         </div>
