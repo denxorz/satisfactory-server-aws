@@ -20,11 +20,12 @@
     showStationDetails.value = !!newStation
   })
 
-  // Clear selection when bottom sheet is closed
-  const closeStationDetails = () => {
-    showStationDetails.value = false
-    selectedStations.value = []
-  }
+  // Clear selection when dialog is closed
+  watch(showStationDetails, newValue => {
+    if (!newValue) {
+      selectedStations.value = []
+    }
+  })
 
   const icon = (type?: string) => {
     if (type === 'train') return 'mdi-train'
@@ -104,9 +105,7 @@
         </template>
       </v-data-table>
 
-      <v-bottom-sheet v-model="showStationDetails" :retain-focus="false" inset>
-        <StationDetails :station="selectedStation" :on-close="closeStationDetails" />
-      </v-bottom-sheet>
+      <StationDetails v-model="showStationDetails" :station="selectedStation" />
 
       <div v-if="!stations.length" class="text-center pa-8">
         <v-alert type="info" variant="tonal">
