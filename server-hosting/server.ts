@@ -63,13 +63,13 @@ const setupStartupSequence = (stack: Stack, server: ec2.Instance, storage: IBuck
     });
 
     const useDuckDns = !!(Config.duckDnsDomain && Config.duckDnsToken);
-    const useDynuDns = !!(Config.dynuDnsUsername && Config.dynuDnsToken);
+    const useDynuDns = !!(Config.dynuDnsUsername && Config.dynuDnsPassword);
     const useAfraidDns = !!(Config.afraidDnsToken);
 
     // Ensure correct line endings and execute the script with permissions
     server.userData.addCommands(`\
       sed -i 's/\r$//' ${localPath}; \
       chmod +x ${localPath}; \
-      sudo ${localPath} ${storage.bucketName} ${Config.useExperimentalBuild} ${useDuckDns} ${Config.duckDnsDomain} ${Config.duckDnsToken} ${useDynuDns} ${Config.dynuDnsUsername} ${Config.dynuDnsToken} ${useAfraidDns} ${Config.afraidDnsToken}\
+      sudo ${localPath} ${storage.bucketName} ${Config.useExperimentalBuild} ${useDuckDns} ${Config.duckDnsDomain} ${Config.duckDnsToken} ${useDynuDns} ${Config.dynuDnsUsername} ${Config.dynuDnsPassword} ${useAfraidDns} ${Config.afraidDnsToken}\
     `);
 };
