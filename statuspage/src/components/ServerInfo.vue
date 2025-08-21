@@ -107,16 +107,39 @@
   })
 
   const statusToShow = computed(() => {
+    let baseStatus = status.value
     if (status.value === 'running') {
       if (props.serverProbeData?.success) {
-        return props.serverProbeData.serverState
+        baseStatus = props.serverProbeData.serverState
+      } else {
+        baseStatus = 'Starting...'
       }
-      return 'Starting...'
     }
-    return status.value
+
+    if (startError.value) {
+      return `${baseStatus}, ${startError.value}`
+    }
+
+    return baseStatus
   })
 
   const startRes = ref()
+
+  const startError = computed(() => {
+    if (startRes.value?.data?.start?.status?.includes('Failed')) {
+      try {
+        const errorMatch = startRes.value.data.start.status.match(/\{.*\}/)
+        if (errorMatch) {
+          const errorObj = JSON.parse(errorMatch[0])
+          return errorObj.message || startRes.value.data.start.status
+        }
+      } catch {
+        // If JSON parsing fails, return the original status
+      }
+      return startRes.value.data.start.status
+    }
+    return null
+  })
 
   const startServer = async () => {
     startButtonDisabled.value = true
@@ -160,6 +183,7 @@
           <span>{{ serverInfo.version }}</span>
         </v-col>
       </v-row>
+
       <v-row class="ma-1 mt-4">
         <v-col cols="12">
           <div class="server-actions">
