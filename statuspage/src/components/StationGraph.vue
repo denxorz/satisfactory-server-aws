@@ -56,11 +56,11 @@
 
     const edges = filteredStations.value.flatMap(station => {
       return (station.transporters ?? [])
-        .map(transporter => {
+        .flatMap(transporter => {
           const fromStation = stations.value.find(s => s.id === transporter.from)
           const toStation = stations.value.find(s => s.id === transporter.to)
 
-          if (!fromStation?.shortName || !toStation?.shortName) return
+          if (!fromStation || !toStation) return []
 
           let edgeColor = '#FF0000'
           let edgeStyle = 'solid'
@@ -146,24 +146,60 @@
             }
           }
 
-          requiredStations.push(fromStation.shortName)
-          requiredStations.push(toStation.shortName)
+          requiredStations.push(fromStation.shortName || fromStation.id)
+          requiredStations.push(toStation.shortName || toStation.id)
 
-          return fromStation.isUnload
-            ? {
-                from: toStation.shortName,
-                to: fromStation.shortName,
-                color: edgeColor,
-                style: edgeStyle,
-                penwidth: edgePenwidth,
+          const edges = []
+
+          // Add edge from fromStation to toStation
+          edges.push(
+            fromStation.isUnload
+              ? {
+                  from: toStation.shortName || toStation.id,
+                  to: fromStation.shortName || fromStation.id,
+                  color: edgeColor,
+                  style: edgeStyle,
+                  penwidth: edgePenwidth,
+                }
+              : {
+                  from: fromStation.shortName || fromStation.id,
+                  to: toStation.shortName || toStation.id,
+                  color: edgeColor,
+                  style: edgeStyle,
+                  penwidth: edgePenwidth,
+                }
+          )
+
+          // Add edges from otherStops to toStation
+          if (transporter.otherStops) {
+            transporter.otherStops.forEach(stopId => {
+              const otherStopStation = stations.value.find(s => s.id === stopId)
+              if (otherStopStation) {
+                requiredStations.push(
+                  otherStopStation.shortName || otherStopStation.id
+                )
+                edges.push(
+                  fromStation.isUnload
+                    ? {
+                        from: toStation.shortName || toStation.id,
+                        to: otherStopStation.shortName || otherStopStation.id,
+                        color: edgeColor,
+                        style: edgeStyle,
+                        penwidth: edgePenwidth,
+                      }
+                    : {
+                        from: otherStopStation.shortName || otherStopStation.id,
+                        to: toStation.shortName || toStation.id,
+                        color: edgeColor,
+                        style: edgeStyle,
+                        penwidth: edgePenwidth,
+                      }
+                )
               }
-            : {
-                from: fromStation.shortName,
-                to: toStation.shortName,
-                color: edgeColor,
-                style: edgeStyle,
-                penwidth: edgePenwidth,
-              }
+            })
+          }
+
+          return edges
         })
         .filter(t => !!t)
     })

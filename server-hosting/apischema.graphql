@@ -34,6 +34,7 @@ type Transporter {
     name: String
     from: String!
     to: String
+    otherStops: [String!]
 }
 
 type CargoFlow   {

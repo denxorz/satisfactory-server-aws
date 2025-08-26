@@ -35,6 +35,7 @@
     const destinationIds: string[] = []
     if (transporter.from) destinationIds.push(transporter.from)
     if (transporter.to) destinationIds.push(transporter.to)
+    if (transporter.otherStops) destinationIds.push(...transporter.otherStops)
 
     const destinationStations = stations.filter(
       station =>

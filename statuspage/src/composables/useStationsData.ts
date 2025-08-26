@@ -34,6 +34,7 @@ export function useStationsData() {
               name
               from
               to
+              otherStops
             }
             x
             y
