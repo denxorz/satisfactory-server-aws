@@ -138,6 +138,7 @@
                 edgeColor = '#FF8C00'
                 break
               case 'sam':
+              case 'samingot':
                 edgeColor = '#9932CC'
                 break
               default:
