@@ -95,7 +95,7 @@
             item?.cargoFlows
               ?.map(
                 c =>
-                  `${item?.isUnload ? '-' : '+'}${c?.flowPerMinute ?? '??'} ${c?.type}`
+                  `${c?.isExact ? '' : '~'}${item?.isUnload ? '-' : '+'}${c?.flowPerMinute ?? '??'} ${c?.type}`
               )
               ?.join(' / ') || 'Unknown'
           }}
