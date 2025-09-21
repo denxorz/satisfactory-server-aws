@@ -25,7 +25,7 @@
       case 'plastic':
         return '#4169E1'
       case 'rubber':
-        return '#154734'
+        return '#F5F5DC'
       case 'modularframefused':
         return '#FFFF00'
       case 'computer':
@@ -42,6 +42,7 @@
         return 'gold'
       case 'spaceelevatorpart_7':
         return 'orange'
+      case 'fluidcanister':
       case 'gastank':
         return '#FF6B6B'
       case 'fuel':
@@ -136,20 +137,16 @@
         return '#ADD8E6'
       case 'hazmatfilter':
       case 'filter':
+      case 'fabric':
         return '#D3D3D3'
       case 'circuitboardhighspeed':
-        return '#00BFFF'
       case 'circuitboard':
         return '#00CED1'
-      case 'fabric':
-        return '#F0F8FF'
       case 'crystalshard':
         return '#BA55D3'
       case 'samfluctuator':
         return '#4B0082'
       case 'silica':
-        return '#F5F5DC'
-      case 'fluidcanister':
         return '#1E90FF'
       case 'highspeedconnector':
         return '#FF8C00'
@@ -167,8 +164,8 @@
     const minY = -375000
     const maxY = 300000
 
-    const mapWidth = 20
-    const mapHeight = 20
+    const mapWidth = 30
+    const mapHeight = 30
 
     const scaleX = (mapWidth - 2) / (maxX - minX)
     const scaleY = (mapHeight - 2) / (maxY - minY)
@@ -325,7 +322,7 @@ digraph G {
           cargoTypes.length > 0 ? getCargoColor(cargoTypes[0]) : '#FF0000'
 
         const uploaderId = `uploader_${index}`
-        dot += `\n${uploaderId} [label="", shape=triangle, style=filled, fillcolor="${color}", color="${color}", pos="${x.toFixed(2)},${y.toFixed(2)}!", width=0.3, height=0.3];`
+        dot += `\n${uploaderId} [label="", shape=triangle, style=filled, fillcolor="${color}", color="#000000", penwidth=2, pos="${x.toFixed(2)},${y.toFixed(2)}!", width=0.3, height=0.3];`
       }
     })
 
@@ -400,18 +397,8 @@ digraph G {
         svgImg.crossOrigin = 'anonymous'
 
         svgImg.onload = () => {
-          // Calculate SVG position and size (with left margin)
-          //const marginLeft = canvas.width * 0.05 // 5% margin
-          const svgWidth = canvas.width //* 0.95 // 95% width
-          const svgHeight = canvas.height //(svgImg.height / svgImg.width) * svgWidth
+          ctx.drawImage(svgImg, 0, 0, canvas.width, canvas.height)
 
-          // Center the SVG vertically
-          //const svgY = (canvas.height - svgHeight) / 2
-
-          // Draw SVG overlay
-          ctx.drawImage(svgImg, 0, 0, svgWidth, svgHeight)
-
-          // Convert canvas to blob and create URL
           canvas.toBlob(blob => {
             if (blob) {
               mergedImageUrl.value = URL.createObjectURL(blob)
