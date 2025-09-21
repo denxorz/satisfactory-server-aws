@@ -9,12 +9,157 @@
 
   const stations = computed(() => stationsStore.stations)
   const filteredStations = computed(() => stationsStore.filteredStations)
+  const filteredUploaders = computed(() => stationsStore.filteredUploaders)
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const graphviz = ref()
 
   const showBottomSheet = ref(false)
+
+  const getCargoColor = (cargoType: string): string => {
+    const cargoTypeLower = cargoType.toLowerCase()
+    switch (cargoTypeLower) {
+      case 'coal':
+        return '#000000'
+      case 'plastic':
+        return '#4169E1'
+      case 'rubber':
+        return '#154734'
+      case 'modularframefused':
+        return '#FFFF00'
+      case 'computer':
+        return '#00CED1'
+      case 'oreuranium':
+        return '#00FF00'
+      case 'modularframeheavy':
+        return '#F5F5F5'
+      case 'aluminumcasing':
+        return 'darkgray'
+      case 'aluminumplate':
+        return 'gray'
+      case 'ficsiteingot':
+        return 'gold'
+      case 'spaceelevatorpart_7':
+        return 'orange'
+      case 'gastank':
+        return '#FF6B6B'
+      case 'fuel':
+        return '#FFD700'
+      case 'quartzcrystal':
+        return '#FF1493'
+      case 'singularitycell':
+        return '#E6E6FA'
+      case 'computersuper':
+        return '#00BFFF'
+      case 'spaceelevatorpart_9':
+        return '#FF4500'
+      case 'turbofuel':
+        return '#FF8C00'
+      case 'sam':
+      case 'samingot':
+        return '#9932CC'
+      case 'nuclearwaste':
+        return '#00FF00'
+      case 'timecrystal':
+        return '#FF69B4'
+      case 'crystaloscillator':
+        return '#FFB6C1'
+      case 'spaceelevatorpart_8':
+        return '#FF6347'
+      case 'coppersheet':
+        return '#CD7F32'
+      case 'packagedbiofuel':
+        return '#8B4513'
+      case 'biofuel':
+        return '#A0522D'
+      case 'wire':
+        return '#C0C0C0'
+      case 'cable':
+        return '#708090'
+      case 'motorlightweight':
+        return '#B0C4DE'
+      case 'ficsitemesh':
+        return '#9370DB'
+      case 'ironplatereinforced':
+        return '#696969'
+      case 'ironplate':
+        return '#A9A9A9'
+      case 'ironrod':
+        return '#808080'
+      case 'steelplate':
+        return '#2F4F4F'
+      case 'ironscrew':
+        return '#778899'
+      case 'modularframe':
+        return '#4682B4'
+      case 'portableminer':
+        return '#5F9EA0'
+      case 'electromagneticcontrolrod':
+        return '#20B2AA'
+      case 'motor':
+        return '#87CEEB'
+      case 'steelpipe':
+        return '#4682B4'
+      case 'steelplatereinforced':
+        return '#191970'
+      case 'cement':
+        return '#F5F5DC'
+      case 'stator':
+        return '#DDA0DD'
+      case 'packagedionizedfuel':
+        return '#FF1493'
+      case 'rotor':
+        return '#DA70D6'
+      case 'xmasball1':
+      case 'xmasbow':
+      case 'candycane':
+      case 'snow':
+      case 'xmasbranch':
+      case 'xmasball3':
+      case 'xmasball4':
+      case 'xmasball2':
+        return '#8B0000'
+      case 'nobeliskexplosive':
+      case 'nobeliskshockwave':
+      case 'cartridgechaos':
+      case 'cartridgestandard':
+      case 'cartridgesmartprojectile':
+      case 'rebar_explosive':
+      case 'rebar_stunshot':
+      case 'rebar_spreadshot':
+      case 'spikedrebar':
+        return '#FFD700'
+      case 'highspeedwire':
+        return '#FFA500'
+      case 'modularframelightweight':
+        return '#ADD8E6'
+      case 'hazmatfilter':
+      case 'filter':
+        return '#D3D3D3'
+      case 'circuitboardhighspeed':
+        return '#00BFFF'
+      case 'circuitboard':
+        return '#00CED1'
+      case 'fabric':
+        return '#F0F8FF'
+      case 'crystalshard':
+        return '#BA55D3'
+      case 'samfluctuator':
+        return '#4B0082'
+      case 'silica':
+        return '#F5F5DC'
+      case 'fluidcanister':
+        return '#1E90FF'
+      case 'highspeedconnector':
+        return '#FF8C00'
+      case 'coolingsystem':
+        return '#6A5ACD'
+      default:
+        console.log(cargoType)
+        return '#FF0000'
+    }
+  }
 
   const dotContent = computed(() => {
     const minX = -320000
@@ -32,18 +177,18 @@
       if (!name) return 'unknown'
       // Sanitize the name for DOT syntax - replace invalid characters with underscores
       // and ensure it starts with a letter or underscore
-      const sanitized = name.replace(/[^a-zA-Z0-9_]/g, '_')
+      const sanitized = name.replace(/\W/g, '_')
       return sanitized.startsWith('_') ? `station_${sanitized}` : sanitized
     }
 
     let dot = `
-      digraph G {
-        layout=neato;
-        size="${mapWidth},${mapHeight}";
-        bgcolor="transparent";
-        node [shape=box, style=filled, fontname="Arial", fontcolor="#e59345", color="#e59345", penwidth=0.5, fillcolor="#212121", fontweight=600];
-        edge [fontname="Arial", penwidth=2];
-        graph [ranksep=0, nodesep=0, splines=curved];
+digraph G {
+  layout=neato;
+  size="${mapWidth},${mapHeight}";
+  bgcolor="transparent";
+  node [shape=box, style=filled, fontname="Arial", fontcolor="#e59345", color="#e59345", penwidth=0.5, fillcolor="#212121", fontweight=600];
+  edge [fontname="Arial", penwidth=2];
+  graph [ranksep=0, nodesep=0, splines=curved];
     `
 
     const cornerSize = 0.001
@@ -80,71 +225,7 @@
           }
 
           if (cargoTypes.length > 0) {
-            const cargoType = cargoTypes[0].toLowerCase()
-
-            switch (cargoType) {
-              case 'coal':
-                edgeColor = '#000000'
-                break
-              case 'plastic':
-                edgeColor = '#4169E1'
-                break
-              case 'rubber':
-                edgeColor = '#154734'
-                break
-              case 'modularframefused':
-                edgeColor = '#FFFF00'
-                break
-              case 'computer':
-                edgeColor = '#00CED1'
-                break
-              case 'oreuranium':
-                edgeColor = '#00FF00'
-                break
-              case 'modularframeheavy':
-                edgeColor = '#F5F5F5'
-                break
-              case 'aluminumcasing':
-                edgeColor = 'darkgray'
-                break
-              case 'aluminumplate':
-                edgeColor = 'gray'
-                break
-              case 'ficsiteingot':
-                edgeColor = 'gold'
-                break
-              case 'spaceelevatorpart_7':
-                edgeColor = 'orange'
-                break
-              case 'gastank':
-                edgeColor = '#FF6B6B'
-                break
-              case 'fuel':
-                edgeColor = '#FFD700'
-                break
-              case 'quartzcrystal':
-                edgeColor = '#FF1493'
-                break
-              case 'singularitycell':
-                edgeColor = '#E6E6FA'
-                break
-              case 'computersuper':
-                edgeColor = '#00BFFF'
-                break
-              case 'spaceelevatorpart_9':
-                edgeColor = '#FF4500'
-                break
-              case 'turbofuel':
-                edgeColor = '#FF8C00'
-                break
-              case 'sam':
-              case 'samingot':
-                edgeColor = '#9932CC'
-                break
-              default:
-                console.log(cargoType)
-                break
-            }
+            edgeColor = getCargoColor(cargoTypes[0])
           }
 
           requiredStations.push(fromStation.shortName || fromStation.id)
@@ -229,7 +310,28 @@
       dot += `\n${dotId(name)} [label="${name.toUpperCase()}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
     })
 
+    filteredUploaders.value.forEach((uploader, index) => {
+      if (
+        uploader.x !== null &&
+        uploader.y !== null &&
+        uploader.x !== undefined &&
+        uploader.y !== undefined
+      ) {
+        const x = (uploader.x - minX) * scaleX
+        const y = mapHeight - (uploader.y - minY) * scaleY
+
+        const cargoTypes = uploader.cargoTypes ?? []
+        const color =
+          cargoTypes.length > 0 ? getCargoColor(cargoTypes[0]) : '#FF0000'
+
+        const uploaderId = `uploader_${index}`
+        dot += `\n${uploaderId} [label="", shape=triangle, style=filled, fillcolor="${color}", color="${color}", pos="${x.toFixed(2)},${y.toFixed(2)}!", width=0.3, height=0.3];`
+      }
+    })
+
     dot += '\n}'
+
+    console.log(dot)
 
     return dot
   })
@@ -343,17 +445,8 @@
         </v-alert>
       </div>
 
-      <div v-else>
-        <div v-if="!filteredStations.length" class="text-center pa-8">
-          <v-alert type="info" variant="tonal">
-            <template #title>No Station Data Available</template>
-            <template #text>This will be automatically updated daily.</template>
-          </v-alert>
-        </div>
-      </div>
-
       <div
-        v-if="mergedImageUrl && !isLoading && !error && filteredStations.length"
+        v-if="mergedImageUrl && !isLoading && !error"
         style="position: relative; overflow: hidden; min-height: 400px"
       >
         <div class="map-wrapper" @click="showBottomSheet = true">

@@ -53,7 +53,7 @@
             :model-value="stationsStore.filters.selectedCargoTypes"
             @update:model-value="debouncedUpdateSelectedCargoTypes"
             :items="stationsStore.cargoTypeOptions"
-            label="Cargo Type"
+            label="Type"
             multiple
             clearable
             density="compact"
@@ -72,6 +72,7 @@
           <v-chip-group class="gap-2">
             <v-chip
               :class="
+                stationsStore.filters.selectedTransferTypes.length === 0 ||
                 stationsStore.filters.selectedTransferTypes.includes('load')
                   ? 'filter-chip-active'
                   : ''
@@ -84,6 +85,7 @@
             </v-chip>
             <v-chip
               :class="
+                stationsStore.filters.selectedTransferTypes.length === 0 ||
                 stationsStore.filters.selectedTransferTypes.includes('unload')
                   ? 'filter-chip-active'
                   : ''
@@ -102,6 +104,7 @@
           <v-chip-group class="gap-2">
             <v-chip
               :class="
+                stationsStore.filters.selectedStationTypes.length === 0 ||
                 stationsStore.filters.selectedStationTypes.includes('train')
                   ? 'filter-chip-active'
                   : ''
@@ -114,6 +117,7 @@
             </v-chip>
             <v-chip
               :class="
+                stationsStore.filters.selectedStationTypes.length === 0 ||
                 stationsStore.filters.selectedStationTypes.includes('truck')
                   ? 'filter-chip-active'
                   : ''
@@ -126,6 +130,7 @@
             </v-chip>
             <v-chip
               :class="
+                stationsStore.filters.selectedStationTypes.length === 0 ||
                 stationsStore.filters.selectedStationTypes.includes('drone')
                   ? 'filter-chip-active'
                   : ''
@@ -135,6 +140,16 @@
             >
               <v-icon start>mdi-quadcopter</v-icon>
               Drones
+            </v-chip>
+            <v-chip
+              :class="
+                stationsStore.filters.showUploaders ? 'filter-chip-active' : ''
+              "
+              size="small"
+              @click="stationsStore.toggleShowUploaders()"
+            >
+              <v-icon start>mdi-upload</v-icon>
+              Uploader
             </v-chip>
           </v-chip-group>
         </v-col>

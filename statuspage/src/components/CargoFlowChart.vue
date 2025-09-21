@@ -151,7 +151,7 @@
       <div v-else class="text-center pa-8">
         <v-alert type="info" variant="tonal">
           <template #title>No Cargo Flow Data Available</template>
-          <template #text>This will be automatically updated daily.</template>
+          <template #text></template>
         </v-alert>
       </div>
     </v-card-text>

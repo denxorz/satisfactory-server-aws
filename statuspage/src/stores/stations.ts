@@ -1,16 +1,18 @@
 import { defineStore } from 'pinia'
 import { computed, readonly, ref } from 'vue'
-import type { Station } from '../gql/graphql'
+import type { Station, Uploader } from '../gql/graphql'
 
 interface Filters {
   searchText: string
   selectedStationTypes: string[]
   selectedTransferTypes: string[]
   selectedCargoTypes: string[]
+  showUploaders: boolean
 }
 
 export const useStationsStore = defineStore('stations', () => {
   const stations = ref<Station[]>([])
+  const uploaders = ref<Uploader[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdated = ref<Date | null>(null)
@@ -21,11 +23,16 @@ export const useStationsStore = defineStore('stations', () => {
     selectedStationTypes: [],
     selectedTransferTypes: [],
     selectedCargoTypes: [],
+    showUploaders: true,
   })
 
   const setStations = (newStations: Station[]) => {
     stations.value = newStations
     lastUpdated.value = new Date()
+  }
+
+  const setUploaders = (newUploaders: Uploader[]) => {
+    uploaders.value = newUploaders
   }
 
   const setLoading = (loading: boolean) => {
@@ -62,10 +69,10 @@ export const useStationsStore = defineStore('stations', () => {
     const currentTypes = filters.value.selectedStationTypes
     const index = currentTypes.indexOf(stationType)
     if (index > -1) {
-      // Remove if already selected
+      // Remove if already selected (make it active again)
       currentTypes.splice(index, 1)
     } else {
-      // Add if not selected
+      // Add if not selected (make it inactive)
       currentTypes.push(stationType)
     }
     filters.value.selectedStationTypes = [...currentTypes]
@@ -79,10 +86,10 @@ export const useStationsStore = defineStore('stations', () => {
     const currentTypes = filters.value.selectedTransferTypes
     const index = currentTypes.indexOf(transferType)
     if (index > -1) {
-      // Remove if already selected
+      // Remove if already selected (make it active again)
       currentTypes.splice(index, 1)
     } else {
-      // Add if not selected
+      // Add if not selected (make it inactive)
       currentTypes.push(transferType)
     }
     filters.value.selectedTransferTypes = [...currentTypes]
@@ -92,7 +99,10 @@ export const useStationsStore = defineStore('stations', () => {
     filters.value.selectedCargoTypes = selectedCargoTypes
   }
 
-  // Update all filters at once
+  const toggleShowUploaders = () => {
+    filters.value.showUploaders = !filters.value.showUploaders
+  }
+
   const updateFilters = (newFilters: Filters) => {
     filters.value = newFilters
   }
@@ -104,18 +114,29 @@ export const useStationsStore = defineStore('stations', () => {
       selectedStationTypes: [],
       selectedTransferTypes: [],
       selectedCargoTypes: [],
+      showUploaders: true,
     }
   }
 
   const cargoTypeOptions = computed(() => {
     const cargoTypes = new Set<string>()
+
+    // Add cargo types from stations
     stations.value.forEach(station => {
       station.cargoTypes?.forEach(type => {
         if (type) cargoTypes.add(type)
       })
     })
+
+    // Add cargo types from uploaders
+    uploaders.value.forEach(uploader => {
+      uploader.cargoTypes?.forEach(type => {
+        if (type) cargoTypes.add(type)
+      })
+    })
+
     return Array.from(cargoTypes)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map(type => ({
         title: type,
         value: type,
@@ -171,15 +192,40 @@ export const useStationsStore = defineStore('stations', () => {
     })
   })
 
+  // Filtered uploaders based on current filters
+  const filteredUploaders = computed(() => {
+    if (!filters.value.showUploaders) {
+      return []
+    }
+
+    return uploaders.value.filter(uploader => {
+      // Cargo type filter (unified for both stations and uploaders)
+      if (filters.value.selectedCargoTypes.length > 0) {
+        const uploaderCargoTypes = uploader.cargoTypes || []
+        const hasMatchingCargo = filters.value.selectedCargoTypes.some(
+          selectedType => uploaderCargoTypes.includes(selectedType)
+        )
+        if (!hasMatchingCargo) {
+          return false
+        }
+      }
+
+      return true
+    })
+  })
+
   return {
     stations,
+    uploaders,
     filteredStations,
+    filteredUploaders,
     filters,
     cargoTypeOptions,
     isLoading: readonly(isLoading),
     error: readonly(error),
     lastUpdated: readonly(lastUpdated),
     setStations,
+    setUploaders,
     setLoading,
     setError,
     clearStations,
@@ -189,6 +235,7 @@ export const useStationsStore = defineStore('stations', () => {
     updateSelectedTransferTypes,
     toggleTransferType,
     updateSelectedCargoTypes,
+    toggleShowUploaders,
     updateFilters,
     clearFilters,
     isDataStale,

@@ -109,8 +109,8 @@
 
       <div v-if="!stations.length" class="text-center pa-8">
         <v-alert type="info" variant="tonal">
-          <template #title>Loading Stations</template>
-          <template #text>Please wait while station data is being loaded.</template>
+          <template #title>No Stations Available</template>
+          <template #text></template>
         </v-alert>
       </div>
     </v-card-text>

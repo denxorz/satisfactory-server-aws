@@ -40,12 +40,20 @@ type Transporter {
 type CargoFlow   {
     type: String!
     isUnload: Boolean!
-    flowPerMinute: Int
+    flowPerMinute: Float
     isExact: Boolean!
+}
+
+type Uploader {
+    id: String
+    cargoTypes: [String!]
+    x: Float
+    y: Float
 }
 
 type SaveDetails {
     stations: [Station!]
+    uploaders: [Uploader!]
 }
 
 type SaveDetailsBuildInfo {
