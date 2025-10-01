@@ -2,7 +2,7 @@ import { useQuery } from '@vue/apollo-composable'
 import { computed, watch } from 'vue'
 
 import { graphql } from '../gql'
-import type { Station, Uploader } from '../gql/graphql'
+import type { Factory, Station, Uploader } from '../gql/graphql'
 import { useStationsStore } from '../stores/stations'
 
 export function useStationsData() {
@@ -45,6 +45,13 @@ export function useStationsData() {
             x
             y
           }
+          factories {
+            id
+            type
+            percentageProducing
+            x
+            y
+          }
         }
       }
     `),
@@ -64,6 +71,11 @@ export function useStationsData() {
     return uploadersData.filter((u): u is Uploader => !!u)
   })
 
+  const factories = computed(() => {
+    const factoriesData = resultSaveDetails.value?.saveDetails?.factories ?? []
+    return factoriesData.filter((f): f is Factory => !!f)
+  })
+
   watch(
     stations,
     newStations => {
@@ -80,9 +92,18 @@ export function useStationsData() {
     { immediate: true }
   )
 
+  watch(
+    factories,
+    newFactories => {
+      stationsStore.setFactories(newFactories)
+    },
+    { immediate: true }
+  )
+
   return {
     stations,
     uploaders,
+    factories,
   }
 }
 

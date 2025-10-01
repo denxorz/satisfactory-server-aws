@@ -51,9 +51,18 @@ type Uploader {
     y: Float
 }
 
+type Factory {
+    id: String!
+    type: String!
+    percentageProducing: Int!
+    x: Float!
+    y: Float!
+}
+
 type SaveDetails {
     stations: [Station!]
     uploaders: [Uploader!]
+    factories: [Factory!]
 }
 
 type SaveDetailsBuildInfo {

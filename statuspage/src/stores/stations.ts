@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, readonly, ref } from 'vue'
-import type { Station, Uploader } from '../gql/graphql'
+import type { Factory, Station, Uploader } from '../gql/graphql'
 
 interface Filters {
   searchText: string
@@ -13,6 +13,7 @@ interface Filters {
 export const useStationsStore = defineStore('stations', () => {
   const stations = ref<Station[]>([])
   const uploaders = ref<Uploader[]>([])
+  const factories = ref<Factory[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdated = ref<Date | null>(null)
@@ -33,6 +34,10 @@ export const useStationsStore = defineStore('stations', () => {
 
   const setUploaders = (newUploaders: Uploader[]) => {
     uploaders.value = newUploaders
+  }
+
+  const setFactories = (newFactories: Factory[]) => {
+    factories.value = newFactories
   }
 
   const setLoading = (loading: boolean) => {
@@ -217,6 +222,7 @@ export const useStationsStore = defineStore('stations', () => {
   return {
     stations,
     uploaders,
+    factories,
     filteredStations,
     filteredUploaders,
     filters,
@@ -226,6 +232,7 @@ export const useStationsStore = defineStore('stations', () => {
     lastUpdated: readonly(lastUpdated),
     setStations,
     setUploaders,
+    setFactories,
     setLoading,
     setError,
     clearStations,
