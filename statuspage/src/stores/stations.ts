@@ -7,6 +7,7 @@ interface Filters {
   selectedStationTypes: string[]
   selectedTransferTypes: string[]
   selectedCargoTypes: string[]
+  selectedFactoryTypes: string[]
   showUploaders: boolean
 }
 
@@ -24,6 +25,7 @@ export const useStationsStore = defineStore('stations', () => {
     selectedStationTypes: [],
     selectedTransferTypes: [],
     selectedCargoTypes: [],
+    selectedFactoryTypes: [],
     showUploaders: true,
   })
 
@@ -104,6 +106,10 @@ export const useStationsStore = defineStore('stations', () => {
     filters.value.selectedCargoTypes = selectedCargoTypes
   }
 
+  const updateSelectedFactoryTypes = (selectedFactoryTypes: string[]) => {
+    filters.value.selectedFactoryTypes = selectedFactoryTypes
+  }
+
   const toggleShowUploaders = () => {
     filters.value.showUploaders = !filters.value.showUploaders
   }
@@ -119,6 +125,7 @@ export const useStationsStore = defineStore('stations', () => {
       selectedStationTypes: [],
       selectedTransferTypes: [],
       selectedCargoTypes: [],
+      selectedFactoryTypes: [],
       showUploaders: true,
     }
   }
@@ -144,6 +151,25 @@ export const useStationsStore = defineStore('stations', () => {
       .sort((a, b) => a.localeCompare(b))
       .map(type => ({
         title: type,
+        value: type,
+      }))
+  })
+
+  const factoryTypeOptions = computed(() => {
+    const factoryTypeCounts = new Map<string, number>()
+
+    // Count factories by type
+    factories.value.forEach(factory => {
+      if (factory.type) {
+        const currentCount = factoryTypeCounts.get(factory.type) || 0
+        factoryTypeCounts.set(factory.type, currentCount + 1)
+      }
+    })
+
+    return Array.from(factoryTypeCounts.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([type, count]) => ({
+        title: `${type} (${count})`,
         value: type,
       }))
   })
@@ -219,14 +245,31 @@ export const useStationsStore = defineStore('stations', () => {
     })
   })
 
+  // Filtered factories based on current filters
+  const filteredFactories = computed(() => {
+    return factories.value.filter(factory => {
+      // Factory type filter
+      if (filters.value.selectedFactoryTypes.length > 0) {
+        const factoryType = factory.type || 'unknown'
+        if (!filters.value.selectedFactoryTypes.includes(factoryType)) {
+          return false
+        }
+      }
+
+      return true
+    })
+  })
+
   return {
     stations,
     uploaders,
     factories,
     filteredStations,
     filteredUploaders,
+    filteredFactories,
     filters,
     cargoTypeOptions,
+    factoryTypeOptions,
     isLoading: readonly(isLoading),
     error: readonly(error),
     lastUpdated: readonly(lastUpdated),
@@ -242,9 +285,11 @@ export const useStationsStore = defineStore('stations', () => {
     updateSelectedTransferTypes,
     toggleTransferType,
     updateSelectedCargoTypes,
+    updateSelectedFactoryTypes,
     toggleShowUploaders,
     updateFilters,
     clearFilters,
     isDataStale,
   }
 })
+

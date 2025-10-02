@@ -10,7 +10,60 @@
   const graphviz = ref()
   const mergedImageUrl = ref('')
 
-  const factories = computed(() => stationsStore.factories)
+  const factories = computed(() => stationsStore.filteredFactories)
+
+  function debounce<T extends (...args: never[]) => unknown>(
+    func: T,
+    delay: number = 150
+  ): T {
+    let timeoutId: number
+    return ((...args: Parameters<T>) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func(...args), delay)
+    }) as T
+  }
+
+  const debouncedUpdateSelectedFactoryTypes = debounce((factoryTypes: string[]) =>
+    stationsStore.updateSelectedFactoryTypes(factoryTypes)
+  )
+
+  const allFactoryTypesSelected = computed(() => {
+    return (
+      stationsStore.filters.selectedFactoryTypes.length ===
+      stationsStore.factoryTypeOptions.length
+    )
+  })
+
+  const noFactoryTypesSelected = computed(() => {
+    return stationsStore.filters.selectedFactoryTypes.length === 0
+  })
+
+  const showIndividualChips = computed(() => {
+    return stationsStore.filters.selectedFactoryTypes.length <= 2
+  })
+
+  const selectAllFactoryTypes = () => {
+    const allTypes = stationsStore.factoryTypeOptions.map(option => option.value)
+    stationsStore.updateSelectedFactoryTypes(allTypes)
+  }
+
+  const clearAllFactoryTypes = () => {
+    stationsStore.updateSelectedFactoryTypes([])
+  }
+
+  watch(
+    () => stationsStore.factoryTypeOptions,
+    newOptions => {
+      if (
+        newOptions.length > 0 &&
+        stationsStore.filters.selectedFactoryTypes.length === 0
+      ) {
+        const allTypes = newOptions.map(option => option.value)
+        stationsStore.updateSelectedFactoryTypes(allTypes)
+      }
+    },
+    { immediate: true }
+  )
 
   const getFactoryColor = (percentageProducing: number): string => {
     if (percentageProducing === 100) return '#00FF00' // Green
@@ -148,6 +201,67 @@
   <v-card>
     <v-card-title>Factory Map</v-card-title>
 
+    <div class="pa-4">
+      <v-row dense class="mb-3 align-center">
+        <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
+          <v-autocomplete
+            :model-value="stationsStore.filters.selectedFactoryTypes"
+            @update:model-value="debouncedUpdateSelectedFactoryTypes"
+            :items="stationsStore.factoryTypeOptions"
+            label="Factory Type"
+            multiple
+            clearable
+            density="compact"
+            variant="outlined"
+            prepend-inner-icon="mdi-factory"
+            :chips="showIndividualChips"
+            :closable-chips="showIndividualChips"
+            hide-details
+            :menu-props="{ maxHeight: '300' }"
+            class="factory-type-filter"
+          >
+            <template v-if="!showIndividualChips" #selection="{ index }">
+              <v-chip
+                v-if="index === 0"
+                size="small"
+                color="primary"
+                variant="tonal"
+                closable
+                @click:close="clearAllFactoryTypes"
+              >
+                {{ stationsStore.filters.selectedFactoryTypes.length }} of
+                {{ stationsStore.factoryTypeOptions.length }} types
+              </v-chip>
+            </template>
+          </v-autocomplete>
+        </v-col>
+
+        <v-col cols="auto" class="pl-2">
+          <div class="d-flex flex-nowrap align-center">
+            <v-btn
+              size="small"
+              variant="outlined"
+              @click="selectAllFactoryTypes"
+              :disabled="allFactoryTypesSelected"
+              class="me-3"
+            >
+              <v-icon start>mdi-check-all</v-icon>
+              All
+            </v-btn>
+            <v-btn
+              size="small"
+              variant="outlined"
+              @click="clearAllFactoryTypes"
+              :disabled="noFactoryTypesSelected"
+            >
+              <v-icon start>mdi-close</v-icon>
+              None
+            </v-btn>
+          </div>
+        </v-col>
+      </v-row>
+    </div>
+
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">
         <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -213,5 +327,23 @@
     height: 12px;
     border-radius: 50%;
     border: 1px solid #000;
+  }
+
+  .factory-type-filter {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .factory-type-filter .v-field__input {
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .factory-type-filter .v-chip {
+    margin: 2px;
+  }
+
+  .factory-type-filter .v-field {
+    margin-bottom: 0;
   }
 </style>
