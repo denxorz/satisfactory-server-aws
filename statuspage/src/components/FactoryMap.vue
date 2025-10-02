@@ -25,9 +25,9 @@
 
     // Use coordinate bounds that match StationGraph exactly
     const minX = -320000
-    const maxX = 450000
-    const minY = -375000
-    const maxY = 300000
+    const maxX = 380000
+    const minY = -250000
+    const maxY = 450000
 
     const mapWidth = 30
     const mapHeight = 30
@@ -43,6 +43,12 @@
       edge [fontname="Arial", penwidth=2];
       graph [ranksep=0, nodesep=0, splines=curved];
     `
+
+    const cornerSize = 0.001
+    dot += `\n_tl [label="", pos="0,${mapHeight}!", width=${cornerSize}, height=${cornerSize}];`
+    dot += `\n_tr [label="", pos="${mapWidth},${mapHeight}!", width=${cornerSize}, height=${cornerSize}];`
+    dot += `\n_bl [label="", pos="0,0!", width=${cornerSize}, height=${cornerSize}];`
+    dot += `\n_br [label="", pos="${mapWidth},0!", width=${cornerSize}, height=${cornerSize}];`
 
     factories.value.forEach((factory, index) => {
       if (
