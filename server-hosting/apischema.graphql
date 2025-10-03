@@ -57,6 +57,7 @@ type Factory {
     percentageProducing: Int!
     x: Float!
     y: Float!
+    powerCircuitId: String
 }
 
 type SaveDetails {

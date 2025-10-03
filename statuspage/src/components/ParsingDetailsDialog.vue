@@ -56,8 +56,8 @@
           isRebuilding.value = false
         }, 8000)
       }
-    } catch (error) {
-      console.error('Rebuild error:', error)
+    } catch {
+      // Handle rebuild error silently
     }
   }
 

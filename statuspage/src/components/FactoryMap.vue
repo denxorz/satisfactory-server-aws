@@ -27,29 +27,39 @@
     stationsStore.updateSelectedFactoryTypes(factoryTypes)
   )
 
-  const allFactoryTypesSelected = computed(() => {
-    return (
-      stationsStore.filters.selectedFactoryTypes.length ===
-      stationsStore.factoryTypeOptions.length
-    )
-  })
+  const debouncedUpdateSelectedPowerCircuitIds = debounce(
+    (powerCircuitIds: string[]) =>
+      stationsStore.updateSelectedPowerCircuitIds(powerCircuitIds)
+  )
 
-  const noFactoryTypesSelected = computed(() => {
-    return stationsStore.filters.selectedFactoryTypes.length === 0
-  })
+  const debouncedUpdateSelectedFactoryStatuses = debounce(
+    (factoryStatuses: string[]) =>
+      stationsStore.updateSelectedFactoryStatuses(factoryStatuses)
+  )
 
   const showIndividualChips = computed(() => {
     return stationsStore.filters.selectedFactoryTypes.length <= 2
   })
 
-  const selectAllFactoryTypes = () => {
-    const allTypes = stationsStore.factoryTypeOptions.map(option => option.value)
-    stationsStore.updateSelectedFactoryTypes(allTypes)
-  }
+  const isAllFactoryTypesSelected = computed(() => {
+    return stationsStore.filters.selectedFactoryTypes.includes('ALL')
+  })
 
-  const clearAllFactoryTypes = () => {
-    stationsStore.updateSelectedFactoryTypes([])
-  }
+  const isAllPowerCircuitsSelected = computed(() => {
+    return stationsStore.filters.selectedPowerCircuitIds.includes('ALL')
+  })
+
+  const showIndividualPowerCircuitChips = computed(() => {
+    return stationsStore.filters.selectedPowerCircuitIds.length <= 2
+  })
+
+  const isAllFactoryStatusesSelected = computed(() => {
+    return stationsStore.filters.selectedFactoryStatuses.includes('ALL')
+  })
+
+  const showIndividualFactoryStatusChips = computed(() => {
+    return stationsStore.filters.selectedFactoryStatuses.length <= 2
+  })
 
   watch(
     () => stationsStore.factoryTypeOptions,
@@ -58,25 +68,48 @@
         newOptions.length > 0 &&
         stationsStore.filters.selectedFactoryTypes.length === 0
       ) {
-        const allTypes = newOptions.map(option => option.value)
-        stationsStore.updateSelectedFactoryTypes(allTypes)
+        // Auto-select "ALL" option on initial load
+        stationsStore.updateSelectedFactoryTypes(['ALL'])
+      }
+    },
+    { immediate: true }
+  )
+
+  watch(
+    () => stationsStore.powerCircuitIdOptions,
+    newOptions => {
+      if (
+        newOptions.length > 0 &&
+        stationsStore.filters.selectedPowerCircuitIds.length === 0
+      ) {
+        // Auto-select "ALL" power circuits on initial load
+        stationsStore.updateSelectedPowerCircuitIds(['ALL'])
+      }
+    },
+    { immediate: true }
+  )
+
+  watch(
+    () => stationsStore.factoryStatusOptions,
+    newOptions => {
+      if (
+        newOptions.length > 0 &&
+        stationsStore.filters.selectedFactoryStatuses.length === 0
+      ) {
+        // Auto-select "ALL" option on initial load
+        stationsStore.updateSelectedFactoryStatuses(['ALL'])
       }
     },
     { immediate: true }
   )
 
   const getFactoryColor = (percentageProducing: number): string => {
-    if (percentageProducing === 100) return '#00FF00' // Green
-    if (percentageProducing === 0) return '#FF0000' // Red
-    return '#FFA500' // Orange
+    if (percentageProducing === 100) return '#00FF00'
+    if (percentageProducing === 0) return '#FF0000'
+    return '#FFA500'
   }
 
   const dotContent = computed(() => {
-    if (!factories.value || factories.value.length === 0) {
-      return ''
-    }
-
-    // Use coordinate bounds that match StationGraph exactly
     const minX = -320000
     const maxX = 380000
     const minY = -250000
@@ -103,21 +136,23 @@
     dot += `\n_bl [label="", pos="0,0!", width=${cornerSize}, height=${cornerSize}];`
     dot += `\n_br [label="", pos="${mapWidth},0!", width=${cornerSize}, height=${cornerSize}];`
 
-    factories.value.forEach((factory, index) => {
-      if (
-        factory.x !== null &&
-        factory.x !== undefined &&
-        factory.y !== null &&
-        factory.y !== undefined
-      ) {
-        const x = (factory.x - minX) * scaleX
-        const y = mapHeight - (factory.y - minY) * scaleY - 5 // Shift factories up by 5 units
-        const color = getFactoryColor(factory.percentageProducing)
+    if (factories.value && factories.value.length > 0) {
+      factories.value.forEach((factory, index) => {
+        if (
+          factory.x !== null &&
+          factory.x !== undefined &&
+          factory.y !== null &&
+          factory.y !== undefined
+        ) {
+          const x = (factory.x - minX) * scaleX
+          const y = mapHeight - (factory.y - minY) * scaleY - 5
+          const color = getFactoryColor(factory.percentageProducing)
 
-        const factoryId = `factory_${index}`
-        dot += `\n${factoryId} [fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
-      }
-    })
+          const factoryId = `factory_${index}`
+          dot += `\n${factoryId} [fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+        }
+      })
+    }
 
     dot += '\n}'
 
@@ -128,8 +163,7 @@
     try {
       isLoading.value = true
       graphviz.value = await Graphviz.load()
-    } catch (err) {
-      console.error('Failed to load Graphviz:', err)
+    } catch {
       error.value = 'Failed to load graph renderer'
     } finally {
       isLoading.value = false
@@ -143,8 +177,7 @@
         try {
           const svg = await newGraphviz.dot(newDotContent)
           await mergeImages(svg)
-        } catch (err) {
-          console.error('Failed to render graph:', err)
+        } catch {
           error.value = 'Failed to render graph'
         }
       }
@@ -191,8 +224,8 @@
       }
 
       bgImg.src = '/1920px-Biome_Map.jpg'
-    } catch (err) {
-      console.error('Failed to merge images:', err)
+    } catch {
+      // Handle merge error silently
     }
   }
 </script>
@@ -227,37 +260,91 @@
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="clearAllFactoryTypes"
+                @click:close="() => stationsStore.updateSelectedFactoryTypes([])"
               >
-                {{ stationsStore.filters.selectedFactoryTypes.length }} of
-                {{ stationsStore.factoryTypeOptions.length }} types
+                <span v-if="isAllFactoryTypesSelected">All Types</span>
+                <span v-else>
+                  {{ stationsStore.filters.selectedFactoryTypes.length }} of
+                  {{ stationsStore.factoryTypeOptions.length - 1 }} types
+                </span>
               </v-chip>
             </template>
           </v-autocomplete>
         </v-col>
 
-        <v-col cols="auto" class="pl-2">
-          <div class="d-flex flex-nowrap align-center">
-            <v-btn
-              size="small"
-              variant="outlined"
-              @click="selectAllFactoryTypes"
-              :disabled="allFactoryTypesSelected"
-              class="me-3"
+        <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
+          <v-autocomplete
+            :model-value="stationsStore.filters.selectedPowerCircuitIds"
+            @update:model-value="debouncedUpdateSelectedPowerCircuitIds"
+            :items="stationsStore.powerCircuitIdOptions"
+            label="Power Circuit"
+            multiple
+            clearable
+            density="compact"
+            variant="outlined"
+            prepend-inner-icon="mdi-lightning-bolt"
+            :chips="showIndividualPowerCircuitChips"
+            :closable-chips="showIndividualPowerCircuitChips"
+            hide-details
+            :menu-props="{ maxHeight: '300' }"
+            class="power-circuit-filter"
+          >
+            <template v-if="!showIndividualPowerCircuitChips" #selection="{ index }">
+              <v-chip
+                v-if="index === 0"
+                size="small"
+                color="primary"
+                variant="tonal"
+                closable
+                @click:close="() => stationsStore.updateSelectedPowerCircuitIds([])"
+              >
+                <span v-if="isAllPowerCircuitsSelected">All Circuits</span>
+                <span v-else>
+                  {{ stationsStore.filters.selectedPowerCircuitIds.length }} of
+                  {{ stationsStore.powerCircuitIdOptions.length - 1 }} circuits
+                </span>
+              </v-chip>
+            </template>
+          </v-autocomplete>
+        </v-col>
+
+        <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
+          <v-autocomplete
+            :model-value="stationsStore.filters.selectedFactoryStatuses"
+            @update:model-value="debouncedUpdateSelectedFactoryStatuses"
+            :items="stationsStore.factoryStatusOptions"
+            label="Factory Status"
+            multiple
+            clearable
+            density="compact"
+            variant="outlined"
+            prepend-inner-icon="mdi-cog"
+            :chips="showIndividualFactoryStatusChips"
+            :closable-chips="showIndividualFactoryStatusChips"
+            hide-details
+            :menu-props="{ maxHeight: '300' }"
+            class="factory-status-filter"
+          >
+            <template
+              v-if="!showIndividualFactoryStatusChips"
+              #selection="{ index }"
             >
-              <v-icon start>mdi-check-all</v-icon>
-              All
-            </v-btn>
-            <v-btn
-              size="small"
-              variant="outlined"
-              @click="clearAllFactoryTypes"
-              :disabled="noFactoryTypesSelected"
-            >
-              <v-icon start>mdi-close</v-icon>
-              None
-            </v-btn>
-          </div>
+              <v-chip
+                v-if="index === 0"
+                size="small"
+                color="primary"
+                variant="tonal"
+                closable
+                @click:close="() => stationsStore.updateSelectedFactoryStatuses([])"
+              >
+                <span v-if="isAllFactoryStatusesSelected">All Statuses</span>
+                <span v-else>
+                  {{ stationsStore.filters.selectedFactoryStatuses.length }} of
+                  {{ stationsStore.factoryStatusOptions.length - 1 }} statuses
+                </span>
+              </v-chip>
+            </template>
+          </v-autocomplete>
         </v-col>
       </v-row>
     </div>
@@ -286,22 +373,6 @@
           />
         </div>
       </div>
-
-      <div v-else-if="!factories || factories.length === 0" class="text-center pa-8">
-        <v-alert type="info" variant="tonal">No factory data available</v-alert>
-      </div>
-
-      <div
-        v-else
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-        "
-      >
-        <v-progress-circular indeterminate size="64"></v-progress-circular>
-      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -329,21 +400,29 @@
     border: 1px solid #000;
   }
 
-  .factory-type-filter {
+  .factory-type-filter,
+  .power-circuit-filter,
+  .factory-status-filter {
     max-height: 120px;
     overflow-y: auto;
   }
 
-  .factory-type-filter .v-field__input {
+  .factory-type-filter .v-field__input,
+  .power-circuit-filter .v-field__input,
+  .factory-status-filter .v-field__input {
     max-height: 100px;
     overflow-y: auto;
   }
 
-  .factory-type-filter .v-chip {
+  .factory-type-filter .v-chip,
+  .power-circuit-filter .v-chip,
+  .factory-status-filter .v-chip {
     margin: 2px;
   }
 
-  .factory-type-filter .v-field {
+  .factory-type-filter .v-field,
+  .power-circuit-filter .v-field,
+  .factory-status-filter .v-field {
     margin-bottom: 0;
   }
 </style>

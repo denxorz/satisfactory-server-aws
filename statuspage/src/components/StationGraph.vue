@@ -153,7 +153,6 @@
       case 'coolingsystem':
         return '#6A5ACD'
       default:
-        console.log(cargoType)
         return '#FF0000'
     }
   }
@@ -328,8 +327,6 @@ digraph G {
 
     dot += '\n}'
 
-    console.log(dot)
-
     return dot
   })
 
@@ -337,8 +334,7 @@ digraph G {
     try {
       isLoading.value = true
       graphviz.value = await Graphviz.load()
-    } catch (err) {
-      console.error('Failed to load Graphviz:', err)
+    } catch {
       error.value = 'Failed to load graph renderer'
     } finally {
       isLoading.value = false
@@ -354,8 +350,7 @@ digraph G {
         try {
           const svg = await newGraphviz.dot(newDotContent)
           await mergeImages(svg)
-        } catch (err) {
-          console.error('Failed to render graph:', err)
+        } catch {
           error.value = 'Failed to render graph'
         }
       }
@@ -410,8 +405,8 @@ digraph G {
       }
 
       bgImg.src = '/1920px-Biome_Map.jpg'
-    } catch (err) {
-      console.error('Failed to merge images:', err)
+    } catch {
+      // Handle merge error silently
     }
   }
 </script>

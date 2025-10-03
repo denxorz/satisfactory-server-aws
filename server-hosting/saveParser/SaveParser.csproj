@@ -18,7 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" />
-    <PackageReference Include="Denxorz.Satisfactory.Routes" Version="1.2.0" />
+    <PackageReference Include="Denxorz.Satisfactory.Routes" Version="1.2.2" />
     <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
   </ItemGroup>
   <ItemGroup>
