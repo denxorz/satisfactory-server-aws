@@ -1,16 +1,16 @@
 <script setup lang="ts">
   import { Graphviz } from '@hpcc-js/wasm'
   import { computed, onMounted, ref, watch } from 'vue'
-  import { useStationsStore } from '../stores/stations'
+  import { useFactoryStabilityStore } from '../stores/factoryStability'
 
-  const stationsStore = useStationsStore()
+  const factoryStabilityStore = useFactoryStabilityStore()
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const graphviz = ref()
   const mergedImageUrl = ref('')
 
-  const factories = computed(() => stationsStore.filteredFactories)
+  const factories = computed(() => factoryStabilityStore.filteredFactories)
 
   function debounce<T extends (...args: never[]) => unknown>(
     func: T,
@@ -24,80 +24,80 @@
   }
 
   const debouncedUpdateSelectedFactoryTypes = debounce((factoryTypes: string[]) =>
-    stationsStore.updateSelectedFactoryTypes(factoryTypes)
+    factoryStabilityStore.updateSelectedFactoryTypes(factoryTypes)
   )
 
   const debouncedUpdateSelectedSubPowerCircuitIds = debounce(
     (subPowerCircuitIds: number[]) =>
-      stationsStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
+      factoryStabilityStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
   )
 
   const debouncedUpdateSelectedFactoryStatuses = debounce(
     (factoryStatuses: string[]) =>
-      stationsStore.updateSelectedFactoryStatuses(factoryStatuses)
+      factoryStabilityStore.updateSelectedFactoryStatuses(factoryStatuses)
   )
 
   const showIndividualChips = computed(() => {
-    return stationsStore.filters.selectedFactoryTypes.length <= 2
+    return factoryStabilityStore.filters.selectedFactoryTypes.length <= 2
   })
 
   const isAllFactoryTypesSelected = computed(() => {
-    return stationsStore.filters.selectedFactoryTypes.includes('ALL')
+    return factoryStabilityStore.filters.selectedFactoryTypes.includes('ALL')
   })
 
   const isAllSubPowerCircuitsSelected = computed(() => {
-    return stationsStore.filters.selectedSubPowerCircuitIds.includes(-1)
+    return factoryStabilityStore.filters.selectedSubPowerCircuitIds.includes(-1)
   })
 
   const showIndividualSubPowerCircuitChips = computed(() => {
-    return stationsStore.filters.selectedSubPowerCircuitIds.length <= 2
+    return factoryStabilityStore.filters.selectedSubPowerCircuitIds.length <= 2
   })
 
   const isAllFactoryStatusesSelected = computed(() => {
-    return stationsStore.filters.selectedFactoryStatuses.includes('ALL')
+    return factoryStabilityStore.filters.selectedFactoryStatuses.includes('ALL')
   })
 
   const showIndividualFactoryStatusChips = computed(() => {
-    return stationsStore.filters.selectedFactoryStatuses.length <= 2
+    return factoryStabilityStore.filters.selectedFactoryStatuses.length <= 2
   })
 
   watch(
-    () => stationsStore.factoryTypeOptions,
+    () => factoryStabilityStore.factoryTypeOptions,
     newOptions => {
       if (
         newOptions.length > 0 &&
-        stationsStore.filters.selectedFactoryTypes.length === 0
+        factoryStabilityStore.filters.selectedFactoryTypes.length === 0
       ) {
         // Auto-select "ALL" option on initial load
-        stationsStore.updateSelectedFactoryTypes(['ALL'])
+        factoryStabilityStore.updateSelectedFactoryTypes(['ALL'])
       }
     },
     { immediate: true }
   )
 
   watch(
-    () => stationsStore.subPowerCircuitIdOptions,
+    () => factoryStabilityStore.subPowerCircuitIdOptions,
     newOptions => {
       if (
         newOptions.length > 0 &&
-        stationsStore.filters.selectedSubPowerCircuitIds.length === 0
+        factoryStabilityStore.filters.selectedSubPowerCircuitIds.length === 0
       ) {
         // Auto-select "ALL" power circuits on initial load
-        stationsStore.updateSelectedSubPowerCircuitIds([-1])
+        factoryStabilityStore.updateSelectedSubPowerCircuitIds([-1])
       }
     },
     { immediate: true }
   )
 
   watch(
-    () => stationsStore.factoryStatusOptions,
+    () => factoryStabilityStore.factoryStatusOptions,
     newOptions => {
       if (
         newOptions.length > 0 &&
-        stationsStore.filters.selectedFactoryStatuses.length === 0
+        factoryStabilityStore.filters.selectedFactoryStatuses.length === 0
       ) {
         // Auto-select "ALL" option on initial load
-        stationsStore.updateSelectedFactoryStatuses(['ALL'])
+        factoryStabilityStore.updateSelectedFactoryStatuses(['ALL'])
       }
     },
     { immediate: true }
@@ -244,9 +244,9 @@
       <v-row dense class="mb-3 align-center">
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedFactoryTypes"
+            :model-value="factoryStabilityStore.filters.selectedFactoryTypes"
             @update:model-value="debouncedUpdateSelectedFactoryTypes"
-            :items="stationsStore.factoryTypeOptions"
+            :items="factoryStabilityStore.factoryTypeOptions"
             label="Factory Type"
             multiple
             clearable
@@ -266,12 +266,14 @@
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="() => stationsStore.updateSelectedFactoryTypes([])"
+                @click:close="
+                  () => factoryStabilityStore.updateSelectedFactoryTypes([])
+                "
               >
                 <span v-if="isAllFactoryTypesSelected">All Types</span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedFactoryTypes.length }} of
-                  {{ stationsStore.factoryTypeOptions.length - 1 }} types
+                  {{ factoryStabilityStore.filters.selectedFactoryTypes.length }} of
+                  {{ factoryStabilityStore.factoryTypeOptions.length - 1 }} types
                 </span>
               </v-chip>
             </template>
@@ -280,9 +282,9 @@
 
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedSubPowerCircuitIds"
+            :model-value="factoryStabilityStore.filters.selectedSubPowerCircuitIds"
             @update:model-value="debouncedUpdateSelectedSubPowerCircuitIds"
-            :items="stationsStore.subPowerCircuitIdOptions"
+            :items="factoryStabilityStore.subPowerCircuitIdOptions"
             label="Power Circuit"
             multiple
             clearable
@@ -306,13 +308,19 @@
                 variant="tonal"
                 closable
                 @click:close="
-                  () => stationsStore.updateSelectedSubPowerCircuitIds([])
+                  () => factoryStabilityStore.updateSelectedSubPowerCircuitIds([])
                 "
               >
                 <span v-if="isAllSubPowerCircuitsSelected">All Circuits</span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedSubPowerCircuitIds.length }} of
-                  {{ stationsStore.subPowerCircuitIdOptions.length - 1 }} circuits
+                  {{
+                    factoryStabilityStore.filters.selectedSubPowerCircuitIds.length
+                  }}
+                  of
+                  {{
+                    factoryStabilityStore.subPowerCircuitIdOptions.length - 1
+                  }}
+                  circuits
                 </span>
               </v-chip>
             </template>
@@ -321,9 +329,9 @@
 
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedFactoryStatuses"
+            :model-value="factoryStabilityStore.filters.selectedFactoryStatuses"
             @update:model-value="debouncedUpdateSelectedFactoryStatuses"
-            :items="stationsStore.factoryStatusOptions"
+            :items="factoryStabilityStore.factoryStatusOptions"
             label="Factory Status"
             multiple
             clearable
@@ -346,12 +354,20 @@
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="() => stationsStore.updateSelectedFactoryStatuses([])"
+                @click:close="
+                  () => factoryStabilityStore.updateSelectedFactoryStatuses([])
+                "
               >
                 <span v-if="isAllFactoryStatusesSelected">All Statuses</span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedFactoryStatuses.length }} of
-                  {{ stationsStore.factoryStatusOptions.length - 1 }} statuses
+                  {{
+                    factoryStabilityStore.filters.selectedFactoryStatuses.length
+                  }}
+                  of
+                  {{
+                    factoryStabilityStore.factoryStatusOptions.length - 1
+                  }}
+                  statuses
                 </span>
               </v-chip>
             </template>

@@ -1,16 +1,16 @@
 <script setup lang="ts">
   import { Graphviz } from '@hpcc-js/wasm'
   import { computed, onMounted, ref, watch } from 'vue'
-  import { useStationsStore } from '../stores/stations'
+  import { useFactoryPowerCircuitStore } from '../stores/factoryPowerCircuit'
 
-  const stationsStore = useStationsStore()
+  const factoryPowerCircuitStore = useFactoryPowerCircuitStore()
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const graphviz = ref()
   const mergedImageUrl = ref('')
 
-  const factories = computed(() => stationsStore.filteredFactories)
+  const factories = computed(() => factoryPowerCircuitStore.filteredFactories)
 
   function debounce<T extends (...args: never[]) => unknown>(
     func: T,
@@ -24,17 +24,17 @@
   }
 
   const debouncedUpdateSelectedFactoryTypes = debounce((factoryTypes: string[]) =>
-    stationsStore.updateSelectedFactoryTypes(factoryTypes)
+    factoryPowerCircuitStore.updateSelectedFactoryTypes(factoryTypes)
   )
 
   const debouncedUpdateSelectedSubPowerCircuitIds = debounce(
     (subPowerCircuitIds: number[]) =>
-      stationsStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
+      factoryPowerCircuitStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
   )
 
   const debouncedUpdateSelectedFactoryStatuses = debounce(
     (factoryStatuses: string[]) =>
-      stationsStore.updateSelectedFactoryStatuses(factoryStatuses)
+      factoryPowerCircuitStore.updateSelectedFactoryStatuses(factoryStatuses)
   )
 
   const showIndividualChips = (items: string[]) => items.length <= 2
@@ -45,28 +45,28 @@
   // Auto-select "ALL" options on initial load
   watch(
     () => [
-      stationsStore.factoryTypeOptions,
-      stationsStore.subPowerCircuitIdOptions,
-      stationsStore.factoryStatusOptions,
+      factoryPowerCircuitStore.factoryTypeOptions,
+      factoryPowerCircuitStore.subPowerCircuitIdOptions,
+      factoryPowerCircuitStore.factoryStatusOptions,
     ],
     ([factoryOptions, powerOptions, statusOptions]) => {
       if (
         factoryOptions.length > 0 &&
-        stationsStore.filters.selectedFactoryTypes.length === 0
+        factoryPowerCircuitStore.filters.selectedFactoryTypes.length === 0
       ) {
-        stationsStore.updateSelectedFactoryTypes(['ALL'])
+        factoryPowerCircuitStore.updateSelectedFactoryTypes(['ALL'])
       }
       if (
         powerOptions.length > 0 &&
-        stationsStore.filters.selectedSubPowerCircuitIds.length === 0
+        factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds.length === 0
       ) {
-        stationsStore.updateSelectedSubPowerCircuitIds([-1])
+        factoryPowerCircuitStore.updateSelectedSubPowerCircuitIds([-1])
       }
       if (
         statusOptions.length > 0 &&
-        stationsStore.filters.selectedFactoryStatuses.length === 0
+        factoryPowerCircuitStore.filters.selectedFactoryStatuses.length === 0
       ) {
-        stationsStore.updateSelectedFactoryStatuses(['ALL'])
+        factoryPowerCircuitStore.updateSelectedFactoryStatuses(['ALL'])
       }
     },
     { immediate: true }
@@ -251,67 +251,23 @@
       <v-row dense class="mb-3 align-center">
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedFactoryTypes"
+            :model-value="factoryPowerCircuitStore.filters.selectedFactoryTypes"
             @update:model-value="debouncedUpdateSelectedFactoryTypes"
-            :items="stationsStore.factoryTypeOptions"
+            :items="factoryPowerCircuitStore.factoryTypeOptions"
             label="Factory Type"
             multiple
             clearable
             density="compact"
             variant="outlined"
             prepend-inner-icon="mdi-factory"
-            :chips="showIndividualChips(stationsStore.filters.selectedFactoryTypes)"
-            :closable-chips="
-              showIndividualChips(stationsStore.filters.selectedFactoryTypes)
-            "
-            hide-details
-            :menu-props="{ maxHeight: '300' }"
-          >
-            <template
-              v-if="!showIndividualChips(stationsStore.filters.selectedFactoryTypes)"
-              #selection="{ index }"
-            >
-              <v-chip
-                v-if="index === 0"
-                size="small"
-                color="primary"
-                variant="tonal"
-                closable
-                @click:close="() => stationsStore.updateSelectedFactoryTypes([])"
-              >
-                <span
-                  v-if="isAllSelected(stationsStore.filters.selectedFactoryTypes)"
-                >
-                  All Types
-                </span>
-                <span v-else>
-                  {{ stationsStore.filters.selectedFactoryTypes.length }} of
-                  {{ stationsStore.factoryTypeOptions.length - 1 }} types
-                </span>
-              </v-chip>
-            </template>
-          </v-autocomplete>
-        </v-col>
-
-        <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
-          <v-autocomplete
-            :model-value="stationsStore.filters.selectedSubPowerCircuitIds"
-            @update:model-value="debouncedUpdateSelectedSubPowerCircuitIds"
-            :items="stationsStore.subPowerCircuitIdOptions"
-            label="Power Circuit"
-            multiple
-            clearable
-            density="compact"
-            variant="outlined"
-            prepend-inner-icon="mdi-lightning-bolt"
             :chips="
-              showIndividualChipsNumbers(
-                stationsStore.filters.selectedSubPowerCircuitIds
+              showIndividualChips(
+                factoryPowerCircuitStore.filters.selectedFactoryTypes
               )
             "
             :closable-chips="
-              showIndividualChipsNumbers(
-                stationsStore.filters.selectedSubPowerCircuitIds
+              showIndividualChips(
+                factoryPowerCircuitStore.filters.selectedFactoryTypes
               )
             "
             hide-details
@@ -319,8 +275,8 @@
           >
             <template
               v-if="
-                !showIndividualChipsNumbers(
-                  stationsStore.filters.selectedSubPowerCircuitIds
+                !showIndividualChips(
+                  factoryPowerCircuitStore.filters.selectedFactoryTypes
                 )
               "
               #selection="{ index }"
@@ -332,21 +288,24 @@
                 variant="tonal"
                 closable
                 @click:close="
-                  () => stationsStore.updateSelectedSubPowerCircuitIds([])
+                  () => factoryPowerCircuitStore.updateSelectedFactoryTypes([])
                 "
               >
                 <span
                   v-if="
-                    isAllSelectedNumbers(
-                      stationsStore.filters.selectedSubPowerCircuitIds
+                    isAllSelected(
+                      factoryPowerCircuitStore.filters.selectedFactoryTypes
                     )
                   "
                 >
-                  All Circuits
+                  All Types
                 </span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedSubPowerCircuitIds.length }} of
-                  {{ stationsStore.subPowerCircuitIdOptions.length - 1 }} circuits
+                  {{
+                    factoryPowerCircuitStore.filters.selectedFactoryTypes.length
+                  }}
+                  of
+                  {{ factoryPowerCircuitStore.factoryTypeOptions.length - 1 }} types
                 </span>
               </v-chip>
             </template>
@@ -355,27 +314,35 @@
 
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedFactoryStatuses"
-            @update:model-value="debouncedUpdateSelectedFactoryStatuses"
-            :items="stationsStore.factoryStatusOptions"
-            label="Factory Status"
+            :model-value="
+              factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+            "
+            @update:model-value="debouncedUpdateSelectedSubPowerCircuitIds"
+            :items="factoryPowerCircuitStore.subPowerCircuitIdOptions"
+            label="Power Circuit"
             multiple
             clearable
             density="compact"
             variant="outlined"
-            prepend-inner-icon="mdi-cog"
+            prepend-inner-icon="mdi-lightning-bolt"
             :chips="
-              showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+              showIndividualChipsNumbers(
+                factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+              )
             "
             :closable-chips="
-              showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+              showIndividualChipsNumbers(
+                factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+              )
             "
             hide-details
             :menu-props="{ maxHeight: '300' }"
           >
             <template
               v-if="
-                !showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+                !showIndividualChipsNumbers(
+                  factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+                )
               "
               #selection="{ index }"
             >
@@ -385,16 +352,95 @@
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="() => stationsStore.updateSelectedFactoryStatuses([])"
+                @click:close="
+                  () => factoryPowerCircuitStore.updateSelectedSubPowerCircuitIds([])
+                "
               >
                 <span
-                  v-if="isAllSelected(stationsStore.filters.selectedFactoryStatuses)"
+                  v-if="
+                    isAllSelectedNumbers(
+                      factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+                    )
+                  "
+                >
+                  All Circuits
+                </span>
+                <span v-else>
+                  {{
+                    factoryPowerCircuitStore.filters.selectedSubPowerCircuitIds
+                      .length
+                  }}
+                  of
+                  {{
+                    factoryPowerCircuitStore.subPowerCircuitIdOptions.length - 1
+                  }}
+                  circuits
+                </span>
+              </v-chip>
+            </template>
+          </v-autocomplete>
+        </v-col>
+
+        <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
+          <v-autocomplete
+            :model-value="factoryPowerCircuitStore.filters.selectedFactoryStatuses"
+            @update:model-value="debouncedUpdateSelectedFactoryStatuses"
+            :items="factoryPowerCircuitStore.factoryStatusOptions"
+            label="Factory Status"
+            multiple
+            clearable
+            density="compact"
+            variant="outlined"
+            prepend-inner-icon="mdi-cog"
+            :chips="
+              showIndividualChips(
+                factoryPowerCircuitStore.filters.selectedFactoryStatuses
+              )
+            "
+            :closable-chips="
+              showIndividualChips(
+                factoryPowerCircuitStore.filters.selectedFactoryStatuses
+              )
+            "
+            hide-details
+            :menu-props="{ maxHeight: '300' }"
+          >
+            <template
+              v-if="
+                !showIndividualChips(
+                  factoryPowerCircuitStore.filters.selectedFactoryStatuses
+                )
+              "
+              #selection="{ index }"
+            >
+              <v-chip
+                v-if="index === 0"
+                size="small"
+                color="primary"
+                variant="tonal"
+                closable
+                @click:close="
+                  () => factoryPowerCircuitStore.updateSelectedFactoryStatuses([])
+                "
+              >
+                <span
+                  v-if="
+                    isAllSelected(
+                      factoryPowerCircuitStore.filters.selectedFactoryStatuses
+                    )
+                  "
                 >
                   All Statuses
                 </span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedFactoryStatuses.length }} of
-                  {{ stationsStore.factoryStatusOptions.length - 1 }} statuses
+                  {{
+                    factoryPowerCircuitStore.filters.selectedFactoryStatuses.length
+                  }}
+                  of
+                  {{
+                    factoryPowerCircuitStore.factoryStatusOptions.length - 1
+                  }}
+                  statuses
                 </span>
               </v-chip>
             </template>
