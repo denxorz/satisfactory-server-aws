@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import CargoFlowChart from './components/CargoFlowChart.vue'
-  import FactoryMap from './components/FactoryMap.vue'
+  import FactoryPowerCircuitMap from './components/FactoryPowerCircuitMap.vue'
+  import FactoryStabilityMap from './components/FactoryStabilityMap.vue'
   import LoginScreen from './components/LoginScreen.vue'
   import ServerInfo from './components/ServerInfo.vue'
   import StationFilters from './components/StationFilters.vue'
@@ -48,7 +49,10 @@
               <StationsTable class="fill-height" />
             </v-col>
             <v-col cols="12">
-              <FactoryMap class="fill-height" />
+              <FactoryStabilityMap class="fill-height" />
+            </v-col>
+            <v-col cols="12">
+              <FactoryPowerCircuitMap class="fill-height" />
             </v-col>
           </v-row>
         </v-container>

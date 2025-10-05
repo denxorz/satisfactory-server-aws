@@ -37,76 +37,87 @@
       stationsStore.updateSelectedFactoryStatuses(factoryStatuses)
   )
 
-  const showIndividualChips = computed(() => {
-    return stationsStore.filters.selectedFactoryTypes.length <= 2
-  })
+  const showIndividualChips = (items: string[]) => items.length <= 2
+  const isAllSelected = (items: string[]) => items.includes('ALL')
 
-  const isAllFactoryTypesSelected = computed(() => {
-    return stationsStore.filters.selectedFactoryTypes.includes('ALL')
-  })
-
-  const isAllPowerCircuitsSelected = computed(() => {
-    return stationsStore.filters.selectedPowerCircuitIds.includes('ALL')
-  })
-
-  const showIndividualPowerCircuitChips = computed(() => {
-    return stationsStore.filters.selectedPowerCircuitIds.length <= 2
-  })
-
-  const isAllFactoryStatusesSelected = computed(() => {
-    return stationsStore.filters.selectedFactoryStatuses.includes('ALL')
-  })
-
-  const showIndividualFactoryStatusChips = computed(() => {
-    return stationsStore.filters.selectedFactoryStatuses.length <= 2
-  })
-
+  // Auto-select "ALL" options on initial load
   watch(
-    () => stationsStore.factoryTypeOptions,
-    newOptions => {
+    () => [
+      stationsStore.factoryTypeOptions,
+      stationsStore.powerCircuitIdOptions,
+      stationsStore.factoryStatusOptions,
+    ],
+    ([factoryOptions, powerOptions, statusOptions]) => {
       if (
-        newOptions.length > 0 &&
+        factoryOptions.length > 0 &&
         stationsStore.filters.selectedFactoryTypes.length === 0
       ) {
-        // Auto-select "ALL" option on initial load
         stationsStore.updateSelectedFactoryTypes(['ALL'])
       }
-    },
-    { immediate: true }
-  )
-
-  watch(
-    () => stationsStore.powerCircuitIdOptions,
-    newOptions => {
       if (
-        newOptions.length > 0 &&
+        powerOptions.length > 0 &&
         stationsStore.filters.selectedPowerCircuitIds.length === 0
       ) {
-        // Auto-select "ALL" power circuits on initial load
         stationsStore.updateSelectedPowerCircuitIds(['ALL'])
       }
-    },
-    { immediate: true }
-  )
-
-  watch(
-    () => stationsStore.factoryStatusOptions,
-    newOptions => {
       if (
-        newOptions.length > 0 &&
+        statusOptions.length > 0 &&
         stationsStore.filters.selectedFactoryStatuses.length === 0
       ) {
-        // Auto-select "ALL" option on initial load
         stationsStore.updateSelectedFactoryStatuses(['ALL'])
       }
     },
     { immediate: true }
   )
 
-  const getFactoryColor = (percentageProducing: number): string => {
-    if (percentageProducing === 100) return '#00FF00'
-    if (percentageProducing === 0) return '#FF0000'
-    return '#FFA500'
+  // Color palette for different power circuits - using X11 color names supported by DOT
+  const powerCircuitColors = [
+    'red', // Bright red
+    'green', // Bright green
+    'blue', // Bright blue
+    'yellow', // Bright yellow
+    'magenta', // Bright magenta
+    'cyan', // Bright cyan
+    'orange', // Bright orange
+    'brown', // Brown
+    'lime', // Bright lime
+    'gold', // Gold
+    'turquoise', // Turquoise
+    'violet', // Violet
+    'maroon', // Dark red
+    'forestgreen', // Dark green
+    'royalblue', // Royal blue
+    'deeppink', // Pink-red
+    'greenyellow', // Yellow-green
+    'crimson', // Dark red
+    'navy', // Dark blue
+    'orangered', // Orange-red
+    'mediumpurple', // Purple
+    'mediumseagreen', // Green-blue
+    'coral', // Orange-pink
+    'teal', // Blue-green
+    'slategray', // Gray-blue
+    'olive', // Olive green
+    'indigo', // Dark purple-blue
+    'silver', // Silver
+    'khaki', // Yellow-brown
+    'plum', // Purple-pink
+  ]
+
+  const getPowerCircuitColor = (
+    powerCircuitId: string | null | undefined
+  ): string => {
+    if (!powerCircuitId) return 'lightgray'
+
+    let hash = 0
+    for (let i = 0; i < powerCircuitId.length; i++) {
+      const char = powerCircuitId.charCodeAt(i)
+      hash = (hash << 5) - hash + char
+      hash = hash & hash
+    }
+
+    const circuitIndex = Math.abs(hash) % powerCircuitColors.length
+    return powerCircuitColors[circuitIndex]
   }
 
   const getFactoryShape = (factoryType: string): string => {
@@ -151,7 +162,7 @@
         ) {
           const x = (factory.x - minX) * scaleX
           const y = mapHeight - (factory.y - minY) * scaleY - 5
-          const color = getFactoryColor(factory.percentageProducing)
+          const color = getPowerCircuitColor(factory.powerCircuitId)
           const shape = getFactoryShape(factory.type)
 
           const factoryId = `factory_${index}`
@@ -238,7 +249,7 @@
 
 <template>
   <v-card>
-    <v-card-title>Factory Map</v-card-title>
+    <v-card-title>Factory Power Circuit Map</v-card-title>
 
     <div class="pa-4">
       <v-row dense class="mb-3 align-center">
@@ -253,13 +264,17 @@
             density="compact"
             variant="outlined"
             prepend-inner-icon="mdi-factory"
-            :chips="showIndividualChips"
-            :closable-chips="showIndividualChips"
+            :chips="showIndividualChips(stationsStore.filters.selectedFactoryTypes)"
+            :closable-chips="
+              showIndividualChips(stationsStore.filters.selectedFactoryTypes)
+            "
             hide-details
             :menu-props="{ maxHeight: '300' }"
-            class="factory-type-filter"
           >
-            <template v-if="!showIndividualChips" #selection="{ index }">
+            <template
+              v-if="!showIndividualChips(stationsStore.filters.selectedFactoryTypes)"
+              #selection="{ index }"
+            >
               <v-chip
                 v-if="index === 0"
                 size="small"
@@ -268,7 +283,11 @@
                 closable
                 @click:close="() => stationsStore.updateSelectedFactoryTypes([])"
               >
-                <span v-if="isAllFactoryTypesSelected">All Types</span>
+                <span
+                  v-if="isAllSelected(stationsStore.filters.selectedFactoryTypes)"
+                >
+                  All Types
+                </span>
                 <span v-else>
                   {{ stationsStore.filters.selectedFactoryTypes.length }} of
                   {{ stationsStore.factoryTypeOptions.length - 1 }} types
@@ -289,13 +308,21 @@
             density="compact"
             variant="outlined"
             prepend-inner-icon="mdi-lightning-bolt"
-            :chips="showIndividualPowerCircuitChips"
-            :closable-chips="showIndividualPowerCircuitChips"
+            :chips="
+              showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+            "
+            :closable-chips="
+              showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+            "
             hide-details
             :menu-props="{ maxHeight: '300' }"
-            class="power-circuit-filter"
           >
-            <template v-if="!showIndividualPowerCircuitChips" #selection="{ index }">
+            <template
+              v-if="
+                !showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+              "
+              #selection="{ index }"
+            >
               <v-chip
                 v-if="index === 0"
                 size="small"
@@ -304,7 +331,11 @@
                 closable
                 @click:close="() => stationsStore.updateSelectedPowerCircuitIds([])"
               >
-                <span v-if="isAllPowerCircuitsSelected">All Circuits</span>
+                <span
+                  v-if="isAllSelected(stationsStore.filters.selectedPowerCircuitIds)"
+                >
+                  All Circuits
+                </span>
                 <span v-else>
                   {{ stationsStore.filters.selectedPowerCircuitIds.length }} of
                   {{ stationsStore.powerCircuitIdOptions.length - 1 }} circuits
@@ -325,14 +356,19 @@
             density="compact"
             variant="outlined"
             prepend-inner-icon="mdi-cog"
-            :chips="showIndividualFactoryStatusChips"
-            :closable-chips="showIndividualFactoryStatusChips"
+            :chips="
+              showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+            "
+            :closable-chips="
+              showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+            "
             hide-details
             :menu-props="{ maxHeight: '300' }"
-            class="factory-status-filter"
           >
             <template
-              v-if="!showIndividualFactoryStatusChips"
+              v-if="
+                !showIndividualChips(stationsStore.filters.selectedFactoryStatuses)
+              "
               #selection="{ index }"
             >
               <v-chip
@@ -343,7 +379,11 @@
                 closable
                 @click:close="() => stationsStore.updateSelectedFactoryStatuses([])"
               >
-                <span v-if="isAllFactoryStatusesSelected">All Statuses</span>
+                <span
+                  v-if="isAllSelected(stationsStore.filters.selectedFactoryStatuses)"
+                >
+                  All Statuses
+                </span>
                 <span v-else>
                   {{ stationsStore.filters.selectedFactoryStatuses.length }} of
                   {{ stationsStore.factoryStatusOptions.length - 1 }} statuses
@@ -358,7 +398,9 @@
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">
         <v-progress-circular indeterminate size="64"></v-progress-circular>
-        <div class="mt-4" style="color: #e59345">Loading factory map...</div>
+        <div class="mt-4" style="color: #e59345">
+          Loading factory power circuit map...
+        </div>
       </div>
 
       <div v-else-if="error" class="text-center pa-8">
@@ -374,7 +416,7 @@
         <div class="map-wrapper">
           <v-img
             :src="mergedImageUrl"
-            alt="Factory Map with Background"
+            alt="Factory Power Circuit Map with Background"
             class="map-image"
           />
         </div>
@@ -397,38 +439,5 @@
   .map-image {
     object-fit: contain;
     transition: opacity 0.2s;
-  }
-
-  .factory-legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid #000;
-  }
-
-  .factory-type-filter,
-  .power-circuit-filter,
-  .factory-status-filter {
-    max-height: 120px;
-    overflow-y: auto;
-  }
-
-  .factory-type-filter .v-field__input,
-  .power-circuit-filter .v-field__input,
-  .factory-status-filter .v-field__input {
-    max-height: 100px;
-    overflow-y: auto;
-  }
-
-  .factory-type-filter .v-chip,
-  .power-circuit-filter .v-chip,
-  .factory-status-filter .v-chip {
-    margin: 2px;
-  }
-
-  .factory-type-filter .v-field,
-  .power-circuit-filter .v-field,
-  .factory-status-filter .v-field {
-    margin-bottom: 0;
   }
 </style>
