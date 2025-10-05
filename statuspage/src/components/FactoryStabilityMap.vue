@@ -27,9 +27,9 @@
     stationsStore.updateSelectedFactoryTypes(factoryTypes)
   )
 
-  const debouncedUpdateSelectedPowerCircuitIds = debounce(
-    (powerCircuitIds: string[]) =>
-      stationsStore.updateSelectedPowerCircuitIds(powerCircuitIds)
+  const debouncedUpdateSelectedSubPowerCircuitIds = debounce(
+    (subPowerCircuitIds: number[]) =>
+      stationsStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
   )
 
   const debouncedUpdateSelectedFactoryStatuses = debounce(
@@ -45,12 +45,12 @@
     return stationsStore.filters.selectedFactoryTypes.includes('ALL')
   })
 
-  const isAllPowerCircuitsSelected = computed(() => {
-    return stationsStore.filters.selectedPowerCircuitIds.includes('ALL')
+  const isAllSubPowerCircuitsSelected = computed(() => {
+    return stationsStore.filters.selectedSubPowerCircuitIds.includes(-1)
   })
 
-  const showIndividualPowerCircuitChips = computed(() => {
-    return stationsStore.filters.selectedPowerCircuitIds.length <= 2
+  const showIndividualSubPowerCircuitChips = computed(() => {
+    return stationsStore.filters.selectedSubPowerCircuitIds.length <= 2
   })
 
   const isAllFactoryStatusesSelected = computed(() => {
@@ -76,14 +76,14 @@
   )
 
   watch(
-    () => stationsStore.powerCircuitIdOptions,
+    () => stationsStore.subPowerCircuitIdOptions,
     newOptions => {
       if (
         newOptions.length > 0 &&
-        stationsStore.filters.selectedPowerCircuitIds.length === 0
+        stationsStore.filters.selectedSubPowerCircuitIds.length === 0
       ) {
         // Auto-select "ALL" power circuits on initial load
-        stationsStore.updateSelectedPowerCircuitIds(['ALL'])
+        stationsStore.updateSelectedSubPowerCircuitIds([-1])
       }
     },
     { immediate: true }
@@ -280,34 +280,39 @@
 
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedPowerCircuitIds"
-            @update:model-value="debouncedUpdateSelectedPowerCircuitIds"
-            :items="stationsStore.powerCircuitIdOptions"
+            :model-value="stationsStore.filters.selectedSubPowerCircuitIds"
+            @update:model-value="debouncedUpdateSelectedSubPowerCircuitIds"
+            :items="stationsStore.subPowerCircuitIdOptions"
             label="Power Circuit"
             multiple
             clearable
             density="compact"
             variant="outlined"
             prepend-inner-icon="mdi-lightning-bolt"
-            :chips="showIndividualPowerCircuitChips"
-            :closable-chips="showIndividualPowerCircuitChips"
+            :chips="showIndividualSubPowerCircuitChips"
+            :closable-chips="showIndividualSubPowerCircuitChips"
             hide-details
             :menu-props="{ maxHeight: '300' }"
             class="power-circuit-filter"
           >
-            <template v-if="!showIndividualPowerCircuitChips" #selection="{ index }">
+            <template
+              v-if="!showIndividualSubPowerCircuitChips"
+              #selection="{ index }"
+            >
               <v-chip
                 v-if="index === 0"
                 size="small"
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="() => stationsStore.updateSelectedPowerCircuitIds([])"
+                @click:close="
+                  () => stationsStore.updateSelectedSubPowerCircuitIds([])
+                "
               >
-                <span v-if="isAllPowerCircuitsSelected">All Circuits</span>
+                <span v-if="isAllSubPowerCircuitsSelected">All Circuits</span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedPowerCircuitIds.length }} of
-                  {{ stationsStore.powerCircuitIdOptions.length - 1 }} circuits
+                  {{ stationsStore.filters.selectedSubPowerCircuitIds.length }} of
+                  {{ stationsStore.subPowerCircuitIdOptions.length - 1 }} circuits
                 </span>
               </v-chip>
             </template>

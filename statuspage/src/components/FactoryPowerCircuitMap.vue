@@ -27,9 +27,9 @@
     stationsStore.updateSelectedFactoryTypes(factoryTypes)
   )
 
-  const debouncedUpdateSelectedPowerCircuitIds = debounce(
-    (powerCircuitIds: string[]) =>
-      stationsStore.updateSelectedPowerCircuitIds(powerCircuitIds)
+  const debouncedUpdateSelectedSubPowerCircuitIds = debounce(
+    (subPowerCircuitIds: number[]) =>
+      stationsStore.updateSelectedSubPowerCircuitIds(subPowerCircuitIds)
   )
 
   const debouncedUpdateSelectedFactoryStatuses = debounce(
@@ -38,13 +38,15 @@
   )
 
   const showIndividualChips = (items: string[]) => items.length <= 2
+  const showIndividualChipsNumbers = (items: number[]) => items.length <= 2
   const isAllSelected = (items: string[]) => items.includes('ALL')
+  const isAllSelectedNumbers = (items: number[]) => items.includes(-1)
 
   // Auto-select "ALL" options on initial load
   watch(
     () => [
       stationsStore.factoryTypeOptions,
-      stationsStore.powerCircuitIdOptions,
+      stationsStore.subPowerCircuitIdOptions,
       stationsStore.factoryStatusOptions,
     ],
     ([factoryOptions, powerOptions, statusOptions]) => {
@@ -56,9 +58,9 @@
       }
       if (
         powerOptions.length > 0 &&
-        stationsStore.filters.selectedPowerCircuitIds.length === 0
+        stationsStore.filters.selectedSubPowerCircuitIds.length === 0
       ) {
-        stationsStore.updateSelectedPowerCircuitIds(['ALL'])
+        stationsStore.updateSelectedSubPowerCircuitIds([-1])
       }
       if (
         statusOptions.length > 0 &&
@@ -105,18 +107,12 @@
   ]
 
   const getPowerCircuitColor = (
-    powerCircuitId: string | null | undefined
+    powerCircuitId: number | null | undefined
   ): string => {
     if (!powerCircuitId) return 'lightgray'
+    if (powerCircuitId < 0) return 'gray'
 
-    let hash = 0
-    for (let i = 0; i < powerCircuitId.length; i++) {
-      const char = powerCircuitId.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash
-    }
-
-    const circuitIndex = Math.abs(hash) % powerCircuitColors.length
+    const circuitIndex = powerCircuitId % powerCircuitColors.length
     return powerCircuitColors[circuitIndex]
   }
 
@@ -162,7 +158,7 @@
         ) {
           const x = (factory.x - minX) * scaleX
           const y = mapHeight - (factory.y - minY) * scaleY - 5
-          const color = getPowerCircuitColor(factory.powerCircuitId)
+          const color = getPowerCircuitColor(factory.subPowerCircuitId)
           const shape = getFactoryShape(factory.type)
 
           const factoryId = `factory_${index}`
@@ -299,9 +295,9 @@
 
         <v-col cols="auto" class="flex-grow-1" style="max-width: 400px">
           <v-autocomplete
-            :model-value="stationsStore.filters.selectedPowerCircuitIds"
-            @update:model-value="debouncedUpdateSelectedPowerCircuitIds"
-            :items="stationsStore.powerCircuitIdOptions"
+            :model-value="stationsStore.filters.selectedSubPowerCircuitIds"
+            @update:model-value="debouncedUpdateSelectedSubPowerCircuitIds"
+            :items="stationsStore.subPowerCircuitIdOptions"
             label="Power Circuit"
             multiple
             clearable
@@ -309,17 +305,23 @@
             variant="outlined"
             prepend-inner-icon="mdi-lightning-bolt"
             :chips="
-              showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+              showIndividualChipsNumbers(
+                stationsStore.filters.selectedSubPowerCircuitIds
+              )
             "
             :closable-chips="
-              showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+              showIndividualChipsNumbers(
+                stationsStore.filters.selectedSubPowerCircuitIds
+              )
             "
             hide-details
             :menu-props="{ maxHeight: '300' }"
           >
             <template
               v-if="
-                !showIndividualChips(stationsStore.filters.selectedPowerCircuitIds)
+                !showIndividualChipsNumbers(
+                  stationsStore.filters.selectedSubPowerCircuitIds
+                )
               "
               #selection="{ index }"
             >
@@ -329,16 +331,22 @@
                 color="primary"
                 variant="tonal"
                 closable
-                @click:close="() => stationsStore.updateSelectedPowerCircuitIds([])"
+                @click:close="
+                  () => stationsStore.updateSelectedSubPowerCircuitIds([])
+                "
               >
                 <span
-                  v-if="isAllSelected(stationsStore.filters.selectedPowerCircuitIds)"
+                  v-if="
+                    isAllSelectedNumbers(
+                      stationsStore.filters.selectedSubPowerCircuitIds
+                    )
+                  "
                 >
                   All Circuits
                 </span>
                 <span v-else>
-                  {{ stationsStore.filters.selectedPowerCircuitIds.length }} of
-                  {{ stationsStore.powerCircuitIdOptions.length - 1 }} circuits
+                  {{ stationsStore.filters.selectedSubPowerCircuitIds.length }} of
+                  {{ stationsStore.subPowerCircuitIdOptions.length - 1 }} circuits
                 </span>
               </v-chip>
             </template>

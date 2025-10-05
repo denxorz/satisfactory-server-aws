@@ -8,7 +8,7 @@ interface Filters {
   selectedTransferTypes: string[]
   selectedCargoTypes: string[]
   selectedFactoryTypes: string[]
-  selectedPowerCircuitIds: string[]
+  selectedSubPowerCircuitIds: number[]
   selectedFactoryStatuses: string[]
   showUploaders: boolean
 }
@@ -27,7 +27,7 @@ export const useStationsStore = defineStore('stations', () => {
     selectedTransferTypes: [],
     selectedCargoTypes: [],
     selectedFactoryTypes: [],
-    selectedPowerCircuitIds: [],
+    selectedSubPowerCircuitIds: [],
     selectedFactoryStatuses: [],
     showUploaders: true,
   })
@@ -112,8 +112,10 @@ export const useStationsStore = defineStore('stations', () => {
     filters.value.selectedFactoryTypes = selectedFactoryTypes
   }
 
-  const updateSelectedPowerCircuitIds = (selectedPowerCircuitIds: string[]) => {
-    filters.value.selectedPowerCircuitIds = selectedPowerCircuitIds
+  const updateSelectedSubPowerCircuitIds = (
+    selectedSubPowerCircuitIds: number[]
+  ) => {
+    filters.value.selectedSubPowerCircuitIds = selectedSubPowerCircuitIds
   }
 
   const updateSelectedFactoryStatuses = (selectedFactoryStatuses: string[]) => {
@@ -135,7 +137,7 @@ export const useStationsStore = defineStore('stations', () => {
       selectedTransferTypes: [],
       selectedCargoTypes: [],
       selectedFactoryTypes: [],
-      selectedPowerCircuitIds: [],
+      selectedSubPowerCircuitIds: [],
       selectedFactoryStatuses: [],
       showUploaders: true,
     }
@@ -198,44 +200,34 @@ export const useStationsStore = defineStore('stations', () => {
     ]
   })
 
-  const powerCircuitIdOptions = computed(() => {
-    const powerCircuitIdCounts = new Map<string, number>()
+  const subPowerCircuitIdOptions = computed(() => {
+    const subPowerCircuitIdCounts = new Map<number, number>()
 
-    // Count factories by power circuit ID
+    // Count factories by sub power circuit ID
     factories.value.forEach(factory => {
-      if (factory.powerCircuitId) {
-        const currentCount = powerCircuitIdCounts.get(factory.powerCircuitId) || 0
-        powerCircuitIdCounts.set(factory.powerCircuitId, currentCount + 1)
+      if (factory.subPowerCircuitId) {
+        const currentCount =
+          subPowerCircuitIdCounts.get(factory.subPowerCircuitId) || 0
+        subPowerCircuitIdCounts.set(factory.subPowerCircuitId, currentCount + 1)
       }
     })
 
-    const circuitOptions = Array.from(powerCircuitIdCounts.entries())
-      .sort((a, b) => {
-        const aNum = parseInt(a[0])
-        const bNum = parseInt(b[0])
-
-        // If both are numbers, sort numerically
-        if (!isNaN(aNum) && !isNaN(bNum)) {
-          return aNum - bNum
-        }
-
-        // Otherwise use locale compare for mixed alphanumeric
-        return a[0].localeCompare(b[0], undefined, { numeric: true })
-      })
+    const circuitOptions = Array.from(subPowerCircuitIdCounts.entries())
+      .sort((a, b) => a[0] - b[0])
       .map(([circuitId, count]) => ({
         title: `Circuit ${circuitId} (${count})`,
         value: circuitId,
       }))
 
     // Add "All" option at the beginning
-    const totalFactories = Array.from(powerCircuitIdCounts.values()).reduce(
+    const totalFactories = Array.from(subPowerCircuitIdCounts.values()).reduce(
       (sum, count) => sum + count,
       0
     )
     return [
       {
         title: `All Circuits (${totalFactories})`,
-        value: 'ALL',
+        value: -1,
       },
       ...circuitOptions,
     ]
@@ -351,7 +343,7 @@ export const useStationsStore = defineStore('stations', () => {
     return factories.value.filter(factory => {
       if (
         filters.value.selectedFactoryTypes.length === 0 &&
-        filters.value.selectedPowerCircuitIds.length === 0 &&
+        filters.value.selectedSubPowerCircuitIds.length === 0 &&
         filters.value.selectedFactoryStatuses.length === 0
       ) {
         return false
@@ -366,16 +358,16 @@ export const useStationsStore = defineStore('stations', () => {
         }
       }
 
-      if (filters.value.selectedPowerCircuitIds.length > 0) {
-        if (filters.value.selectedPowerCircuitIds.includes('ALL')) {
-          if (!factory.powerCircuitId) {
+      if (filters.value.selectedSubPowerCircuitIds.length > 0) {
+        if (filters.value.selectedSubPowerCircuitIds.includes(-1)) {
+          if (!factory.subPowerCircuitId) {
             return false
           }
         } else {
-          const powerCircuitId = factory.powerCircuitId
+          const subPowerCircuitId = factory.subPowerCircuitId
           if (
-            !powerCircuitId ||
-            !filters.value.selectedPowerCircuitIds.includes(powerCircuitId)
+            !subPowerCircuitId ||
+            !filters.value.selectedSubPowerCircuitIds.includes(subPowerCircuitId)
           ) {
             return false
           }
@@ -413,7 +405,7 @@ export const useStationsStore = defineStore('stations', () => {
     filters,
     cargoTypeOptions,
     factoryTypeOptions,
-    powerCircuitIdOptions,
+    subPowerCircuitIdOptions,
     factoryStatusOptions,
     isLoading: readonly(isLoading),
     error: readonly(error),
@@ -431,7 +423,7 @@ export const useStationsStore = defineStore('stations', () => {
     toggleTransferType,
     updateSelectedCargoTypes,
     updateSelectedFactoryTypes,
-    updateSelectedPowerCircuitIds,
+    updateSelectedSubPowerCircuitIds,
     updateSelectedFactoryStatuses,
     toggleShowUploaders,
     updateFilters,

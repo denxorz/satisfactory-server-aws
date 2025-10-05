@@ -51,7 +51,8 @@ export function useStationsData() {
             percentageProducing
             x
             y
-            powerCircuitId
+            mainPowerCircuitId
+            subPowerCircuitId
           }
         }
       }

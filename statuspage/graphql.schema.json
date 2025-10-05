@@ -119,6 +119,18 @@
             "deprecationReason": null
           },
           {
+            "name": "mainPowerCircuitId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "percentageProducing",
             "description": null,
             "args": [],
@@ -135,12 +147,12 @@
             "deprecationReason": null
           },
           {
-            "name": "powerCircuitId",
+            "name": "subPowerCircuitId",
             "description": null,
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "String",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
