@@ -109,6 +109,11 @@
     return '#FFA500'
   }
 
+  const getFactoryShape = (factoryType: string): string => {
+    const circleTypes = ['Converter', 'HadronCollider', 'QuantumEncoder']
+    return circleTypes.includes(factoryType) ? 'triangle' : 'circle'
+  }
+
   const dotContent = computed(() => {
     const minX = -320000
     const maxX = 380000
@@ -147,9 +152,10 @@
           const x = (factory.x - minX) * scaleX
           const y = mapHeight - (factory.y - minY) * scaleY - 5
           const color = getFactoryColor(factory.percentageProducing)
+          const shape = getFactoryShape(factory.type)
 
           const factoryId = `factory_${index}`
-          dot += `\n${factoryId} [fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+          dot += `\n${factoryId} [shape="${shape}", fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
         }
       })
     }
