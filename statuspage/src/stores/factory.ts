@@ -2,19 +2,19 @@ import { defineStore } from 'pinia'
 import { computed, readonly, ref } from 'vue'
 import type { Factory } from '../gql/graphql'
 
-interface FactoryStabilityFilters {
+interface FactoryFilters {
   selectedFactoryTypes: string[]
   selectedSubPowerCircuitIds: number[]
   selectedFactoryStatuses: string[]
 }
 
-export const useFactoryStabilityStore = defineStore('factoryStability', () => {
+export const useFactoryStore = defineStore('factory', () => {
   const factories = ref<Factory[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdated = ref<Date | null>(null)
 
-  const filters = ref<FactoryStabilityFilters>({
+  const filters = ref<FactoryFilters>({
     selectedFactoryTypes: [],
     selectedSubPowerCircuitIds: [],
     selectedFactoryStatuses: [],
@@ -60,7 +60,7 @@ export const useFactoryStabilityStore = defineStore('factoryStability', () => {
     filters.value.selectedFactoryStatuses = selectedFactoryStatuses
   }
 
-  const updateFilters = (newFilters: FactoryStabilityFilters) => {
+  const updateFilters = (newFilters: FactoryFilters) => {
     filters.value = newFilters
   }
 

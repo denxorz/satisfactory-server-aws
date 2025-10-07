@@ -3,14 +3,12 @@ import { computed, watch } from 'vue'
 
 import { graphql } from '../gql'
 import type { Factory, Station, Uploader } from '../gql/graphql'
-import { useFactoryPowerCircuitStore } from '../stores/factoryPowerCircuit'
-import { useFactoryStabilityStore } from '../stores/factoryStability'
+import { useFactoryStore } from '../stores/factory'
 import { useStationsStore } from '../stores/stations'
 
 export function useStationsData() {
   const stationsStore = useStationsStore()
-  const factoryPowerCircuitStore = useFactoryPowerCircuitStore()
-  const factoryStabilityStore = useFactoryStabilityStore()
+  const factoryStore = useFactoryStore()
 
   const shouldSkipQuery = computed(
     () => stationsStore.stations.length > 0 && !stationsStore.isDataStale()
@@ -101,8 +99,7 @@ export function useStationsData() {
   watch(
     factories,
     newFactories => {
-      factoryPowerCircuitStore.setFactories(newFactories)
-      factoryStabilityStore.setFactories(newFactories)
+      factoryStore.setFactories(newFactories)
     },
     { immediate: true }
   )
