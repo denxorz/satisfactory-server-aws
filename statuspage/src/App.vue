@@ -1,5 +1,7 @@
 <script setup lang="ts">
+  import { ref } from 'vue'
   import CargoFlowChart from './components/CargoFlowChart.vue'
+  import FactoryFilters from './components/FactoryFilters.vue'
   import FactoryPowerCircuitMap from './components/FactoryPowerCircuitMap.vue'
   import FactoryStabilityMap from './components/FactoryStabilityMap.vue'
   import LoginScreen from './components/LoginScreen.vue'
@@ -16,6 +18,8 @@
   const { isAuthenticated, handleAuthenticated } = useAuthentication()
   const { serverStatus, serverProbeData } = useServerStatus()
   useStationsData()
+
+  const activeTab = ref('stations')
 </script>
 
 <template>
@@ -27,34 +31,61 @@
       <Toolbar />
       <v-main class="satisfactory-theme">
         <v-container class="pa-4" max-width="1400">
-          <v-row>
-            <v-col cols="12" md="8">
-              <StationFilters class="fill-height" />
-            </v-col>
-            <v-col cols="12" md="4">
-              <ServerInfo
-                :server-status="serverStatus"
-                :server-probe-data="serverProbeData"
-                class="fill-height"
-              />
-            </v-col>
-            <v-col cols="12">
-              <CargoFlowChart />
-            </v-col>
+          <v-tabs
+            v-model="activeTab"
+            color="primary"
+            class="mb-4"
+            align-tabs="start"
+          >
+            <v-tab value="stations">
+              <v-icon start>mdi-train</v-icon>
+              Stations & Logistics
+            </v-tab>
+            <v-tab value="factories">
+              <v-icon start>mdi-factory</v-icon>
+              Factory Maps
+            </v-tab>
+          </v-tabs>
 
-            <v-col cols="12" lg="6">
-              <StationGraph class="fill-height" />
-            </v-col>
-            <v-col cols="12" lg="6">
-              <StationsTable class="fill-height" />
-            </v-col>
-            <v-col cols="12">
-              <FactoryStabilityMap class="fill-height" />
-            </v-col>
-            <v-col cols="12">
-              <FactoryPowerCircuitMap class="fill-height" />
-            </v-col>
-          </v-row>
+          <v-window v-model="activeTab">
+            <v-window-item value="stations">
+              <v-row>
+                <v-col cols="12" md="8">
+                  <StationFilters class="fill-height" />
+                </v-col>
+                <v-col cols="12" md="4">
+                  <ServerInfo
+                    :server-status="serverStatus"
+                    :server-probe-data="serverProbeData"
+                    class="fill-height"
+                  />
+                </v-col>
+                <v-col cols="12">
+                  <CargoFlowChart />
+                </v-col>
+                <v-col cols="12" lg="6">
+                  <StationGraph class="fill-height" />
+                </v-col>
+                <v-col cols="12" lg="6">
+                  <StationsTable class="fill-height" />
+                </v-col>
+              </v-row>
+            </v-window-item>
+
+            <v-window-item value="factories">
+              <v-row>
+                <v-col cols="12">
+                  <FactoryFilters class="mb-4" />
+                </v-col>
+                <v-col cols="12" lg="6">
+                  <FactoryStabilityMap class="fill-height" />
+                </v-col>
+                <v-col cols="12" lg="6">
+                  <FactoryPowerCircuitMap class="fill-height" />
+                </v-col>
+              </v-row>
+            </v-window-item>
+          </v-window>
         </v-container>
       </v-main>
     </template>
