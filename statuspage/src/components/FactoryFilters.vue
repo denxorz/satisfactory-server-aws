@@ -48,7 +48,7 @@
             hide-details
             single-line
           >
-            <template v-slot:selection="{ item, index }">
+            <template v-slot:selection="{ index }">
               <div v-if="index == 0">
                 Type ({{ factoryStore.filters.selectedFactoryTypes.length }})
               </div>
@@ -71,7 +71,7 @@
             hide-details
             single-line
           >
-            <template v-slot:selection="{ item, index }">
+            <template v-slot:selection="{ index }">
               <div v-if="index == 0">
                 Power Circuit ({{
                   factoryStore.filters.selectedPowerCircuits.length
@@ -96,7 +96,7 @@
             hide-details
             single-line
           >
-            <template v-slot:selection="{ item, index }">
+            <template v-slot:selection="{ index }">
               <div v-if="index == 0">
                 Stability ({{
                   factoryStore.filters.selectedFactoryStabilities.length
