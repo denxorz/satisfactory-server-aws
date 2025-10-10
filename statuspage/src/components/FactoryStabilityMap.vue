@@ -14,8 +14,9 @@
 
   const getFactoryColor = (percentageProducing: number): string => {
     if (percentageProducing === 100) return '#00FF00'
-    if (percentageProducing === 0) return '#FF0000'
-    return '#FFA500'
+    if (percentageProducing >= 95 && percentageProducing < 100) return '#FFFF00'
+    if (percentageProducing >= 1 && percentageProducing < 95) return '#FFA500'
+    return '#FF0000'
   }
 
   const getFactoryShape = (factoryType: string): string => {

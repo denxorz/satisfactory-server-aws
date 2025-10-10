@@ -4,8 +4,8 @@ import type { Factory } from '../gql/graphql'
 
 interface FactoryFilters {
   selectedFactoryTypes: string[]
-  selectedSubPowerCircuitIds: number[]
-  selectedFactoryStatuses: string[]
+  selectedPowerCircuits: string[]
+  selectedFactoryStabilities: string[]
 }
 
 export const useFactoryStore = defineStore('factory', () => {
@@ -16,8 +16,8 @@ export const useFactoryStore = defineStore('factory', () => {
 
   const filters = ref<FactoryFilters>({
     selectedFactoryTypes: [],
-    selectedSubPowerCircuitIds: [],
-    selectedFactoryStatuses: [],
+    selectedPowerCircuits: [],
+    selectedFactoryStabilities: [],
   })
 
   const setFactories = (newFactories: Factory[]) => {
@@ -50,14 +50,14 @@ export const useFactoryStore = defineStore('factory', () => {
     filters.value.selectedFactoryTypes = selectedFactoryTypes
   }
 
-  const updateSelectedSubPowerCircuitIds = (
-    selectedSubPowerCircuitIds: number[]
-  ) => {
-    filters.value.selectedSubPowerCircuitIds = selectedSubPowerCircuitIds
+  const updateSelectedPowerCircuits = (selectedPowerCircuits: string[]) => {
+    filters.value.selectedPowerCircuits = selectedPowerCircuits
   }
 
-  const updateSelectedFactoryStatuses = (selectedFactoryStatuses: string[]) => {
-    filters.value.selectedFactoryStatuses = selectedFactoryStatuses
+  const updateSelectedFactoryStabilities = (
+    selectedFactoryStabilities: string[]
+  ) => {
+    filters.value.selectedFactoryStabilities = selectedFactoryStabilities
   }
 
   const updateFilters = (newFilters: FactoryFilters) => {
@@ -67,8 +67,8 @@ export const useFactoryStore = defineStore('factory', () => {
   const clearFilters = () => {
     filters.value = {
       selectedFactoryTypes: [],
-      selectedSubPowerCircuitIds: [],
-      selectedFactoryStatuses: [],
+      selectedPowerCircuits: [],
+      selectedFactoryStabilities: [],
     }
   }
 
@@ -82,55 +82,50 @@ export const useFactoryStore = defineStore('factory', () => {
       }
     })
 
-    const typeOptions = Array.from(factoryTypeCounts.entries())
+    return Array.from(factoryTypeCounts.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([type, count]) => ({
         title: `${type} (${count})`,
         value: type,
       }))
-
-    const totalFactories = Array.from(factoryTypeCounts.values()).reduce(
-      (sum, count) => sum + count,
-      0
-    )
-    return [
-      {
-        title: `All Types (${totalFactories})`,
-        value: 'ALL',
-      },
-      ...typeOptions,
-    ]
   })
 
-  const subPowerCircuitIdOptions = computed(() => {
-    const subPowerCircuitIdCounts = new Map<number, number>()
+  const powerCircuitIdOptions = computed(() => {
+    const mainCircuitCounts = new Map<number, number>()
+    const subCircuitCounts = new Map<number, number>()
 
     factories.value.forEach(factory => {
-      if (factory.subPowerCircuitId) {
-        const currentCount =
-          subPowerCircuitIdCounts.get(factory.subPowerCircuitId) || 0
-        subPowerCircuitIdCounts.set(factory.subPowerCircuitId, currentCount + 1)
+      if (
+        factory.mainPowerCircuitId !== null &&
+        factory.mainPowerCircuitId !== undefined
+      ) {
+        const currentCount = mainCircuitCounts.get(factory.mainPowerCircuitId) || 0
+        mainCircuitCounts.set(factory.mainPowerCircuitId, currentCount + 1)
+      }
+      if (
+        factory.subPowerCircuitId !== null &&
+        factory.subPowerCircuitId !== undefined
+      ) {
+        const currentCount = subCircuitCounts.get(factory.subPowerCircuitId) || 0
+        subCircuitCounts.set(factory.subPowerCircuitId, currentCount + 1)
       }
     })
 
-    const circuitOptions = Array.from(subPowerCircuitIdCounts.entries())
+    const mainOptions = Array.from(mainCircuitCounts.entries())
       .sort((a, b) => a[0] - b[0])
       .map(([circuitId, count]) => ({
-        title: `Circuit ${circuitId} (${count})`,
-        value: circuitId,
+        title: `Main ${circuitId} (${count})`,
+        value: `main_${circuitId}`,
       }))
 
-    const totalFactories = Array.from(subPowerCircuitIdCounts.values()).reduce(
-      (sum, count) => sum + count,
-      0
-    )
-    return [
-      {
-        title: `All Circuits (${totalFactories})`,
-        value: -1,
-      },
-      ...circuitOptions,
-    ]
+    const subOptions = Array.from(subCircuitCounts.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([circuitId, count]) => ({
+        title: `Sub ${circuitId} (${count})`,
+        value: `sub_${circuitId}`,
+      }))
+
+    return [...mainOptions, ...subOptions]
   })
 
   const factoryStatusOptions = computed(() => {
@@ -138,89 +133,91 @@ export const useFactoryStore = defineStore('factory', () => {
 
     factories.value.forEach(factory => {
       let status: string
-      if (factory.percentageProducing === 100) {
+      const percentage = factory.percentageProducing
+
+      if (percentage === 100) {
         status = 'Stable'
-      } else if (factory.percentageProducing === 0) {
+      } else if (percentage >= 95 && percentage < 100) {
+        status = 'Almost Stable'
+      } else if (percentage >= 1 && percentage < 95) {
+        status = 'Unstable'
+      } else if (percentage === 0) {
         status = 'Off'
       } else {
-        status = 'Unstable'
+        status = 'Off' // Treat any other values as Off
       }
 
       const currentCount = statusCounts.get(status) || 0
       statusCounts.set(status, currentCount + 1)
     })
 
-    const statusOptions = [
+    return [
       { title: `Stable (${statusCounts.get('Stable') || 0})`, value: 'Stable' },
+      {
+        title: `Almost Stable (${statusCounts.get('Almost Stable') || 0})`,
+        value: 'Almost Stable',
+      },
       {
         title: `Unstable (${statusCounts.get('Unstable') || 0})`,
         value: 'Unstable',
       },
       { title: `Off (${statusCounts.get('Off') || 0})`, value: 'Off' },
     ]
-
-    const totalFactories = Array.from(statusCounts.values()).reduce(
-      (sum, count) => sum + count,
-      0
-    )
-    return [
-      {
-        title: `All Statuses (${totalFactories})`,
-        value: 'ALL',
-      },
-      ...statusOptions,
-    ]
   })
 
   const filteredFactories = computed(() => {
     return factories.value.filter(factory => {
-      if (
-        filters.value.selectedFactoryTypes.length === 0 &&
-        filters.value.selectedSubPowerCircuitIds.length === 0 &&
-        filters.value.selectedFactoryStatuses.length === 0
-      ) {
-        return false
-      }
-
+      // Factory type filter
       if (filters.value.selectedFactoryTypes.length > 0) {
-        if (!filters.value.selectedFactoryTypes.includes('ALL')) {
-          const factoryType = factory.type || 'unknown'
-          if (!filters.value.selectedFactoryTypes.includes(factoryType)) {
-            return false
-          }
+        const factoryType = factory.type || 'unknown'
+        if (!filters.value.selectedFactoryTypes.includes(factoryType)) {
+          return false
         }
       }
 
-      if (filters.value.selectedSubPowerCircuitIds.length > 0) {
-        if (filters.value.selectedSubPowerCircuitIds.includes(-1)) {
-          if (!factory.subPowerCircuitId) {
-            return false
-          }
+      // Power circuit filter
+      if (filters.value.selectedPowerCircuits.length > 0) {
+        const mainCircuitKey =
+          factory.mainPowerCircuitId !== null &&
+          factory.mainPowerCircuitId !== undefined
+            ? `main_${factory.mainPowerCircuitId}`
+            : null
+        const subCircuitKey =
+          factory.subPowerCircuitId !== null &&
+          factory.subPowerCircuitId !== undefined
+            ? `sub_${factory.subPowerCircuitId}`
+            : null
+
+        const hasMatchingCircuit =
+          (mainCircuitKey &&
+            filters.value.selectedPowerCircuits.includes(mainCircuitKey)) ||
+          (subCircuitKey &&
+            filters.value.selectedPowerCircuits.includes(subCircuitKey))
+
+        if (!hasMatchingCircuit) {
+          return false
+        }
+      }
+
+      // Factory stability filter
+      if (filters.value.selectedFactoryStabilities.length > 0) {
+        let status: string
+        const percentage = factory.percentageProducing
+
+        if (percentage === 100) {
+          status = 'Stable'
+        } else if (percentage >= 95 && percentage < 100) {
+          status = 'Almost Stable'
+        } else if (percentage >= 1 && percentage < 95) {
+          status = 'Unstable'
+        } else if (percentage === 0) {
+          status = 'Off'
         } else {
-          const subPowerCircuitId = factory.subPowerCircuitId
-          if (
-            !subPowerCircuitId ||
-            !filters.value.selectedSubPowerCircuitIds.includes(subPowerCircuitId)
-          ) {
-            return false
-          }
+          status = 'Off' // Treat any other values as Off
         }
-      }
 
-      if (filters.value.selectedFactoryStatuses.length > 0) {
-        if (!filters.value.selectedFactoryStatuses.includes('ALL')) {
-          let status: string
-          if (factory.percentageProducing === 100) {
-            status = 'Stable'
-          } else if (factory.percentageProducing === 0) {
-            status = 'Off'
-          } else {
-            status = 'Unstable'
-          }
-
-          if (!filters.value.selectedFactoryStatuses.includes(status)) {
-            return false
-          }
+        if (!filters.value.selectedFactoryStabilities.includes(status)) {
+          return false
         }
       }
 
@@ -233,7 +230,7 @@ export const useFactoryStore = defineStore('factory', () => {
     filteredFactories,
     filters,
     factoryTypeOptions,
-    subPowerCircuitIdOptions,
+    powerCircuitIdOptions,
     factoryStatusOptions,
     isLoading: readonly(isLoading),
     error: readonly(error),
@@ -243,8 +240,8 @@ export const useFactoryStore = defineStore('factory', () => {
     setError,
     clearFactories,
     updateSelectedFactoryTypes,
-    updateSelectedSubPowerCircuitIds,
-    updateSelectedFactoryStatuses,
+    updateSelectedPowerCircuits,
+    updateSelectedFactoryStabilities,
     updateFilters,
     clearFilters,
     isDataStale,
