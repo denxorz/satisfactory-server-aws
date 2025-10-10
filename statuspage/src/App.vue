@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import CargoFlowChart from './components/CargoFlowChart.vue'
   import FactoryFilters from './components/FactoryFilters.vue'
   import FactoryPowerCircuitMap from './components/FactoryPowerCircuitMap.vue'
@@ -20,6 +20,22 @@
   useStationsData()
 
   const activeTab = ref('stations')
+
+  // Initialize tab from URL on mount
+  onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabFromUrl = urlParams.get('tab')
+    if (tabFromUrl && ['stations', 'factories'].includes(tabFromUrl)) {
+      activeTab.value = tabFromUrl
+    }
+  })
+
+  // Watch for tab changes and update URL
+  watch(activeTab, newTab => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', newTab)
+    window.history.replaceState({}, '', url.toString())
+  })
 </script>
 
 <template>
