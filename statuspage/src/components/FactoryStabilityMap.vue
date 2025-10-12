@@ -10,7 +10,7 @@
   const graphviz = ref()
   const mergedImageUrl = ref('')
 
-  const factories = computed(() => factoryStore.filteredFactories)
+  const factories = computed(() => factoryStore.factoriesWithTransparency)
 
   const getFactoryColor = (percentageProducing: number): string => {
     if (percentageProducing === 100) return '#00FF00'
@@ -64,8 +64,22 @@
           const color = getFactoryColor(factory.percentageProducing)
           const shape = getFactoryShape(factory.type)
 
+          // Apply transparency to filtered-out factories
+          const alpha = factory.isTransparent ? 0.1 : 1.0
+          const transparentColor =
+            color +
+            Math.round(alpha * 255)
+              .toString(16)
+              .padStart(2, '0')
+          const transparentBorder = factory.isTransparent
+            ? '#000000' +
+              Math.round(alpha * 255)
+                .toString(16)
+                .padStart(2, '0')
+            : '#000000'
+
           const factoryId = `factory_${index}`
-          dot += `\n${factoryId} [shape="${shape}", fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+          dot += `\n${factoryId} [shape="${shape}", fillcolor="${transparentColor}", color="${transparentBorder}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
         }
       })
     }

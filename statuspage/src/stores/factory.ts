@@ -165,69 +165,78 @@ export const useFactoryStore = defineStore('factory', () => {
     ]
   })
 
+  const isFactoryFiltered = (factory: Factory): boolean => {
+    // Factory type filter
+    if (filters.value.selectedFactoryTypes.length > 0) {
+      const factoryType = factory.type || 'unknown'
+      if (!filters.value.selectedFactoryTypes.includes(factoryType)) {
+        return true
+      }
+    }
+
+    // Power circuit filter
+    if (filters.value.selectedPowerCircuits.length > 0) {
+      const mainCircuitKey =
+        factory.mainPowerCircuitId !== null &&
+        factory.mainPowerCircuitId !== undefined
+          ? `main_${factory.mainPowerCircuitId}`
+          : null
+      const subCircuitKey =
+        factory.subPowerCircuitId !== null && factory.subPowerCircuitId !== undefined
+          ? `sub_${factory.subPowerCircuitId}`
+          : null
+
+      const hasMatchingCircuit =
+        (mainCircuitKey &&
+          filters.value.selectedPowerCircuits.includes(mainCircuitKey)) ||
+        (subCircuitKey &&
+          filters.value.selectedPowerCircuits.includes(subCircuitKey))
+
+      if (!hasMatchingCircuit) {
+        return true
+      }
+    }
+
+    // Factory stability filter
+    if (filters.value.selectedFactoryStabilities.length > 0) {
+      let status: string
+      const percentage = factory.percentageProducing
+
+      if (percentage === 100) {
+        status = 'Stable'
+      } else if (percentage >= 95 && percentage < 100) {
+        status = 'Almost Stable'
+      } else if (percentage >= 1 && percentage < 95) {
+        status = 'Unstable'
+      } else if (percentage === 0) {
+        status = 'Off'
+      } else {
+        status = 'Off' // Treat any other values as Off
+      }
+
+      if (!filters.value.selectedFactoryStabilities.includes(status)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   const filteredFactories = computed(() => {
-    return factories.value.filter(factory => {
-      // Factory type filter
-      if (filters.value.selectedFactoryTypes.length > 0) {
-        const factoryType = factory.type || 'unknown'
-        if (!filters.value.selectedFactoryTypes.includes(factoryType)) {
-          return false
-        }
-      }
+    return factories.value.filter(factory => !isFactoryFiltered(factory))
+  })
 
-      // Power circuit filter
-      if (filters.value.selectedPowerCircuits.length > 0) {
-        const mainCircuitKey =
-          factory.mainPowerCircuitId !== null &&
-          factory.mainPowerCircuitId !== undefined
-            ? `main_${factory.mainPowerCircuitId}`
-            : null
-        const subCircuitKey =
-          factory.subPowerCircuitId !== null &&
-          factory.subPowerCircuitId !== undefined
-            ? `sub_${factory.subPowerCircuitId}`
-            : null
-
-        const hasMatchingCircuit =
-          (mainCircuitKey &&
-            filters.value.selectedPowerCircuits.includes(mainCircuitKey)) ||
-          (subCircuitKey &&
-            filters.value.selectedPowerCircuits.includes(subCircuitKey))
-
-        if (!hasMatchingCircuit) {
-          return false
-        }
-      }
-
-      // Factory stability filter
-      if (filters.value.selectedFactoryStabilities.length > 0) {
-        let status: string
-        const percentage = factory.percentageProducing
-
-        if (percentage === 100) {
-          status = 'Stable'
-        } else if (percentage >= 95 && percentage < 100) {
-          status = 'Almost Stable'
-        } else if (percentage >= 1 && percentage < 95) {
-          status = 'Unstable'
-        } else if (percentage === 0) {
-          status = 'Off'
-        } else {
-          status = 'Off' // Treat any other values as Off
-        }
-
-        if (!filters.value.selectedFactoryStabilities.includes(status)) {
-          return false
-        }
-      }
-
-      return true
-    })
+  const factoriesWithTransparency = computed(() => {
+    return factories.value.map(factory => ({
+      ...factory,
+      isTransparent: isFactoryFiltered(factory),
+    }))
   })
 
   return {
     factories,
     filteredFactories,
+    factoriesWithTransparency,
     filters,
     factoryTypeOptions,
     powerCircuitIdOptions,

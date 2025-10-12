@@ -10,7 +10,7 @@
   const graphviz = ref()
   const mergedImageUrl = ref('')
 
-  const factories = computed(() => factoryStore.filteredFactories)
+  const factories = computed(() => factoryStore.factoriesWithTransparency)
 
   // Color palette for different power circuits - using X11 color names supported by DOT
   const powerCircuitColors = [
@@ -49,11 +49,45 @@
   const getPowerCircuitColor = (
     powerCircuitId: number | null | undefined
   ): string => {
-    if (!powerCircuitId) return 'lightgray'
-    if (powerCircuitId < 0) return 'gray'
+    if (!powerCircuitId) return '#D3D3D3' // lightgray in hex
+    if (powerCircuitId < 0) return '#808080' // gray in hex
 
     const circuitIndex = powerCircuitId % powerCircuitColors.length
     return powerCircuitColors[circuitIndex]
+  }
+
+  // Convert X11 color names to hex for transparency support
+  const x11ToHex: Record<string, string> = {
+    red: '#FF0000',
+    green: '#008000',
+    blue: '#0000FF',
+    yellow: '#FFFF00',
+    magenta: '#FF00FF',
+    cyan: '#00FFFF',
+    orange: '#FFA500',
+    brown: '#A52A2A',
+    lime: '#00FF00',
+    gold: '#FFD700',
+    turquoise: '#40E0D0',
+    violet: '#EE82EE',
+    maroon: '#800000',
+    forestgreen: '#228B22',
+    royalblue: '#4169E1',
+    deeppink: '#FF1493',
+    greenyellow: '#ADFF2F',
+    crimson: '#DC143C',
+    navy: '#000080',
+    orangered: '#FF4500',
+    mediumpurple: '#9370DB',
+    mediumseagreen: '#3CB371',
+    coral: '#FF7F50',
+    teal: '#008080',
+    slategray: '#708090',
+    olive: '#808000',
+    indigo: '#4B0082',
+    silver: '#C0C0C0',
+    khaki: '#F0E68C',
+    plum: '#DDA0DD',
   }
 
   const getFactoryShape = (factoryType: string): string => {
@@ -101,8 +135,30 @@
           const color = getPowerCircuitColor(factory.subPowerCircuitId)
           const shape = getFactoryShape(factory.type)
 
+          // Apply transparency to filtered-out factories
+          const alpha = factory.isTransparent ? 0.1 : 1.0
+
+          // Convert X11 color to hex if needed, then apply transparency
+          let hexColor = color
+          if (x11ToHex[color]) {
+            hexColor = x11ToHex[color]
+          }
+
+          const transparentColor = factory.isTransparent
+            ? hexColor +
+              Math.round(alpha * 255)
+                .toString(16)
+                .padStart(2, '0')
+            : hexColor
+          const transparentBorder = factory.isTransparent
+            ? '#000000' +
+              Math.round(alpha * 255)
+                .toString(16)
+                .padStart(2, '0')
+            : '#000000'
+
           const factoryId = `factory_${index}`
-          dot += `\n${factoryId} [shape="${shape}", fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+          dot += `\n${factoryId} [shape="${shape}", fillcolor="${transparentColor}", color="${transparentBorder}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
         }
       })
     }
