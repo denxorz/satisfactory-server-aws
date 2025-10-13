@@ -12,7 +12,7 @@
   const mergedImageUrl = ref('')
   const selectedFactory = ref<Factory | null>(null)
 
-  const factories = computed(() => factoryStore.factoriesWithTransparency)
+  const factories = computed(() => factoryStore.factoriesWithTransparency || [])
 
   const getFactoryColor = (percentageProducing: number): string => {
     if (percentageProducing === 100) return '#00FF00'
@@ -67,7 +67,7 @@
     selectedFactory.value = closestFactory
   }
 
-  const dotContent = computed(() => {
+  const createDotContent = (factories: Factory[]) => {
     const minX = -320000
     const maxX = 380000
     const minY = -250000
@@ -94,8 +94,8 @@
     dot += `\n_bl [label="", pos="0,0!", width=${cornerSize}, height=${cornerSize}];`
     dot += `\n_br [label="", pos="${mapWidth},0!", width=${cornerSize}, height=${cornerSize}];`
 
-    if (factories.value && factories.value.length > 0) {
-      factories.value.forEach((factory, index) => {
+    if (factories && factories.length > 0) {
+      factories.forEach((factory, index) => {
         if (
           factory.x !== null &&
           factory.x !== undefined &&
@@ -107,22 +107,8 @@
           const color = getFactoryColor(factory.percentageProducing)
           const shape = getFactoryShape(factory.type)
 
-          // Apply transparency to filtered-out factories
-          const alpha = factory.isTransparent ? 0.1 : 1.0
-          const transparentColor =
-            color +
-            Math.round(alpha * 255)
-              .toString(16)
-              .padStart(2, '0')
-          const transparentBorder = factory.isTransparent
-            ? '#000000' +
-              Math.round(alpha * 255)
-                .toString(16)
-                .padStart(2, '0')
-            : '#000000'
-
           const factoryId = `factory_${index}`
-          dot += `\n${factoryId} [shape="${shape}", fillcolor="${transparentColor}", color="${transparentBorder}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
+          dot += `\n${factoryId} [shape="${shape}", fillcolor="${color}", color="#000000", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
         }
       })
     }
@@ -130,7 +116,7 @@
     dot += '\n}'
 
     return dot
-  })
+  }
 
   onMounted(async () => {
     try {
@@ -144,12 +130,23 @@
   })
 
   watch(
-    [dotContent, graphviz],
-    async ([newDotContent, newGraphviz]) => {
-      if (newGraphviz && newDotContent) {
+    [factories, graphviz],
+    async ([newFactories, newGraphviz]) => {
+      if (newGraphviz && newFactories && newFactories.length > 0) {
         try {
-          const svg = await newGraphviz.dot(newDotContent)
-          await mergeImages(svg)
+          const filteredFactories = newFactories.filter(
+            factory => factory.isTransparent
+          )
+          const nonFilteredFactories = newFactories.filter(
+            factory => !factory.isTransparent
+          )
+
+          const dotContentFiltered = createDotContent(filteredFactories)
+          const dotContentNonFiltered = createDotContent(nonFilteredFactories)
+
+          const svgFiltered = await newGraphviz.dot(dotContentFiltered)
+          const svgNonFiltered = await newGraphviz.dot(dotContentNonFiltered)
+          await mergeImages(svgFiltered, svgNonFiltered)
         } catch {
           error.value = 'Failed to render graph'
         }
@@ -158,7 +155,47 @@
     { immediate: true }
   )
 
-  const mergeImages = async (svgContent: string) => {
+  const loadAndMergeSvgs = (
+    svgFiltered: string,
+    svgNonFiltered: string,
+    ctx: any,
+    canvas: any
+  ) => {
+    const loadSvgImage = (svgContent: string): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' })
+        const svgUrl = URL.createObjectURL(svgBlob)
+        const svgImg = new window.Image()
+        svgImg.crossOrigin = 'anonymous'
+
+        svgImg.onload = () => {
+          URL.revokeObjectURL(svgUrl)
+          resolve(svgImg)
+        }
+        svgImg.onerror = reject
+        svgImg.src = svgUrl
+      })
+    }
+
+    Promise.all([loadSvgImage(svgFiltered), loadSvgImage(svgNonFiltered)])
+      .then(([filteredImg, nonFilteredImg]) => {
+        ctx.globalAlpha = 0.3
+        ctx.drawImage(filteredImg, 0, 0, canvas.width, canvas.height)
+
+        ctx.globalAlpha = 1.0
+        ctx.drawImage(nonFilteredImg, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob: Blob | null) => {
+          if (blob) {
+            mergedImageUrl.value = URL.createObjectURL(blob)
+          }
+        }, 'image/png')
+      })
+      .catch(() => {
+        error.value = 'Failed to load SVG images'
+      })
+  }
+
+  const mergeImages = async (svgFiltered: string, svgNonFiltered: string) => {
     try {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
@@ -177,23 +214,7 @@
 
         ctx.globalAlpha = 1.0
         ctx.filter = 'none'
-
-        const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' })
-        const svgUrl = URL.createObjectURL(svgBlob)
-        const svgImg = new window.Image()
-        svgImg.crossOrigin = 'anonymous'
-
-        svgImg.onload = () => {
-          ctx.drawImage(svgImg, 0, 0, canvas.width, canvas.height)
-
-          canvas.toBlob(blob => {
-            if (blob) {
-              mergedImageUrl.value = URL.createObjectURL(blob)
-            }
-          }, 'image/png')
-        }
-
-        svgImg.src = svgUrl
+        loadAndMergeSvgs(svgFiltered, svgNonFiltered, ctx, canvas)
       }
 
       bgImg.src = '/1920px-Biome_Map.jpg'
@@ -263,39 +284,6 @@
   .map-image {
     object-fit: contain;
     transition: opacity 0.2s;
-  }
-
-  .factory-legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid #000;
-  }
-
-  .factory-type-filter,
-  .power-circuit-filter,
-  .factory-status-filter {
-    max-height: 120px;
-    overflow-y: auto;
-  }
-
-  .factory-type-filter .v-field__input,
-  .power-circuit-filter .v-field__input,
-  .factory-status-filter .v-field__input {
-    max-height: 100px;
-    overflow-y: auto;
-  }
-
-  .factory-type-filter .v-chip,
-  .power-circuit-filter .v-chip,
-  .factory-status-filter .v-chip {
-    margin: 2px;
-  }
-
-  .factory-type-filter .v-field,
-  .power-circuit-filter .v-field,
-  .factory-status-filter .v-field {
-    margin-bottom: 0;
   }
 </style>
 
