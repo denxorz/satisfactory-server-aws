@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Graphviz } from '@hpcc-js/wasm'
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import type { Factory } from '../gql/graphql'
   import { useFactoryStore } from '../stores/factory'
 
@@ -11,8 +11,6 @@
   const graphviz = ref()
   const mergedImageUrl = ref('')
   const selectedFactory = ref<Factory | null>(null)
-
-  const factories = computed(() => factoryStore.factoriesWithTransparency || [])
 
   const getFactoryColor = (percentageProducing: number): string => {
     if (percentageProducing === 100) return '#00FF00'
@@ -46,7 +44,7 @@
     let closestFactory: Factory | null = null
     let closestDistance = Infinity
 
-    factories.value.forEach(factory => {
+    factoryStore.nonFilteredFactories.forEach(factory => {
       if (
         factory.x !== null &&
         factory.x !== undefined &&
@@ -130,19 +128,19 @@
   })
 
   watch(
-    [factories, graphviz],
-    async ([newFactories, newGraphviz]) => {
-      if (newGraphviz && newFactories && newFactories.length > 0) {
+    [
+      () => factoryStore.filteredFactories,
+      () => factoryStore.nonFilteredFactories,
+      graphviz,
+    ],
+    async ([newFilteredFactories, newNonFilteredFactories, newGraphviz]) => {
+      if (
+        newGraphviz &&
+        (newFilteredFactories.length > 0 || newNonFilteredFactories.length > 0)
+      ) {
         try {
-          const filteredFactories = newFactories.filter(
-            factory => factory.isTransparent
-          )
-          const nonFilteredFactories = newFactories.filter(
-            factory => !factory.isTransparent
-          )
-
-          const dotContentFiltered = createDotContent(filteredFactories)
-          const dotContentNonFiltered = createDotContent(nonFilteredFactories)
+          const dotContentFiltered = createDotContent(newFilteredFactories)
+          const dotContentNonFiltered = createDotContent(newNonFilteredFactories)
 
           const svgFiltered = await newGraphviz.dot(dotContentFiltered)
           const svgNonFiltered = await newGraphviz.dot(dotContentNonFiltered)

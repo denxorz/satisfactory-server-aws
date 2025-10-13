@@ -223,20 +223,17 @@ export const useFactoryStore = defineStore('factory', () => {
   }
 
   const filteredFactories = computed(() => {
-    return factories.value.filter(factory => !isFactoryFiltered(factory))
+    return (factories.value || []).filter(factory => isFactoryFiltered(factory))
   })
 
-  const factoriesWithTransparency = computed(() => {
-    return factories.value.map(factory => ({
-      ...factory,
-      isTransparent: isFactoryFiltered(factory),
-    }))
+  const nonFilteredFactories = computed(() => {
+    return (factories.value || []).filter(factory => !isFactoryFiltered(factory))
   })
 
   return {
     factories,
     filteredFactories,
-    factoriesWithTransparency,
+    nonFilteredFactories,
     filters,
     factoryTypeOptions,
     powerCircuitIdOptions,
@@ -256,3 +253,4 @@ export const useFactoryStore = defineStore('factory', () => {
     isDataStale,
   }
 })
+
