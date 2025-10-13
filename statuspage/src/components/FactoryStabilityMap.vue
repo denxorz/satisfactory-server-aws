@@ -6,7 +6,6 @@
 <template>
   <BaseFactoryMap
     title="Factory Stability Map"
-    loading-text="Loading factory stability map..."
     :get-factory-color="getFactoryColorForStability"
   />
 </template>

@@ -7,7 +7,6 @@
 
   interface Props {
     title: string
-    loadingText: string
     getFactoryColor: (factory: Factory) => string
   }
 
@@ -124,7 +123,6 @@
       graphviz.value = await Graphviz.load()
     } catch {
       error.value = 'Failed to load graph renderer'
-    } finally {
       isLoading.value = false
     }
   })
@@ -141,14 +139,17 @@
         (newFilteredFactories.length > 0 || newNonFilteredFactories.length > 0)
       ) {
         try {
+          isLoading.value = true
           const dotContentFiltered = createDotContent(newFilteredFactories)
           const dotContentNonFiltered = createDotContent(newNonFilteredFactories)
 
           const svgFiltered = await newGraphviz.dot(dotContentFiltered)
           const svgNonFiltered = await newGraphviz.dot(dotContentNonFiltered)
           await mergeImages(svgFiltered, svgNonFiltered)
+          isLoading.value = false
         } catch {
           error.value = 'Failed to render graph'
+          isLoading.value = false
         }
       }
     },
@@ -229,7 +230,11 @@
     <v-card-title>
       <div>
         <div>{{ title }}</div>
-        <div class="text-caption text-uppercase">
+        <div v-if="isLoading" class="text-caption text-uppercase">Loading...</div>
+        <div v-else-if="error" class="text-caption text-uppercase">
+          Error: {{ error }}
+        </div>
+        <div v-else class="text-caption text-uppercase">
           Selected: {{ selectedFactory?.type ?? '-' }} |
           {{ selectedFactory?.percentageProducing ?? '-' }}% | Main:{{
             getMainCircuitName(selectedFactory?.mainPowerCircuitId)
@@ -240,29 +245,16 @@
     </v-card-title>
 
     <v-card-text>
-      <div v-if="isLoading" class="text-center pa-8">
-        <v-progress-circular indeterminate size="64"></v-progress-circular>
-        <div class="mt-4" style="color: #e59345">
-          {{ loadingText }}
-        </div>
-      </div>
-
-      <div v-else-if="error" class="text-center pa-8">
-        <v-alert type="error" variant="tonal">
-          {{ error }}
-        </v-alert>
-      </div>
-
       <div
-        v-if="mergedImageUrl && !isLoading && !error"
         style="position: relative; overflow: hidden; min-height: 400px"
         @click="handleMapClick"
       >
         <div class="map-wrapper">
           <v-img
-            :src="mergedImageUrl"
+            :src="mergedImageUrl || '/1920px-Biome_Map.jpg'"
             :alt="`${title} with Background`"
             class="map-image"
+            :class="{ 'background-only': !mergedImageUrl }"
           />
         </div>
       </div>
@@ -274,10 +266,17 @@
   .map-wrapper {
     position: relative;
     cursor: pointer;
+    width: 100%;
+    height: 100%;
   }
 
   .map-image {
     object-fit: contain;
     transition: opacity 0.2s;
+  }
+
+  .map-image.background-only {
+    filter: grayscale(0.4) contrast(0.8) brightness(1.1);
+    opacity: 0.4;
   }
 </style>
