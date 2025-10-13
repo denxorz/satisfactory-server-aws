@@ -251,7 +251,8 @@
       >
         <div class="map-wrapper">
           <v-img
-            :src="mergedImageUrl || '/1920px-Biome_Map.jpg'"
+            :src="mergedImageUrl"
+            :lazy-src="'/1920px-Biome_Map.jpg'"
             :alt="`${title} with Background`"
             class="map-image"
             :class="{ 'background-only': !mergedImageUrl }"
