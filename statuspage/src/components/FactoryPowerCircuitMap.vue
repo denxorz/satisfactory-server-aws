@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Graphviz } from '@hpcc-js/wasm'
   import { computed, onMounted, ref, watch } from 'vue'
+  import type { Factory } from '../gql/graphql'
   import { useFactoryStore } from '../stores/factory'
 
   const factoryStore = useFactoryStore()
@@ -9,90 +10,99 @@
   const error = ref<string | null>(null)
   const graphviz = ref()
   const mergedImageUrl = ref('')
+  const selectedFactory = ref<Factory | null>(null)
 
-  const factories = computed(() => factoryStore.factoriesWithTransparency)
+  const factories = computed(() => {
+    return factoryStore.factoriesWithTransparency || []
+  })
 
-  // Color palette for different power circuits - using X11 color names supported by DOT
   const powerCircuitColors = [
-    'red', // Bright red
-    'green', // Bright green
-    'blue', // Bright blue
-    'yellow', // Bright yellow
-    'magenta', // Bright magenta
-    'cyan', // Bright cyan
-    'orange', // Bright orange
-    'brown', // Brown
-    'lime', // Bright lime
-    'gold', // Gold
-    'turquoise', // Turquoise
-    'violet', // Violet
-    'maroon', // Dark red
-    'forestgreen', // Dark green
-    'royalblue', // Royal blue
-    'deeppink', // Pink-red
-    'greenyellow', // Yellow-green
-    'crimson', // Dark red
-    'navy', // Dark blue
-    'orangered', // Orange-red
-    'mediumpurple', // Purple
-    'mediumseagreen', // Green-blue
-    'coral', // Orange-pink
-    'teal', // Blue-green
-    'slategray', // Gray-blue
-    'olive', // Olive green
-    'indigo', // Dark purple-blue
-    'silver', // Silver
-    'khaki', // Yellow-brown
-    'plum', // Purple-pink
+    '#FF0000',
+    '#008000',
+    '#0000FF',
+    '#FFFF00',
+    '#FF00FF',
+    '#00FFFF',
+    '#FFA500',
+    '#A52A2A',
+    '#00FF00',
+    '#FFD700',
+    '#40E0D0',
+    '#EE82EE',
+    '#800000',
+    '#228B22',
+    '#4169E1',
+    '#FF1493',
+    '#ADFF2F',
+    '#DC143C',
+    '#000080',
+    '#FF4500',
+    '#9370DB',
+    '#3CB371',
+    '#FF7F50',
+    '#008080',
+    '#708090',
+    '#808000',
+    '#4B0082',
+    '#C0C0C0',
+    '#F0E68C',
+    '#DDA0DD',
   ]
 
   const getPowerCircuitColor = (
     powerCircuitId: number | null | undefined
   ): string => {
-    if (!powerCircuitId) return '#D3D3D3' // lightgray in hex
-    if (powerCircuitId < 0) return '#808080' // gray in hex
+    if (!powerCircuitId) return '#D3D3D3'
+    if (powerCircuitId < 0) return '#808080'
 
     const circuitIndex = powerCircuitId % powerCircuitColors.length
     return powerCircuitColors[circuitIndex]
   }
 
-  // Convert X11 color names to hex for transparency support
-  const x11ToHex: Record<string, string> = {
-    red: '#FF0000',
-    green: '#008000',
-    blue: '#0000FF',
-    yellow: '#FFFF00',
-    magenta: '#FF00FF',
-    cyan: '#00FFFF',
-    orange: '#FFA500',
-    brown: '#A52A2A',
-    lime: '#00FF00',
-    gold: '#FFD700',
-    turquoise: '#40E0D0',
-    violet: '#EE82EE',
-    maroon: '#800000',
-    forestgreen: '#228B22',
-    royalblue: '#4169E1',
-    deeppink: '#FF1493',
-    greenyellow: '#ADFF2F',
-    crimson: '#DC143C',
-    navy: '#000080',
-    orangered: '#FF4500',
-    mediumpurple: '#9370DB',
-    mediumseagreen: '#3CB371',
-    coral: '#FF7F50',
-    teal: '#008080',
-    slategray: '#708090',
-    olive: '#808000',
-    indigo: '#4B0082',
-    silver: '#C0C0C0',
-    khaki: '#F0E68C',
-    plum: '#DDA0DD',
-  }
-
   const getFactoryShape = (factoryType: string): string => {
     const circleTypes = ['Converter', 'HadronCollider', 'QuantumEncoder']
     return circleTypes.includes(factoryType) ? 'triangle' : 'circle'
+  }
+
+  const handleMapClick = (event: globalThis.MouseEvent) => {
+    const rect = (event.target as globalThis.HTMLElement).getBoundingClientRect()
+    const clickX = event.clientX - rect.left
+    const clickY = event.clientY - rect.top
+
+    const minX = -320000
+    const maxX = 435000
+    const minY = -372000
+    const maxY = 372000
+
+    const scaleX = (maxX - minX) / rect.width
+    const scaleY = (maxY - minY) / rect.height
+
+    const factoryX = clickX * scaleX + minX
+    const factoryY = clickY * scaleY + minY
+
+    const clickRadius = 5000
+    let closestFactory: Factory | null = null
+    let closestDistance = Infinity
+
+    factories.value.forEach(factory => {
+      if (
+        factory.x !== null &&
+        factory.x !== undefined &&
+        factory.y !== null &&
+        factory.y !== undefined
+      ) {
+        const distance = Math.sqrt(
+          (factoryX - factory.x) ** 2 + (factoryY - factory.y) ** 2
+        )
+
+        if (distance < clickRadius && distance < closestDistance) {
+          closestDistance = distance
+          closestFactory = factory
+        }
+      }
+    })
+
+    selectedFactory.value = closestFactory
   }
 
   const dotContent = computed(() => {
@@ -135,14 +145,8 @@
           const color = getPowerCircuitColor(factory.subPowerCircuitId)
           const shape = getFactoryShape(factory.type)
 
-          // Apply transparency to filtered-out factories
           const alpha = factory.isTransparent ? 0.1 : 1.0
-
-          // Convert X11 color to hex if needed, then apply transparency
-          let hexColor = color
-          if (x11ToHex[color]) {
-            hexColor = x11ToHex[color]
-          }
+          const hexColor = color
 
           const transparentColor = factory.isTransparent
             ? hexColor +
@@ -158,6 +162,7 @@
             : '#000000'
 
           const factoryId = `factory_${index}`
+
           dot += `\n${factoryId} [shape="${shape}", fillcolor="${transparentColor}", color="${transparentBorder}", pos="${x.toFixed(2)},${y.toFixed(2)}!"];`
         }
       })
@@ -234,14 +239,25 @@
 
       bgImg.src = '/1920px-Biome_Map.jpg'
     } catch {
-      // Handle merge error silently
+      // Silent error handling
     }
   }
 </script>
 
 <template>
   <v-card>
-    <v-card-title>Factory Power Circuit Map</v-card-title>
+    <v-card-title>
+      <div>
+        <div>Factory Power Circuit Map</div>
+        <div class="text-caption text-uppercase">
+          Selected: {{ selectedFactory?.type ?? '-' }} /
+          {{ selectedFactory?.percentageProducing ?? '-' }}% / Main:{{
+            selectedFactory?.mainPowerCircuitId ?? '-'
+          }}
+          / Sub:{{ selectedFactory?.subPowerCircuitId ?? '-' }}
+        </div>
+      </div>
+    </v-card-title>
 
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">
@@ -260,6 +276,7 @@
       <div
         v-if="mergedImageUrl && !isLoading && !error"
         style="position: relative; overflow: hidden; min-height: 400px"
+        @click="handleMapClick"
       >
         <div class="map-wrapper">
           <v-img
@@ -277,11 +294,6 @@
   .map-wrapper {
     position: relative;
     cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .map-wrapper:hover {
-    transform: scale(1.02);
   }
 
   .map-image {
@@ -289,3 +301,4 @@
     transition: opacity 0.2s;
   }
 </style>
+

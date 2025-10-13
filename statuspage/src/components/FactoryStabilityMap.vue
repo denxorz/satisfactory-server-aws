@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Graphviz } from '@hpcc-js/wasm'
   import { computed, onMounted, ref, watch } from 'vue'
+  import type { Factory } from '../gql/graphql'
   import { useFactoryStore } from '../stores/factory'
 
   const factoryStore = useFactoryStore()
@@ -9,6 +10,7 @@
   const error = ref<string | null>(null)
   const graphviz = ref()
   const mergedImageUrl = ref('')
+  const selectedFactory = ref<Factory | null>(null)
 
   const factories = computed(() => factoryStore.factoriesWithTransparency)
 
@@ -22,6 +24,47 @@
   const getFactoryShape = (factoryType: string): string => {
     const circleTypes = ['Converter', 'HadronCollider', 'QuantumEncoder']
     return circleTypes.includes(factoryType) ? 'triangle' : 'circle'
+  }
+
+  const handleMapClick = (event: globalThis.MouseEvent) => {
+    const rect = (event.target as globalThis.HTMLElement).getBoundingClientRect()
+    const clickX = event.clientX - rect.left
+    const clickY = event.clientY - rect.top
+
+    const minX = -320000
+    const maxX = 435000
+    const minY = -372000
+    const maxY = 372000
+
+    const scaleX = (maxX - minX) / rect.width
+    const scaleY = (maxY - minY) / rect.height
+
+    const factoryX = clickX * scaleX + minX
+    const factoryY = clickY * scaleY + minY
+
+    const clickRadius = 5000
+    let closestFactory: Factory | null = null
+    let closestDistance = Infinity
+
+    factories.value.forEach(factory => {
+      if (
+        factory.x !== null &&
+        factory.x !== undefined &&
+        factory.y !== null &&
+        factory.y !== undefined
+      ) {
+        const distance = Math.sqrt(
+          (factoryX - factory.x) ** 2 + (factoryY - factory.y) ** 2
+        )
+
+        if (distance < clickRadius && distance < closestDistance) {
+          closestDistance = distance
+          closestFactory = factory
+        }
+      }
+    })
+
+    selectedFactory.value = closestFactory
   }
 
   const dotContent = computed(() => {
@@ -162,7 +205,18 @@
 
 <template>
   <v-card>
-    <v-card-title>Factory Stability Map</v-card-title>
+    <v-card-title>
+      <div>
+        <div>Factory Stability Map</div>
+        <div class="text-caption text-uppercase">
+          Selected: {{ selectedFactory?.type ?? '-' }} /
+          {{ selectedFactory?.percentageProducing ?? '-' }}% / Main:{{
+            selectedFactory?.mainPowerCircuitId ?? '-'
+          }}
+          / Sub:{{ selectedFactory?.subPowerCircuitId ?? '-' }}
+        </div>
+      </div>
+    </v-card-title>
 
     <v-card-text>
       <div v-if="isLoading" class="text-center pa-8">
@@ -181,6 +235,7 @@
       <div
         v-if="mergedImageUrl && !isLoading && !error"
         style="position: relative; overflow: hidden; min-height: 400px"
+        @click="handleMapClick"
       >
         <div class="map-wrapper">
           <v-img
@@ -243,3 +298,4 @@
     margin-bottom: 0;
   }
 </style>
+
