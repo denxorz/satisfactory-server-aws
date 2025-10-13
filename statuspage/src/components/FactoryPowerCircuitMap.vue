@@ -3,6 +3,7 @@
   import { onMounted, ref, watch } from 'vue'
   import type { Factory } from '../gql/graphql'
   import { useFactoryStore } from '../stores/factory'
+  import { getMainCircuitName, getSubCircuitName } from '../utils/circuitNames'
 
   const factoryStore = useFactoryStore()
 
@@ -265,11 +266,11 @@
       <div>
         <div>Factory Power Circuit Map</div>
         <div class="text-caption text-uppercase">
-          Selected: {{ selectedFactory?.type ?? '-' }} /
-          {{ selectedFactory?.percentageProducing ?? '-' }}% / Main:{{
-            selectedFactory?.mainPowerCircuitId ?? '-'
+          Selected: {{ selectedFactory?.type ?? '-' }} |
+          {{ selectedFactory?.percentageProducing ?? '-' }}% | Main:{{
+            getMainCircuitName(selectedFactory?.mainPowerCircuitId)
           }}
-          / Sub:{{ selectedFactory?.subPowerCircuitId ?? '-' }}
+          | Sub:{{ getSubCircuitName(selectedFactory?.subPowerCircuitId) }}
         </div>
       </div>
     </v-card-title>

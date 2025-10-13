@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, readonly, ref } from 'vue'
 import type { Factory } from '../gql/graphql'
+import {
+  getMainCircuitFilterName,
+  getSubCircuitFilterName,
+} from '../utils/circuitNames'
 
 interface FactoryFilters {
   selectedFactoryTypes: string[]
@@ -114,14 +118,14 @@ export const useFactoryStore = defineStore('factory', () => {
     const mainOptions = Array.from(mainCircuitCounts.entries())
       .sort((a, b) => a[0] - b[0])
       .map(([circuitId, count]) => ({
-        title: `Main ${circuitId} (${count})`,
+        title: getMainCircuitFilterName(circuitId, count),
         value: `main_${circuitId}`,
       }))
 
     const subOptions = Array.from(subCircuitCounts.entries())
       .sort((a, b) => a[0] - b[0])
       .map(([circuitId, count]) => ({
-        title: `Sub ${circuitId} (${count})`,
+        title: getSubCircuitFilterName(circuitId, count),
         value: `sub_${circuitId}`,
       }))
 
